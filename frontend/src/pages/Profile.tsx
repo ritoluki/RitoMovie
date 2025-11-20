@@ -1,4 +1,5 @@
 import { useState, FormEvent, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useMovieStore } from '@/store/movieStore';
 import Input from '@/components/common/Input';
@@ -196,18 +197,18 @@ const Profile = () => {
             <Card className="p-6">
               <h3 className="text-xl font-bold text-white mb-4">Quick Actions</h3>
               <div className="space-y-2">
-                <a
-                  href="/my-list"
+                <Link
+                  to="/my-list"
                   className="block w-full text-left px-4 py-3 bg-gray-900 hover:bg-gray-700 text-white rounded-lg transition-colors"
                 >
                   View My List
-                </a>
-                <a
-                  href="/browse"
+                </Link>
+                <Link
+                  to="/browse"
                   className="block w-full text-left px-4 py-3 bg-gray-900 hover:bg-gray-700 text-white rounded-lg transition-colors"
                 >
                   Browse Movies
-                </a>
+                </Link>
               </div>
             </Card>
           </div>
