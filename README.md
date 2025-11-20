@@ -51,7 +51,7 @@ You'll also need:
 ### 1. Clone the repository
 ```bash
 git clone <repository-url>
-cd PersonalProject
+cd RitoMovie
 ```
 
 ### 2. Backend Setup
