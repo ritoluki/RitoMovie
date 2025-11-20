@@ -3,13 +3,19 @@ import asyncHandler from '../utils/asyncHandler';
 import ApiError from '../utils/ApiError';
 import * as tmdbService from '../services/tmdbService';
 
+// Helper to get language from i18n middleware
+const getLanguage = (req: Request): string => {
+  return (req as { language?: string }).language || 'en';
+};
+
 // @desc    Get trending movies
 // @route   GET /api/movies/trending
 // @access  Public
 export const getTrendingMovies = asyncHandler(
   async (req: Request, res: Response, __next: NextFunction) => {
     const timeWindow = (req.query.time_window as 'day' | 'week') || 'week';
-    const data = await tmdbService.getTrendingMovies(timeWindow);
+    const language = getLanguage(req);
+    const data = await tmdbService.getTrendingMovies(timeWindow, language);
 
     res.status(200).json({
       success: true,
@@ -24,7 +30,8 @@ export const getTrendingMovies = asyncHandler(
 export const getPopularMovies = asyncHandler(
   async (req: Request, res: Response, __next: NextFunction) => {
     const page = parseInt(req.query.page as string) || 1;
-    const data = await tmdbService.getPopularMovies(page);
+    const language = getLanguage(req);
+    const data = await tmdbService.getPopularMovies(page, language);
 
     res.status(200).json({
       success: true,
@@ -39,7 +46,8 @@ export const getPopularMovies = asyncHandler(
 export const getTopRatedMovies = asyncHandler(
   async (req: Request, res: Response, __next: NextFunction) => {
     const page = parseInt(req.query.page as string) || 1;
-    const data = await tmdbService.getTopRatedMovies(page);
+    const language = getLanguage(req);
+    const data = await tmdbService.getTopRatedMovies(page, language);
 
     res.status(200).json({
       success: true,
@@ -54,7 +62,8 @@ export const getTopRatedMovies = asyncHandler(
 export const getUpcomingMovies = asyncHandler(
   async (req: Request, res: Response, __next: NextFunction) => {
     const page = parseInt(req.query.page as string) || 1;
-    const data = await tmdbService.getUpcomingMovies(page);
+    const language = getLanguage(req);
+    const data = await tmdbService.getUpcomingMovies(page, language);
 
     res.status(200).json({
       success: true,
@@ -69,7 +78,8 @@ export const getUpcomingMovies = asyncHandler(
 export const getNowPlayingMovies = asyncHandler(
   async (req: Request, res: Response, __next: NextFunction) => {
     const page = parseInt(req.query.page as string) || 1;
-    const data = await tmdbService.getNowPlayingMovies(page);
+    const language = getLanguage(req);
+    const data = await tmdbService.getNowPlayingMovies(page, language);
 
     res.status(200).json({
       success: true,
@@ -85,12 +95,13 @@ export const getMoviesByGenre = asyncHandler(
   async (req: Request, res: Response, __next: NextFunction) => {
     const genreId = parseInt(req.params.genreId);
     const page = parseInt(req.query.page as string) || 1;
+    const language = getLanguage(req);
 
     if (isNaN(genreId)) {
       throw new ApiError(400, 'Invalid genre ID');
     }
 
-    const data = await tmdbService.getMoviesByGenre(genreId, page);
+    const data = await tmdbService.getMoviesByGenre(genreId, page, language);
 
     res.status(200).json({
       success: true,
@@ -106,12 +117,13 @@ export const searchMovies = asyncHandler(
   async (req: Request, res: Response, __next: NextFunction) => {
     const query = req.query.q as string;
     const page = parseInt(req.query.page as string) || 1;
+    const language = getLanguage(req);
 
     if (!query) {
       throw new ApiError(400, 'Search query is required');
     }
 
-    const data = await tmdbService.searchMovies(query, page);
+    const data = await tmdbService.searchMovies(query, page, language);
 
     res.status(200).json({
       success: true,
@@ -126,12 +138,13 @@ export const searchMovies = asyncHandler(
 export const getMovieDetails = asyncHandler(
   async (req: Request, res: Response, __next: NextFunction) => {
     const movieId = parseInt(req.params.id);
+    const language = getLanguage(req);
 
     if (isNaN(movieId)) {
       throw new ApiError(400, 'Invalid movie ID');
     }
 
-    const data = await tmdbService.getMovieDetails(movieId);
+    const data = await tmdbService.getMovieDetails(movieId, language);
 
     res.status(200).json({
       success: true,
@@ -146,12 +159,13 @@ export const getMovieDetails = asyncHandler(
 export const getMovieVideos = asyncHandler(
   async (req: Request, res: Response, __next: NextFunction) => {
     const movieId = parseInt(req.params.id);
+    const language = getLanguage(req);
 
     if (isNaN(movieId)) {
       throw new ApiError(400, 'Invalid movie ID');
     }
 
-    const data = await tmdbService.getMovieVideos(movieId);
+    const data = await tmdbService.getMovieVideos(movieId, language);
 
     res.status(200).json({
       success: true,
@@ -187,12 +201,13 @@ export const getSimilarMovies = asyncHandler(
   async (req: Request, res: Response, __next: NextFunction) => {
     const movieId = parseInt(req.params.id);
     const page = parseInt(req.query.page as string) || 1;
+    const language = getLanguage(req);
 
     if (isNaN(movieId)) {
       throw new ApiError(400, 'Invalid movie ID');
     }
 
-    const data = await tmdbService.getSimilarMovies(movieId, page);
+    const data = await tmdbService.getSimilarMovies(movieId, page, language);
 
     res.status(200).json({
       success: true,
@@ -208,12 +223,13 @@ export const getMovieRecommendations = asyncHandler(
   async (req: Request, res: Response, __next: NextFunction) => {
     const movieId = parseInt(req.params.id);
     const page = parseInt(req.query.page as string) || 1;
+    const language = getLanguage(req);
 
     if (isNaN(movieId)) {
       throw new ApiError(400, 'Invalid movie ID');
     }
 
-    const data = await tmdbService.getMovieRecommendations(movieId, page);
+    const data = await tmdbService.getMovieRecommendations(movieId, page, language);
 
     res.status(200).json({
       success: true,
@@ -247,8 +263,9 @@ export const getMovieReviews = asyncHandler(
 // @route   GET /api/movies/genres/list
 // @access  Public
 export const getGenres = asyncHandler(
-  async (_req: Request, res: Response, __next: NextFunction) => {
-    const data = await tmdbService.getGenres();
+  async (req: Request, res: Response, __next: NextFunction) => {
+    const language = getLanguage(req);
+    const data = await tmdbService.getGenres(language);
 
     res.status(200).json({
       success: true,
@@ -262,6 +279,7 @@ export const getGenres = asyncHandler(
 // @access  Public
 export const discoverMovies = asyncHandler(
   async (req: Request, res: Response, __next: NextFunction) => {
+    const language = getLanguage(req);
     const filters = {
       page: parseInt(req.query.page as string) || 1,
       sort_by: req.query.sort_by as string,
@@ -273,6 +291,7 @@ export const discoverMovies = asyncHandler(
       vote_average_lte: req.query.rating_lte
         ? parseFloat(req.query.rating_lte as string)
         : undefined,
+      language,
     };
 
     const data = await tmdbService.discoverMovies(filters);

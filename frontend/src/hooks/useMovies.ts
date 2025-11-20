@@ -1,31 +1,35 @@
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { movieService } from '@/services/movieService';
 
 export const useMovies = () => {
+  const { i18n } = useTranslation();
+  const language = i18n.language;
+
   const useTrending = (timeWindow: 'day' | 'week' = 'week') => {
     return useQuery({
-      queryKey: ['movies', 'trending', timeWindow],
+      queryKey: ['movies', 'trending', timeWindow, language],
       queryFn: () => movieService.getTrending(timeWindow),
     });
   };
 
   const usePopular = (page: number = 1) => {
     return useQuery({
-      queryKey: ['movies', 'popular', page],
+      queryKey: ['movies', 'popular', page, language],
       queryFn: () => movieService.getPopular(page),
     });
   };
 
   const useTopRated = (page: number = 1) => {
     return useQuery({
-      queryKey: ['movies', 'top-rated', page],
+      queryKey: ['movies', 'top-rated', page, language],
       queryFn: () => movieService.getTopRated(page),
     });
   };
 
   const useMovieDetails = (movieId: number) => {
     return useQuery({
-      queryKey: ['movie', movieId],
+      queryKey: ['movie', movieId, language],
       queryFn: () => movieService.getDetails(movieId),
       enabled: !!movieId,
     });
@@ -33,7 +37,7 @@ export const useMovies = () => {
 
   const useMovieVideos = (movieId: number) => {
     return useQuery({
-      queryKey: ['movie', movieId, 'videos'],
+      queryKey: ['movie', movieId, 'videos', language],
       queryFn: () => movieService.getVideos(movieId),
       enabled: !!movieId,
     });
@@ -41,7 +45,7 @@ export const useMovies = () => {
 
   const useMovieCredits = (movieId: number) => {
     return useQuery({
-      queryKey: ['movie', movieId, 'credits'],
+      queryKey: ['movie', movieId, 'credits', language],
       queryFn: () => movieService.getCredits(movieId),
       enabled: !!movieId,
     });
@@ -49,7 +53,7 @@ export const useMovies = () => {
 
   const useSimilarMovies = (movieId: number, page: number = 1) => {
     return useQuery({
-      queryKey: ['movie', movieId, 'similar', page],
+      queryKey: ['movie', movieId, 'similar', page, language],
       queryFn: () => movieService.getSimilar(movieId, page),
       enabled: !!movieId,
     });
@@ -57,15 +61,15 @@ export const useMovies = () => {
 
   const useGenres = () => {
     return useQuery({
-      queryKey: ['genres'],
+      queryKey: ['genres', language],
       queryFn: () => movieService.getGenres(),
-      staleTime: Infinity, // Genres don't change often
+      staleTime: 5 * 60 * 1000, // 5 minutes - genres need to refetch when language changes
     });
   };
 
   const useMoviesByGenre = (genreId: number, page: number = 1) => {
     return useQuery({
-      queryKey: ['movies', 'genre', genreId, page],
+      queryKey: ['movies', 'genre', genreId, page, language],
       queryFn: () => movieService.getByGenre(genreId, page),
       enabled: !!genreId,
     });
@@ -73,7 +77,7 @@ export const useMovies = () => {
 
   const useSearchMovies = (query: string, page: number = 1) => {
     return useQuery({
-      queryKey: ['movies', 'search', query, page],
+      queryKey: ['movies', 'search', query, page, language],
       queryFn: () => movieService.search(query, page),
       enabled: query.length > 0,
     });

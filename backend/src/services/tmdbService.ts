@@ -10,76 +10,97 @@ const tmdbAxios = axios.create({
   },
 });
 
+// Helper to format language for TMDB API
+const formatLanguage = (lang?: string): string => {
+  if (!lang) return 'en-US';
+  
+  // Convert i18n language codes to TMDB format
+  const languageMap: Record<string, string> = {
+    'en': 'en-US',
+    'vi': 'vi-VN',
+  };
+  
+  return languageMap[lang] || languageMap[lang.split('-')[0]] || 'en-US';
+};
+
 // Get trending movies
-export const getTrendingMovies = async (timeWindow: 'day' | 'week' = 'week') => {
-  const response = await tmdbAxios.get(`/trending/movie/${timeWindow}`);
+export const getTrendingMovies = async (timeWindow: 'day' | 'week' = 'week', language?: string) => {
+  const response = await tmdbAxios.get(`/trending/movie/${timeWindow}`, {
+    params: { language: formatLanguage(language) },
+  });
   return response.data;
 };
 
 // Get popular movies
-export const getPopularMovies = async (page: number = 1) => {
+export const getPopularMovies = async (page: number = 1, language?: string) => {
   const response = await tmdbAxios.get('/movie/popular', {
-    params: { page },
+    params: { page, language: formatLanguage(language) },
   });
   return response.data;
 };
 
 // Get top rated movies
-export const getTopRatedMovies = async (page: number = 1) => {
+export const getTopRatedMovies = async (page: number = 1, language?: string) => {
   const response = await tmdbAxios.get('/movie/top_rated', {
-    params: { page },
+    params: { page, language: formatLanguage(language) },
   });
   return response.data;
 };
 
 // Get upcoming movies
-export const getUpcomingMovies = async (page: number = 1) => {
+export const getUpcomingMovies = async (page: number = 1, language?: string) => {
   const response = await tmdbAxios.get('/movie/upcoming', {
-    params: { page },
+    params: { page, language: formatLanguage(language) },
   });
   return response.data;
 };
 
 // Get now playing movies
-export const getNowPlayingMovies = async (page: number = 1) => {
+export const getNowPlayingMovies = async (page: number = 1, language?: string) => {
   const response = await tmdbAxios.get('/movie/now_playing', {
-    params: { page },
+    params: { page, language: formatLanguage(language) },
   });
   return response.data;
 };
 
 // Get movies by genre
-export const getMoviesByGenre = async (genreId: number, page: number = 1) => {
+export const getMoviesByGenre = async (genreId: number, page: number = 1, language?: string) => {
   const response = await tmdbAxios.get('/discover/movie', {
     params: {
       with_genres: genreId,
       page,
       sort_by: 'popularity.desc',
+      language: formatLanguage(language),
     },
   });
   return response.data;
 };
 
 // Search movies
-export const searchMovies = async (query: string, page: number = 1) => {
+export const searchMovies = async (query: string, page: number = 1, language?: string) => {
   const response = await tmdbAxios.get('/search/movie', {
     params: {
       query,
       page,
+      language: formatLanguage(language),
     },
   });
   return response.data;
 };
 
 // Get movie details
-export const getMovieDetails = async (movieId: number) => {
-  const response = await tmdbAxios.get(`/movie/${movieId}`);
+export const getMovieDetails = async (movieId: number, language?: string) => {
+  const response = await tmdbAxios.get(`/movie/${movieId}`, {
+    params: { language: formatLanguage(language) },
+  });
   return response.data;
 };
 
 // Get movie videos (trailers, teasers, etc.)
-export const getMovieVideos = async (movieId: number) => {
-  const response = await tmdbAxios.get(`/movie/${movieId}/videos`);
+export const getMovieVideos = async (movieId: number, language?: string) => {
+  const response = await tmdbAxios.get(`/movie/${movieId}/videos`, {
+    params: { language: formatLanguage(language) },
+  });
   return response.data;
 };
 
@@ -90,17 +111,17 @@ export const getMovieCredits = async (movieId: number) => {
 };
 
 // Get similar movies
-export const getSimilarMovies = async (movieId: number, page: number = 1) => {
+export const getSimilarMovies = async (movieId: number, page: number = 1, language?: string) => {
   const response = await tmdbAxios.get(`/movie/${movieId}/similar`, {
-    params: { page },
+    params: { page, language: formatLanguage(language) },
   });
   return response.data;
 };
 
 // Get movie recommendations
-export const getMovieRecommendations = async (movieId: number, page: number = 1) => {
+export const getMovieRecommendations = async (movieId: number, page: number = 1, language?: string) => {
   const response = await tmdbAxios.get(`/movie/${movieId}/recommendations`, {
-    params: { page },
+    params: { page, language: formatLanguage(language) },
   });
   return response.data;
 };
@@ -114,8 +135,10 @@ export const getMovieReviews = async (movieId: number, page: number = 1) => {
 };
 
 // Get all genres
-export const getGenres = async () => {
-  const response = await tmdbAxios.get('/genre/movie/list');
+export const getGenres = async (language?: string) => {
+  const response = await tmdbAxios.get('/genre/movie/list', {
+    params: { language: formatLanguage(language) },
+  });
   return response.data;
 };
 
@@ -127,11 +150,13 @@ export const discoverMovies = async (filters: {
   with_genres?: string;
   vote_average_gte?: number;
   vote_average_lte?: number;
+  language?: string;
 }) => {
   const response = await tmdbAxios.get('/discover/movie', {
     params: {
       page: filters.page || 1,
       sort_by: filters.sort_by || 'popularity.desc',
+      language: formatLanguage(filters.language),
       ...(filters.year && { primary_release_year: filters.year }),
       ...(filters.with_genres && { with_genres: filters.with_genres }),
       ...(filters.vote_average_gte && {
