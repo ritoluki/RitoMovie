@@ -1,0 +1,9 @@
+# global ignores
+**/.env
+**/.env.*.local
+**/node_modules/
+**/dist/
+**/build/
+**/.DS_Store
+**/coverage/
+backend/uploads/videos/
