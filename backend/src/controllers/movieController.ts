@@ -303,3 +303,23 @@ export const discoverMovies = asyncHandler(
   }
 );
 
+// @desc    Get movie release dates (for age rating/certification)
+// @route   GET /api/movies/:id/release-dates
+// @access  Public
+export const getMovieReleaseDates = asyncHandler(
+  async (req: Request, res: Response, __next: NextFunction) => {
+    const movieId = parseInt(req.params.id);
+
+    if (isNaN(movieId)) {
+      throw new ApiError(400, 'Invalid movie ID');
+    }
+
+    const data = await tmdbService.getMovieReleaseDates(movieId);
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+  }
+);
+

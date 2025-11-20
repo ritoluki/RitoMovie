@@ -35,6 +35,25 @@ export interface Genre {
   name: string;
 }
 
+export interface ReleaseDate {
+  certification: string;
+  descriptors: string[];
+  iso_639_1: string;
+  note: string;
+  release_date: string;
+  type: number;
+}
+
+export interface ReleaseDateResult {
+  iso_3166_1: string;
+  release_dates: ReleaseDate[];
+}
+
+export interface ReleaseDatesResponse {
+  id: number;
+  results: ReleaseDateResult[];
+}
+
 export interface ProductionCompany {
   id: number;
   name: string;

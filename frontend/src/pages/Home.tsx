@@ -44,7 +44,7 @@ const Home = () => {
       )}
 
       {/* Movie Rows */}
-      <div className="relative -mt-32 md:-mt-40 z-10 space-y-8 pb-16">
+      <div className="relative -mt-48 z-10 space-y-8 pb-16">
         {trending?.results && (
           <MovieRow title={t('home.trendingNow')} movies={trending.results} />
         )}

@@ -81,7 +81,7 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout | null = null;
+  let timeout: ReturnType<typeof setTimeout> | null = null;
   
   return (...args: Parameters<T>) => {
     if (timeout) clearTimeout(timeout);
@@ -115,5 +115,47 @@ export function isTokenExpired(token: string): boolean {
   } catch {
     return true;
   }
+}
+
+export function formatCertification(certification: string): string {
+  // Map US certifications to display format
+  const certMap: Record<string, string> = {
+    'G': 'G',
+    'PG': 'PG',
+    'PG-13': 'T13',
+    'R': 'T16',
+    'NC-17': 'T18',
+    'NR': 'NR',
+  };
+  
+  return certMap[certification] || certification;
+}
+
+export function getCertificationFromReleaseDates(
+  releaseDates: { iso_3166_1: string; release_dates: { certification: string }[] }[] | undefined
+): string | null {
+  if (!releaseDates || releaseDates.length === 0) return null;
+  
+  // Try to get US certification first
+  const usRelease = releaseDates.find((r) => r.iso_3166_1 === 'US');
+  if (usRelease && usRelease.release_dates.length > 0) {
+    const cert = usRelease.release_dates.find((rd) => rd.certification);
+    if (cert?.certification) return formatCertification(cert.certification);
+  }
+  
+  // Fallback to any certification
+  for (const release of releaseDates) {
+    const cert = release.release_dates.find((rd) => rd.certification);
+    if (cert?.certification) return cert.certification;
+  }
+  
+  return null;
+}
+
+export function getGenreNames(genreIds: number[], allGenres: { id: number; name: string }[]): string[] {
+  if (!genreIds || !allGenres) return [];
+  return genreIds
+    .map((id) => allGenres.find((g) => g.id === id)?.name)
+    .filter((name): name is string => !!name);
 }
 

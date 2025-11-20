@@ -170,3 +170,9 @@ export const discoverMovies = async (filters: {
   return response.data;
 };
 
+// Get movie release dates (for age rating/certification)
+export const getMovieReleaseDates = async (movieId: number) => {
+  const response = await tmdbAxios.get(`/movie/${movieId}/release_dates`);
+  return response.data;
+};
+

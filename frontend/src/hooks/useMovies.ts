@@ -83,6 +83,15 @@ export const useMovies = () => {
     });
   };
 
+  const useReleaseDates = (movieId: number) => {
+    return useQuery({
+      queryKey: ['movie', movieId, 'release-dates'],
+      queryFn: () => movieService.getReleaseDates(movieId),
+      enabled: !!movieId,
+      staleTime: 10 * 60 * 1000, // 10 minutes - certifications don't change often
+    });
+  };
+
   return {
     useTrending,
     usePopular,
@@ -94,6 +103,7 @@ export const useMovies = () => {
     useGenres,
     useMoviesByGenre,
     useSearchMovies,
+    useReleaseDates,
   };
 };
 

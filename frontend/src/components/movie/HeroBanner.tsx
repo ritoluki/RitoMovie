@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiPlay, FiInfo } from 'react-icons/fi';
+import { FiPlay, FiInfo, FiHeart } from 'react-icons/fi';
 import { Movie } from '@/types';
-import { getImageUrl, truncateText } from '@/utils/helpers';
+import { getImageUrl, truncateText, formatRuntime, getCertificationFromReleaseDates, getGenreNames } from '@/utils/helpers';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useMovies } from '@/hooks/useMovies';
+import { useMovieStore } from '@/store/movieStore';
 
 interface HeroBannerProps {
   movies: Movie[];
@@ -11,13 +13,22 @@ interface HeroBannerProps {
 
 const HeroBanner = ({ movies }: HeroBannerProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const { useMovieDetails, useReleaseDates, useGenres } = useMovies();
+  const { addToWatchlist, removeFromWatchlist, watchlist } = useMovieStore();
+
+  const currentMovie = movies[currentIndex];
+  
+  // Fetch detailed info for current movie
+  const { data: movieDetails } = useMovieDetails(currentMovie?.id);
+  const { data: releaseDates } = useReleaseDates(currentMovie?.id);
+  const { data: genresData } = useGenres();
 
   useEffect(() => {
     if (movies.length === 0) return;
 
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % movies.length);
-    }, 5000);
+    }, 8000);
 
     return () => clearInterval(timer);
   }, [movies.length]);
@@ -26,10 +37,25 @@ const HeroBanner = ({ movies }: HeroBannerProps) => {
     return null;
   }
 
-  const currentMovie = movies[currentIndex];
+  // Get certification
+  const certification = releaseDates ? getCertificationFromReleaseDates(releaseDates.results) : null;
+  
+  // Get genre names
+  const genreNames = genresData ? getGenreNames(currentMovie.genre_ids, genresData.genres) : [];
+  
+  // Check if in watchlist
+  const isInWatchlist = watchlist.includes(currentMovie.id);
+
+  const handleToggleWatchlist = () => {
+    if (isInWatchlist) {
+      removeFromWatchlist(currentMovie.id);
+    } else {
+      addToWatchlist(currentMovie.id);
+    }
+  };
 
   return (
-    <div className="relative h-[70vh] md:h-[85vh] overflow-hidden">
+    <div className="relative h-screen overflow-hidden">
       <AnimatePresence mode="wait">
         <motion.div
           key={currentMovie.id}
@@ -47,84 +73,178 @@ const HeroBanner = ({ movies }: HeroBannerProps) => {
               className="w-full h-full object-cover"
             />
             {/* Gradient Overlays */}
-            <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/60 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/70 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent" />
           </div>
 
           {/* Content */}
-          <div className="relative h-full container mx-auto px-4 flex items-center">
-            <div className="max-w-2xl space-y-4 md:space-y-6">
+          <div className="relative h-full flex items-start pt-32 md:pt-40 lg:pt-44 pl-6 md:pl-16 lg:pl-24 xl:pl-32 pr-4">
+            <div className="max-w-3xl space-y-3 md:space-y-5">
+              {/* Tagline/Original Title */}
+              {currentMovie.original_title && currentMovie.original_title !== currentMovie.title && (
+                <motion.p
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="text-red-500 text-xs md:text-sm font-semibold uppercase tracking-wider text-shadow"
+                >
+                  {currentMovie.original_title}
+                </motion.p>
+              )}
+
+              {/* Movie Title */}
               <motion.h1
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="text-4xl md:text-6xl lg:text-7xl font-bold text-white text-shadow-lg"
+                className="text-3xl md:text-4xl lg:text-5xl font-bold text-white text-shadow-lg leading-tight"
               >
                 {currentMovie.title}
               </motion.h1>
 
+              {/* Metadata Badges */}
               <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="flex items-center space-x-4"
+                className="flex items-center flex-wrap gap-3"
               >
-                <div className="flex items-center space-x-2">
-                  <span className="text-yellow-400 text-xl">★</span>
-                  <span className="text-white font-semibold">
+                {/* IMDb Rating Badge */}
+                <div className="flex items-center space-x-1.5 bg-red-500/20 backdrop-blur-sm border border-red-500/40 px-3 py-1.5 rounded">
+                  <span className="text-red-400 text-sm font-bold">IMDb</span>
+                  <span className="text-white font-semibold text-sm">
                     {currentMovie.vote_average.toFixed(1)}
                   </span>
                 </div>
-                {currentMovie.release_date && (
-                  <span className="text-gray-300">
-                    {new Date(currentMovie.release_date).getFullYear()}
-                  </span>
+
+                {/* Age Rating */}
+                {certification && (
+                  <div className="bg-white/10 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded">
+                    <span className="text-white font-semibold text-sm">{certification}</span>
+                  </div>
                 )}
+
+                {/* Year */}
+                {currentMovie.release_date && (
+                  <div className="bg-white/10 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded">
+                    <span className="text-white font-semibold text-sm">
+                      {new Date(currentMovie.release_date).getFullYear()}
+                    </span>
+                  </div>
+                )}
+
+                {/* Duration */}
+                {movieDetails?.runtime && (
+                  <div className="bg-white/10 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded">
+                    <span className="text-white font-semibold text-sm">
+                      {formatRuntime(movieDetails.runtime)}
+                    </span>
+                  </div>
+                )}
+
+                {/* Quality Badge (CAM example) */}
+                <div className="bg-white/10 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded">
+                  <span className="text-white font-semibold text-sm">CAM</span>
+                </div>
               </motion.div>
 
+              {/* Genre Tags */}
+              {genreNames.length > 0 && (
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.35 }}
+                  className="flex items-center flex-wrap gap-2"
+                >
+                  {genreNames.map((genre) => (
+                    <span
+                      key={genre}
+                      className="text-white text-[10px] md:text-xs font-medium px-2 py-1 bg-gray-800/50 backdrop-blur-sm rounded text-shadow"
+                    >
+                      {genre}
+                    </span>
+                  ))}
+                </motion.div>
+              )}
+
+              {/* Overview */}
               <motion.p
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="text-gray-200 text-base md:text-lg leading-relaxed text-shadow"
+                className="text-gray-200 text-xs md:text-sm lg:text-base leading-relaxed text-shadow max-w-2xl"
               >
-                {truncateText(currentMovie.overview, 200)}
+                {truncateText(currentMovie.overview, 250)}
               </motion.p>
 
+              {/* Action Buttons */}
               <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="flex flex-wrap gap-4"
+                className="flex flex-wrap gap-3 md:gap-4 pt-2"
               >
                 <Link
                   to={`/watch/${currentMovie.id}`}
-                  className="inline-flex items-center space-x-2 bg-white hover:bg-gray-200 text-gray-900 font-semibold px-8 py-3 rounded-lg transition-colors duration-200"
+                  className="inline-flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-500 text-white font-bold px-4 md:px-8 py-3 rounded-full transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   <FiPlay size={20} />
-                  <span>Play</span>
+                  <span className="hidden md:inline">Play</span>
                 </Link>
                 
+                <button
+                  onClick={handleToggleWatchlist}
+                  className={`inline-flex items-center justify-center space-x-2 font-semibold px-4 md:px-8 py-3 rounded-full backdrop-blur-sm transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 ${
+                    isInWatchlist
+                      ? 'bg-red-500/80 hover:bg-red-500 text-white border-2 border-red-400'
+                      : 'bg-gray-800/80 hover:bg-gray-700/80 text-white border-2 border-gray-600'
+                  }`}
+                >
+                  <FiHeart size={20} className={isInWatchlist ? 'fill-current' : ''} />
+                  <span className="hidden md:inline">{isInWatchlist ? 'In List' : 'My List'}</span>
+                </button>
+
                 <Link
                   to={`/movie/${currentMovie.id}`}
-                  className="inline-flex items-center space-x-2 bg-gray-800/80 hover:bg-gray-700/80 text-white font-semibold px-8 py-3 rounded-lg backdrop-blur-sm transition-colors duration-200"
+                  className="inline-flex items-center justify-center space-x-2 bg-gray-800/80 hover:bg-gray-700/80 text-white font-semibold px-4 md:px-8 py-3 rounded-full backdrop-blur-sm border-2 border-gray-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   <FiInfo size={20} />
-                  <span>More Info</span>
+                  <span className="hidden md:inline">More Info</span>
                 </Link>
               </motion.div>
             </div>
           </div>
 
-          {/* Navigation Dots */}
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2">
+          {/* Thumbnail Navigation */}
+          <div className="absolute bottom-48 right-8 hidden md:flex space-x-2 z-20">
+            {movies.slice(0, 5).map((movie, index) => (
+              <button
+                key={movie.id}
+                onClick={() => setCurrentIndex(index)}
+                className={`relative overflow-hidden rounded transition-all duration-300 ${
+                  index === currentIndex
+                    ? 'ring-4 ring-red-500 scale-110'
+                    : 'opacity-70 hover:opacity-100 hover:scale-105'
+                }`}
+              >
+                <img
+                  src={getImageUrl(movie.poster_path, 'poster', 'small')}
+                  alt={movie.title}
+                  className="w-16 h-24 object-cover"
+                />
+              </button>
+            ))}
+          </div>
+
+          {/* Mobile Navigation Dots */}
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex md:hidden space-x-2">
             {movies.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentIndex(index)}
                 className={`w-2 h-2 rounded-full transition-all duration-300 ${
                   index === currentIndex
-                    ? 'bg-white w-8'
+                    ? 'bg-red-500 w-8'
                     : 'bg-white/50 hover:bg-white/75'
                 }`}
                 aria-label={`Go to slide ${index + 1}`}

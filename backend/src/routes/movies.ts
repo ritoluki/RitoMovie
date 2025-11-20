@@ -15,6 +15,7 @@ import {
   getMovieReviews,
   getGenres,
   discoverMovies,
+  getMovieReleaseDates,
 } from '../controllers/movieController';
 
 const router = express.Router();
@@ -35,6 +36,7 @@ router.get('/:id/credits', getMovieCredits);
 router.get('/:id/similar', getSimilarMovies);
 router.get('/:id/recommendations', getMovieRecommendations);
 router.get('/:id/reviews', getMovieReviews);
+router.get('/:id/release-dates', getMovieReleaseDates);
 
 export default router;
 
