@@ -75,34 +75,51 @@ const Header = () => {
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
             {/* Search */}
-            <div className="relative">
-              {isSearchOpen ? (
-                <form onSubmit={handleSearch} className="flex items-center">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search movies..."
-                    className="w-48 md:w-64 px-4 py-2 bg-gray-800 text-white rounded-l-full focus:outline-none focus:ring-2 focus:ring-primary-600"
-                    autoFocus
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setIsSearchOpen(false)}
-                    className="px-3 py-2 bg-gray-800 text-gray-400 hover:text-white rounded-r-full"
+            <div className="relative w-10 h-10">
+              <AnimatePresence mode="wait">
+                {isSearchOpen ? (
+                  <motion.form
+                    key="search-form"
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: 'auto', opacity: 1 }}
+                    exit={{ width: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    onSubmit={handleSearch}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center overflow-hidden"
                   >
-                    <FiX size={20} />
-                  </button>
-                </form>
-              ) : (
-                <button
-                  onClick={() => setIsSearchOpen(true)}
-                  className="p-2 text-gray-300 hover:text-white transition-colors duration-200"
-                  aria-label="Search"
-                >
-                  <FiSearch size={22} />
-                </button>
-              )}
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search movies..."
+                      className="w-48 md:w-64 px-4 py-2 pr-12 bg-gray-800 text-white rounded-full border border-gray-600 focus:outline-none focus:border-gray-500 placeholder:text-gray-400"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSearchOpen(false);
+                        setSearchQuery('');
+                      }}
+                      className="absolute right-2 p-1.5 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-gray-700"
+                    >
+                      <FiX size={18} />
+                    </button>
+                  </motion.form>
+                ) : (
+                  <motion.button
+                    key="search-button"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setIsSearchOpen(true)}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-gray-300 hover:text-white transition-colors duration-200"
+                    aria-label="Search"
+                  >
+                    <FiSearch size={22} />
+                  </motion.button>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* User Menu */}
