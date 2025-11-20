@@ -10,18 +10,22 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.21.1",
     "@tanstack/react-query": "^5.14.2",
     "axios": "^1.6.2",
-    "zustand": "^4.4.7",
-    "framer-motion": "^10.16.16",
-    "react-hot-toast": "^2.4.1",
-    "react-icons": "^4.12.0",
-    "hls.js": "^1.4.14",
     "clsx": "^2.0.0",
-    "tailwind-merge": "^2.2.0"
+    "framer-motion": "^10.16.16",
+    "hls.js": "^1.4.14",
+    "i18next": "^25.6.3",
+    "i18next-browser-languagedetector": "^8.2.0",
+    "i18next-http-backend": "^3.0.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hot-toast": "^2.4.1",
+    "react-i18next": "^16.3.5",
+    "react-icons": "^4.12.0",
+    "react-router-dom": "^6.21.1",
+    "tailwind-merge": "^2.2.0",
+    "zustand": "^4.4.7"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
@@ -39,4 +43,3 @@
     "vite": "^5.0.8"
   }
 }
-

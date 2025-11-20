@@ -2,8 +2,10 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import middleware from 'i18next-http-middleware';
 import connectDB from './config/database';
 import errorHandler from './middleware/errorHandler';
+import i18next from './config/i18n';
 
 // Load environment variables
 dotenv.config();
@@ -22,6 +24,9 @@ app.use(cors({
 }));
 app.use(express.json()); // Body parser
 app.use(express.urlencoded({ extended: true }));
+
+// i18n middleware (must be after body parser)
+app.use(middleware.handle(i18next));
 
 // Serve static files
 app.use('/uploads', express.static('uploads'));

@@ -7,10 +7,12 @@ import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import { FiUser, FiMail, FiLock, FiList, FiClock, FiStar } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 const Profile = () => {
   const { user, updateProfile } = useAuth();
   const { watchlist, history, fetchWatchlist, fetchHistory } = useMovieStore();
+  const { t } = useTranslation();
   
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -26,7 +28,7 @@ const Profile = () => {
     e.preventDefault();
     
     if (!name || !email) {
-      toast.error('Please fill in all fields');
+      toast.error(t('auth.validation.fillAllFields'));
       return;
     }
 
@@ -44,19 +46,19 @@ const Profile = () => {
   const stats = [
     {
       icon: FiList,
-      label: 'Movies in Watchlist',
+      label: t('profile.moviesInWatchlist'),
       value: watchlist.length,
       color: 'text-blue-500',
     },
     {
       icon: FiClock,
-      label: 'Movies Watched',
+      label: t('profile.moviesWatched'),
       value: history.length,
       color: 'text-green-500',
     },
     {
       icon: FiStar,
-      label: 'Account Created',
+      label: t('profile.accountCreated'),
       value: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A',
       color: 'text-yellow-500',
     },
@@ -67,8 +69,8 @@ const Profile = () => {
       <div className="container mx-auto px-4 md:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Profile</h1>
-          <p className="text-gray-400">Manage your account settings</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{t('profile.title')}</h1>
+          <p className="text-gray-400">{t('profile.subtitle')}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -100,7 +102,7 @@ const Profile = () => {
                     size="sm"
                     onClick={() => setIsEditingProfile(true)}
                   >
-                    Edit Profile
+                    {t('profile.editProfile')}
                   </Button>
                 )}
               </div>
@@ -109,23 +111,23 @@ const Profile = () => {
                 <form onSubmit={handleUpdateProfile} className="space-y-6">
                   <Input
                     type="text"
-                    label="Name"
+                    label={t('profile.name')}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Your name"
+                    placeholder={t('profile.namePlaceholder')}
                   />
 
                   <Input
                     type="email"
-                    label="Email"
+                    label={t('profile.email')}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
+                    placeholder={t('profile.emailPlaceholder')}
                   />
 
                   <div className="flex items-center space-x-4">
                     <Button type="submit" variant="primary" isLoading={isLoading}>
-                      Save Changes
+                      {t('common.saveChanges')}
                     </Button>
                     <Button
                       type="button"
@@ -136,7 +138,7 @@ const Profile = () => {
                         setIsEditingProfile(false);
                       }}
                     >
-                      Cancel
+                      {t('common.cancel')}
                     </Button>
                   </div>
                 </form>
@@ -145,7 +147,7 @@ const Profile = () => {
                   <div className="flex items-center space-x-3">
                     <FiUser className="text-gray-400" size={20} />
                     <div>
-                      <p className="text-gray-400 text-sm">Full Name</p>
+                      <p className="text-gray-400 text-sm">{t('profile.fullName')}</p>
                       <p className="text-white font-medium">{user?.name}</p>
                     </div>
                   </div>
@@ -153,7 +155,7 @@ const Profile = () => {
                   <div className="flex items-center space-x-3">
                     <FiMail className="text-gray-400" size={20} />
                     <div>
-                      <p className="text-gray-400 text-sm">Email Address</p>
+                      <p className="text-gray-400 text-sm">{t('profile.emailAddress')}</p>
                       <p className="text-white font-medium">{user?.email}</p>
                     </div>
                   </div>
@@ -161,7 +163,7 @@ const Profile = () => {
                   <div className="flex items-center space-x-3">
                     <FiLock className="text-gray-400" size={20} />
                     <div>
-                      <p className="text-gray-400 text-sm">Password</p>
+                      <p className="text-gray-400 text-sm">{t('profile.password')}</p>
                       <p className="text-white font-medium">••••••••</p>
                     </div>
                   </div>
@@ -173,7 +175,7 @@ const Profile = () => {
           {/* Stats Card */}
           <div className="space-y-4">
             <Card className="p-6">
-              <h3 className="text-xl font-bold text-white mb-4">Statistics</h3>
+              <h3 className="text-xl font-bold text-white mb-4">{t('profile.statistics')}</h3>
               <div className="space-y-4">
                 {stats.map((stat, index) => {
                   const Icon = stat.icon;
@@ -195,19 +197,19 @@ const Profile = () => {
 
             {/* Quick Actions */}
             <Card className="p-6">
-              <h3 className="text-xl font-bold text-white mb-4">Quick Actions</h3>
+              <h3 className="text-xl font-bold text-white mb-4">{t('profile.quickActions')}</h3>
               <div className="space-y-2">
                 <Link
                   to="/my-list"
                   className="block w-full text-left px-4 py-3 bg-gray-900 hover:bg-gray-700 text-white rounded-lg transition-colors"
                 >
-                  View My List
+                  {t('profile.viewMyList')}
                 </Link>
                 <Link
                   to="/browse"
                   className="block w-full text-left px-4 py-3 bg-gray-900 hover:bg-gray-700 text-white rounded-lg transition-colors"
                 >
-                  Browse Movies
+                  {t('profile.browseMovies')}
                 </Link>
               </div>
             </Card>

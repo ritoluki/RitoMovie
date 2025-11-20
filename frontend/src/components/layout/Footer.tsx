@@ -1,19 +1,21 @@
 import { Link } from 'react-router-dom';
 import { FiGithub, FiTwitter, FiFacebook, FiInstagram } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const { t } = useTranslation();
 
   const footerLinks = {
     company: [
-      { name: 'About Us', path: '/about' },
-      { name: 'Contact', path: '/contact' },
-      { name: 'Careers', path: '/careers' },
+      { name: t('footer.aboutUs'), path: '/about' },
+      { name: t('footer.contact'), path: '/contact' },
+      { name: t('footer.careers'), path: '/careers' },
     ],
     support: [
-      { name: 'Help Center', path: '/help' },
-      { name: 'Terms of Service', path: '/terms' },
-      { name: 'Privacy Policy', path: '/privacy' },
+      { name: t('footer.helpCenter'), path: '/help' },
+      { name: t('footer.termsOfService'), path: '/terms' },
+      { name: t('footer.privacyPolicy'), path: '/privacy' },
     ],
     social: [
       { name: 'Facebook', icon: FiFacebook, url: '#' },
@@ -35,7 +37,7 @@ const Footer = () => {
               </div>
             </Link>
             <p className="text-gray-400 text-sm mb-4">
-              Your favorite destination for streaming the best movies and TV shows.
+              {t('footer.tagline')}
             </p>
             <div className="flex space-x-4">
               {footerLinks.social.map((social) => {
@@ -58,7 +60,7 @@ const Footer = () => {
 
           {/* Company Links */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Company</h3>
+            <h3 className="text-white font-semibold mb-4">{t('footer.company')}</h3>
             <ul className="space-y-2">
               {footerLinks.company.map((link) => (
                 <li key={link.path}>
@@ -75,7 +77,7 @@ const Footer = () => {
 
           {/* Support Links */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Support</h3>
+            <h3 className="text-white font-semibold mb-4">{t('footer.support')}</h3>
             <ul className="space-y-2">
               {footerLinks.support.map((link) => (
                 <li key={link.path}>
@@ -92,21 +94,21 @@ const Footer = () => {
 
           {/* Newsletter */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Stay Updated</h3>
+            <h3 className="text-white font-semibold mb-4">{t('footer.stayUpdated')}</h3>
             <p className="text-gray-400 text-sm mb-4">
-              Subscribe to our newsletter for updates.
+              {t('footer.newsletterText')}
             </p>
             <form className="flex">
               <input
                 type="email"
-                placeholder="Your email"
+                placeholder={t('footer.emailPlaceholder')}
                 className="flex-1 px-4 py-2 bg-gray-800 text-white text-sm rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary-600"
               />
               <button
                 type="submit"
                 className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm rounded-r-lg transition-colors duration-200"
               >
-                Subscribe
+                {t('footer.subscribe')}
               </button>
             </form>
           </div>
@@ -116,10 +118,10 @@ const Footer = () => {
         <div className="mt-8 pt-8 border-t border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              &copy; {currentYear} RitoMovie. All rights reserved.
+              &copy; {currentYear} RitoMovie. {t('footer.allRightsReserved')}
             </p>
             <p className="text-gray-400 text-sm mt-2 md:mt-0">
-              Built with ❤️ using React, TypeScript & Node.js
+              {t('footer.builtWith')}
             </p>
           </div>
         </div>

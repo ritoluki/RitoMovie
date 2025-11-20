@@ -25,6 +25,11 @@ axiosInstance.interceptors.request.use(
         console.error('Error parsing auth storage:', error);
       }
     }
+    
+    // Add Accept-Language header for i18n
+    const language = localStorage.getItem('i18nextLng') || 'en';
+    config.headers['Accept-Language'] = language;
+    
     return config;
   },
   (error) => {

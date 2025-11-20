@@ -1,0 +1,148 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "search": "Search",
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No",
+    "confirm": "Confirm",
+    "saveChanges": "Save Changes",
+    "backToHome": "← Back to Home"
+  },
+  "header": {
+    "home": "Home",
+    "movies": "Movies",
+    "myList": "My List",
+    "searchPlaceholder": "Search movies...",
+    "profile": "Profile",
+    "logout": "Logout",
+    "signIn": "Sign In"
+  },
+  "home": {
+    "trendingNow": "Trending Now",
+    "popularMovies": "Popular Movies",
+    "topRated": "Top Rated",
+    "actionMovies": "Action Movies",
+    "comedyMovies": "Comedy Movies",
+    "horrorMovies": "Horror Movies",
+    "romanceMovies": "Romance Movies"
+  },
+  "auth": {
+    "welcomeBack": "Welcome Back",
+    "signInToContinue": "Sign in to continue watching",
+    "email": "Email",
+    "emailPlaceholder": "your@email.com",
+    "password": "Password",
+    "passwordPlaceholder": "••••••••",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "dontHaveAccount": "Don't have an account?",
+    "signUp": "Sign up",
+    "createAccount": "Create Account",
+    "joinUs": "Join us and start watching",
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "John Doe",
+    "confirmPassword": "Confirm Password",
+    "agreeToTerms": "I agree to the",
+    "termsOfService": "Terms of Service",
+    "and": "and",
+    "privacyPolicy": "Privacy Policy",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign In",
+    "createAccountButton": "Create Account",
+    "validation": {
+      "emailRequired": "Email is required",
+      "emailInvalid": "Email is invalid",
+      "passwordRequired": "Password is required",
+      "passwordMinLength": "Password must be at least 6 characters",
+      "nameRequired": "Name is required",
+      "nameMinLength": "Name must be at least 2 characters",
+      "confirmPasswordRequired": "Please confirm your password",
+      "passwordsNotMatch": "Passwords do not match",
+      "fillAllFields": "Please fill in all fields"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "subtitle": "Manage your account settings",
+    "editProfile": "Edit Profile",
+    "fullName": "Full Name",
+    "emailAddress": "Email Address",
+    "password": "Password",
+    "statistics": "Statistics",
+    "moviesInWatchlist": "Movies in Watchlist",
+    "moviesWatched": "Movies Watched",
+    "accountCreated": "Account Created",
+    "quickActions": "Quick Actions",
+    "viewMyList": "View My List",
+    "browseMovies": "Browse Movies",
+    "name": "Name",
+    "namePlaceholder": "Your name",
+    "email": "Email",
+    "emailPlaceholder": "your@email.com"
+  },
+  "movie": {
+    "watchNow": "Watch Now",
+    "addToList": "Add to List",
+    "removeFromList": "Remove from List",
+    "rating": "Rating",
+    "releaseDate": "Release Date",
+    "runtime": "Runtime",
+    "genres": "Genres",
+    "overview": "Overview",
+    "cast": "Cast",
+    "similarMovies": "Similar Movies",
+    "reviews": "Reviews",
+    "minutes": "minutes"
+  },
+  "footer": {
+    "tagline": "Your favorite destination for streaming the best movies and TV shows.",
+    "company": "Company",
+    "aboutUs": "About Us",
+    "contact": "Contact",
+    "careers": "Careers",
+    "support": "Support",
+    "helpCenter": "Help Center",
+    "termsOfService": "Terms of Service",
+    "privacyPolicy": "Privacy Policy",
+    "stayUpdated": "Stay Updated",
+    "newsletterText": "Subscribe to our newsletter for updates.",
+    "emailPlaceholder": "Your email",
+    "subscribe": "Subscribe",
+    "allRightsReserved": "All rights reserved.",
+    "builtWith": "Built with ❤️ using React, TypeScript & Node.js"
+  },
+  "browse": {
+    "title": "Browse Movies",
+    "filterByGenre": "Filter by Genre",
+    "allGenres": "All Genres",
+    "sortBy": "Sort By",
+    "popularity": "Popularity",
+    "releaseDate": "Release Date",
+    "rating": "Rating",
+    "noMoviesFound": "No movies found"
+  },
+  "myList": {
+    "title": "My List",
+    "subtitle": "Your saved movies and shows",
+    "emptyList": "Your list is empty",
+    "addMovies": "Start adding movies to your list"
+  },
+  "watch": {
+    "backToMovie": "Back to Movie",
+    "episodes": "Episodes",
+    "season": "Season"
+  },
+  "errors": {
+    "somethingWentWrong": "Something went wrong",
+    "pageNotFound": "Page not found",
+    "goHome": "Go Home",
+    "networkError": "Network error. Please check your connection.",
+    "serverError": "Server error. Please try again later."
+  }
+}
+

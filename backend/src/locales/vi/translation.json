@@ -1,0 +1,49 @@
+{
+  "auth": {
+    "invalidCredentials": "Email hoặc mật khẩu không hợp lệ",
+    "userNotFound": "Không tìm thấy người dùng",
+    "emailExists": "Email đã tồn tại",
+    "tokenExpired": "Token đã hết hạn",
+    "tokenInvalid": "Token không hợp lệ",
+    "unauthorized": "Truy cập không được phép",
+    "loginSuccess": "Đăng nhập thành công",
+    "registerSuccess": "Đăng ký thành công",
+    "logoutSuccess": "Đăng xuất thành công",
+    "profileUpdated": "Cập nhật hồ sơ thành công"
+  },
+  "validation": {
+    "required": "{{field}} là bắt buộc",
+    "invalidEmail": "Định dạng email không hợp lệ",
+    "minLength": "{{field}} phải có ít nhất {{min}} ký tự",
+    "maxLength": "{{field}} không được vượt quá {{max}} ký tự",
+    "passwordMismatch": "Mật khẩu không khớp",
+    "invalidFormat": "Định dạng {{field}} không hợp lệ"
+  },
+  "movie": {
+    "notFound": "Không tìm thấy phim",
+    "addedToWatchlist": "Đã thêm phim vào danh sách",
+    "removedFromWatchlist": "Đã xóa phim khỏi danh sách",
+    "alreadyInWatchlist": "Phim đã có trong danh sách",
+    "ratingAdded": "Đã thêm đánh giá thành công",
+    "ratingUpdated": "Đã cập nhật đánh giá thành công"
+  },
+  "user": {
+    "notFound": "Không tìm thấy người dùng",
+    "updateSuccess": "Cập nhật người dùng thành công",
+    "deleteSuccess": "Xóa người dùng thành công",
+    "accessDenied": "Truy cập bị từ chối"
+  },
+  "server": {
+    "internalError": "Lỗi máy chủ nội bộ",
+    "notFound": "Không tìm thấy tài nguyên",
+    "badRequest": "Yêu cầu không hợp lệ",
+    "forbidden": "Bị cấm",
+    "serviceUnavailable": "Dịch vụ tạm thời không khả dụng"
+  },
+  "common": {
+    "success": "Thao tác thành công",
+    "failed": "Thao tác thất bại",
+    "processing": "Đang xử lý yêu cầu"
+  }
+}
+

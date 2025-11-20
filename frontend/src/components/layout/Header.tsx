@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FiSearch, FiUser, FiMenu, FiX, FiLogOut, FiList, FiSettings } from 'react-icons/fi';
 import { useAuth } from '@/hooks/useAuth';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -13,6 +15,7 @@ const Header = () => {
   
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -39,9 +42,9 @@ const Header = () => {
   };
 
   const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Movies', path: '/browse' },
-    { name: 'My List', path: '/my-list' },
+    { name: t('header.home'), path: '/' },
+    { name: t('header.movies'), path: '/browse' },
+    { name: t('header.myList'), path: '/my-list' },
   ];
 
   return (
@@ -73,7 +76,10 @@ const Header = () => {
           </nav>
 
           {/* Right Side Actions */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 md:space-x-4">
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+            
             {/* Search */}
             <div className="relative w-10 h-10">
               <AnimatePresence mode="wait">
@@ -91,7 +97,7 @@ const Header = () => {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search movies..."
+                      placeholder={t('header.searchPlaceholder')}
                       className="w-48 md:w-64 px-4 py-2 pr-12 bg-gray-800 text-white rounded-full border border-gray-600 focus:outline-none focus:border-gray-500 placeholder:text-gray-400"
                       autoFocus
                     />
@@ -161,7 +167,7 @@ const Header = () => {
                         className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
                       >
                         <FiSettings size={18} />
-                        <span>Profile</span>
+                        <span>{t('header.profile')}</span>
                       </Link>
                       
                       <Link
@@ -170,7 +176,7 @@ const Header = () => {
                         className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
                       >
                         <FiList size={18} />
-                        <span>My List</span>
+                        <span>{t('header.myList')}</span>
                       </Link>
                       
                       <button
@@ -178,7 +184,7 @@ const Header = () => {
                         className="flex items-center space-x-2 w-full px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
                       >
                         <FiLogOut size={18} />
-                        <span>Logout</span>
+                        <span>{t('header.logout')}</span>
                       </button>
                     </motion.div>
                   )}
@@ -189,7 +195,7 @@ const Header = () => {
                 to="/login"
                 className="hidden md:block btn-primary text-sm"
               >
-                Sign In
+                {t('header.signIn')}
               </Link>
             )}
 
@@ -230,7 +236,7 @@ const Header = () => {
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="text-primary-600 hover:text-primary-500 transition-colors duration-200 font-medium"
                   >
-                    Sign In
+                    {t('header.signIn')}
                   </Link>
                 )}
               </nav>

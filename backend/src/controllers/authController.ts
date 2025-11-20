@@ -3,17 +3,21 @@ import User from '../models/User';
 import asyncHandler from '../utils/asyncHandler';
 import ApiError from '../utils/ApiError';
 
+// Type for i18n request with translation function
+type TFunction = (key: string, options?: Record<string, unknown>) => string;
+
 // @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
 export const register = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
     const { name, email, password } = req.body;
+    const t: TFunction = (req as unknown as { t: TFunction }).t || ((key: string) => key);
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      throw new ApiError(400, 'User already exists with this email');
+      throw new ApiError(400, t('auth.emailExists'));
     }
 
     // Create user
@@ -28,7 +32,7 @@ export const register = asyncHandler(
 
     res.status(201).json({
       success: true,
-      message: 'User registered successfully',
+      message: t('auth.registerSuccess'),
       data: {
         user: {
           _id: user._id,
@@ -51,24 +55,25 @@ export const register = asyncHandler(
 export const login = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
     const { email, password } = req.body;
+    const t: TFunction = (req as unknown as { t: TFunction }).t || ((key: string) => key);
 
     // Validate email & password
     if (!email || !password) {
-      throw new ApiError(400, 'Please provide email and password');
+      throw new ApiError(400, t('validation.required', { field: 'Email and password' }));
     }
 
     // Check for user (include password for comparison)
     const user = await User.findOne({ email }).select('+password');
 
     if (!user) {
-      throw new ApiError(401, 'Invalid credentials');
+      throw new ApiError(401, t('auth.invalidCredentials'));
     }
 
     // Check if password matches
     const isMatch = await user.matchPassword(password);
 
     if (!isMatch) {
-      throw new ApiError(401, 'Invalid credentials');
+      throw new ApiError(401, t('auth.invalidCredentials'));
     }
 
     // Generate token
@@ -76,7 +81,7 @@ export const login = asyncHandler(
 
     res.status(200).json({
       success: true,
-      message: 'Login successful',
+      message: t('auth.loginSuccess'),
       data: {
         user: {
           _id: user._id,
@@ -112,6 +117,8 @@ export const getMe = asyncHandler(
 // @access  Private
 export const updateProfile = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
+    const t: TFunction = (req as unknown as { t: TFunction }).t || ((key: string) => key);
+    
     const fieldsToUpdate = {
       name: req.body.name,
       email: req.body.email,
@@ -132,7 +139,7 @@ export const updateProfile = asyncHandler(
 
     res.status(200).json({
       success: true,
-      message: 'Profile updated successfully',
+      message: t('auth.profileUpdated'),
       data: user,
     });
   }
@@ -144,22 +151,23 @@ export const updateProfile = asyncHandler(
 export const updatePassword = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
     const { currentPassword, newPassword } = req.body;
+    const t: TFunction = (req as unknown as { t: TFunction }).t || ((key: string) => key);
 
     if (!currentPassword || !newPassword) {
-      throw new ApiError(400, 'Please provide current and new password');
+      throw new ApiError(400, t('validation.required', { field: 'Current and new password' }));
     }
 
     const user = await User.findById(req.user.id).select('+password');
 
     if (!user) {
-      throw new ApiError(404, 'User not found');
+      throw new ApiError(404, t('user.notFound'));
     }
 
     // Check current password
     const isMatch = await user.matchPassword(currentPassword);
 
     if (!isMatch) {
-      throw new ApiError(401, 'Current password is incorrect');
+      throw new ApiError(401, t('auth.invalidCredentials'));
     }
 
     user.password = newPassword;
@@ -169,7 +177,7 @@ export const updatePassword = asyncHandler(
 
     res.status(200).json({
       success: true,
-      message: 'Password updated successfully',
+      message: t('auth.profileUpdated'),
       data: { token },
     });
   }

@@ -1,0 +1,148 @@
+{
+  "common": {
+    "loading": "Đang tải...",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "edit": "Chỉnh sửa",
+    "delete": "Xóa",
+    "search": "Tìm kiếm",
+    "close": "Đóng",
+    "yes": "Có",
+    "no": "Không",
+    "confirm": "Xác nhận",
+    "saveChanges": "Lưu thay đổi",
+    "backToHome": "← Quay lại Trang chủ"
+  },
+  "header": {
+    "home": "Trang chủ",
+    "movies": "Phim",
+    "myList": "Danh sách của tôi",
+    "searchPlaceholder": "Tìm kiếm phim...",
+    "profile": "Hồ sơ",
+    "logout": "Đăng xuất",
+    "signIn": "Đăng nhập"
+  },
+  "home": {
+    "trendingNow": "Xu hướng hiện nay",
+    "popularMovies": "Phim phổ biến",
+    "topRated": "Đánh giá cao",
+    "actionMovies": "Phim hành động",
+    "comedyMovies": "Phim hài",
+    "horrorMovies": "Phim kinh dị",
+    "romanceMovies": "Phim lãng mạn"
+  },
+  "auth": {
+    "welcomeBack": "Chào mừng trở lại",
+    "signInToContinue": "Đăng nhập để tiếp tục xem",
+    "email": "Email",
+    "emailPlaceholder": "email@cua-ban.com",
+    "password": "Mật khẩu",
+    "passwordPlaceholder": "••••••••",
+    "rememberMe": "Ghi nhớ đăng nhập",
+    "forgotPassword": "Quên mật khẩu?",
+    "dontHaveAccount": "Chưa có tài khoản?",
+    "signUp": "Đăng ký",
+    "createAccount": "Tạo tài khoản",
+    "joinUs": "Tham gia và bắt đầu xem",
+    "fullName": "Họ và tên",
+    "fullNamePlaceholder": "Nguyễn Văn A",
+    "confirmPassword": "Xác nhận mật khẩu",
+    "agreeToTerms": "Tôi đồng ý với",
+    "termsOfService": "Điều khoản dịch vụ",
+    "and": "và",
+    "privacyPolicy": "Chính sách bảo mật",
+    "alreadyHaveAccount": "Đã có tài khoản?",
+    "signIn": "Đăng nhập",
+    "createAccountButton": "Tạo tài khoản",
+    "validation": {
+      "emailRequired": "Email là bắt buộc",
+      "emailInvalid": "Email không hợp lệ",
+      "passwordRequired": "Mật khẩu là bắt buộc",
+      "passwordMinLength": "Mật khẩu phải có ít nhất 6 ký tự",
+      "nameRequired": "Tên là bắt buộc",
+      "nameMinLength": "Tên phải có ít nhất 2 ký tự",
+      "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
+      "passwordsNotMatch": "Mật khẩu không khớp",
+      "fillAllFields": "Vui lòng điền đầy đủ thông tin"
+    }
+  },
+  "profile": {
+    "title": "Hồ sơ",
+    "subtitle": "Quản lý cài đặt tài khoản",
+    "editProfile": "Chỉnh sửa hồ sơ",
+    "fullName": "Họ và tên",
+    "emailAddress": "Địa chỉ Email",
+    "password": "Mật khẩu",
+    "statistics": "Thống kê",
+    "moviesInWatchlist": "Phim trong danh sách",
+    "moviesWatched": "Phim đã xem",
+    "accountCreated": "Tài khoản được tạo",
+    "quickActions": "Thao tác nhanh",
+    "viewMyList": "Xem danh sách của tôi",
+    "browseMovies": "Duyệt phim",
+    "name": "Tên",
+    "namePlaceholder": "Tên của bạn",
+    "email": "Email",
+    "emailPlaceholder": "email@cua-ban.com"
+  },
+  "movie": {
+    "watchNow": "Xem ngay",
+    "addToList": "Thêm vào danh sách",
+    "removeFromList": "Xóa khỏi danh sách",
+    "rating": "Đánh giá",
+    "releaseDate": "Ngày phát hành",
+    "runtime": "Thời lượng",
+    "genres": "Thể loại",
+    "overview": "Tổng quan",
+    "cast": "Diễn viên",
+    "similarMovies": "Phim tương tự",
+    "reviews": "Nhận xét",
+    "minutes": "phút"
+  },
+  "footer": {
+    "tagline": "Điểm đến yêu thích của bạn để xem những bộ phim và chương trình truyền hình hay nhất.",
+    "company": "Công ty",
+    "aboutUs": "Về chúng tôi",
+    "contact": "Liên hệ",
+    "careers": "Tuyển dụng",
+    "support": "Hỗ trợ",
+    "helpCenter": "Trung tâm trợ giúp",
+    "termsOfService": "Điều khoản dịch vụ",
+    "privacyPolicy": "Chính sách bảo mật",
+    "stayUpdated": "Cập nhật tin tức",
+    "newsletterText": "Đăng ký nhận bản tin để cập nhật thông tin.",
+    "emailPlaceholder": "Email của bạn",
+    "subscribe": "Đăng ký",
+    "allRightsReserved": "Tất cả quyền được bảo lưu.",
+    "builtWith": "Được xây dựng với ❤️ bằng React, TypeScript & Node.js"
+  },
+  "browse": {
+    "title": "Duyệt phim",
+    "filterByGenre": "Lọc theo thể loại",
+    "allGenres": "Tất cả thể loại",
+    "sortBy": "Sắp xếp theo",
+    "popularity": "Phổ biến",
+    "releaseDate": "Ngày phát hành",
+    "rating": "Đánh giá",
+    "noMoviesFound": "Không tìm thấy phim"
+  },
+  "myList": {
+    "title": "Danh sách của tôi",
+    "subtitle": "Phim và chương trình đã lưu của bạn",
+    "emptyList": "Danh sách của bạn trống",
+    "addMovies": "Bắt đầu thêm phim vào danh sách"
+  },
+  "watch": {
+    "backToMovie": "Quay lại phim",
+    "episodes": "Tập",
+    "season": "Mùa"
+  },
+  "errors": {
+    "somethingWentWrong": "Đã xảy ra lỗi",
+    "pageNotFound": "Không tìm thấy trang",
+    "goHome": "Về trang chủ",
+    "networkError": "Lỗi kết nối. Vui lòng kiểm tra kết nối của bạn.",
+    "serverError": "Lỗi máy chủ. Vui lòng thử lại sau."
+  }
+}
+

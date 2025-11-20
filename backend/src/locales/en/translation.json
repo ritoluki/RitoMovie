@@ -1,0 +1,49 @@
+{
+  "auth": {
+    "invalidCredentials": "Invalid email or password",
+    "userNotFound": "User not found",
+    "emailExists": "Email already exists",
+    "tokenExpired": "Token has expired",
+    "tokenInvalid": "Invalid token",
+    "unauthorized": "Unauthorized access",
+    "loginSuccess": "Login successful",
+    "registerSuccess": "Registration successful",
+    "logoutSuccess": "Logout successful",
+    "profileUpdated": "Profile updated successfully"
+  },
+  "validation": {
+    "required": "{{field}} is required",
+    "invalidEmail": "Invalid email format",
+    "minLength": "{{field}} must be at least {{min}} characters",
+    "maxLength": "{{field}} must be at most {{max}} characters",
+    "passwordMismatch": "Passwords do not match",
+    "invalidFormat": "Invalid {{field}} format"
+  },
+  "movie": {
+    "notFound": "Movie not found",
+    "addedToWatchlist": "Movie added to watchlist",
+    "removedFromWatchlist": "Movie removed from watchlist",
+    "alreadyInWatchlist": "Movie already in watchlist",
+    "ratingAdded": "Rating added successfully",
+    "ratingUpdated": "Rating updated successfully"
+  },
+  "user": {
+    "notFound": "User not found",
+    "updateSuccess": "User updated successfully",
+    "deleteSuccess": "User deleted successfully",
+    "accessDenied": "Access denied"
+  },
+  "server": {
+    "internalError": "Internal server error",
+    "notFound": "Resource not found",
+    "badRequest": "Bad request",
+    "forbidden": "Forbidden",
+    "serviceUnavailable": "Service temporarily unavailable"
+  },
+  "common": {
+    "success": "Operation successful",
+    "failed": "Operation failed",
+    "processing": "Processing request"
+  }
+}
+

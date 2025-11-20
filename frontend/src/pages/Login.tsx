@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +15,7 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
 
   const from = (location.state as any)?.from?.pathname || '/';
 
@@ -21,15 +23,15 @@ const Login = () => {
     const newErrors: { email?: string; password?: string } = {};
 
     if (!email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('auth.validation.emailRequired');
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Email is invalid';
+      newErrors.email = t('auth.validation.emailInvalid');
     }
 
     if (!password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t('auth.validation.passwordRequired');
     } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = t('auth.validation.passwordMinLength');
     }
 
     setErrors(newErrors);
@@ -69,14 +71,14 @@ const Login = () => {
 
         {/* Form Card */}
         <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-gray-700">
-          <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
-          <p className="text-gray-400 mb-8">Sign in to continue watching</p>
+          <h2 className="text-3xl font-bold text-white mb-2">{t('auth.welcomeBack')}</h2>
+          <p className="text-gray-400 mb-8">{t('auth.signInToContinue')}</p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <Input
               type="email"
-              label="Email"
-              placeholder="your@email.com"
+              label={t('auth.email')}
+              placeholder={t('auth.emailPlaceholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               error={errors.email}
@@ -85,8 +87,8 @@ const Login = () => {
 
             <Input
               type="password"
-              label="Password"
-              placeholder="••••••••"
+              label={t('auth.password')}
+              placeholder={t('auth.passwordPlaceholder')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               error={errors.password}
@@ -99,14 +101,14 @@ const Login = () => {
                   type="checkbox"
                   className="w-4 h-4 text-primary-600 bg-gray-700 border-gray-600 rounded focus:ring-primary-600"
                 />
-                <span className="ml-2 text-sm text-gray-300">Remember me</span>
+                <span className="ml-2 text-sm text-gray-300">{t('auth.rememberMe')}</span>
               </label>
 
               <Link
                 to="/forgot-password"
                 className="text-sm text-primary-600 hover:text-primary-500 transition-colors"
               >
-                Forgot password?
+                {t('auth.forgotPassword')}
               </Link>
             </div>
 
@@ -117,18 +119,18 @@ const Login = () => {
               className="w-full"
               isLoading={isLoading}
             >
-              Sign In
+              {t('auth.signIn')}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-gray-400">
-              Don't have an account?{' '}
+              {t('auth.dontHaveAccount')}{' '}
               <Link
                 to="/register"
                 className="text-primary-600 hover:text-primary-500 font-semibold transition-colors"
               >
-                Sign up
+                {t('auth.signUp')}
               </Link>
             </p>
           </div>
@@ -140,7 +142,7 @@ const Login = () => {
             to="/"
             className="text-gray-400 hover:text-white transition-colors text-sm"
           >
-            ← Back to Home
+            {t('common.backToHome')}
           </Link>
         </div>
       </motion.div>

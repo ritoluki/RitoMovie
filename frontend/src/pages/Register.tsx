@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -20,6 +21,7 @@ const Register = () => {
 
   const { register } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const validate = (): boolean => {
     const newErrors: {
@@ -30,27 +32,27 @@ const Register = () => {
     } = {};
 
     if (!name) {
-      newErrors.name = 'Name is required';
+      newErrors.name = t('auth.validation.nameRequired');
     } else if (name.length < 2) {
-      newErrors.name = 'Name must be at least 2 characters';
+      newErrors.name = t('auth.validation.nameMinLength');
     }
 
     if (!email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('auth.validation.emailRequired');
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Email is invalid';
+      newErrors.email = t('auth.validation.emailInvalid');
     }
 
     if (!password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t('auth.validation.passwordRequired');
     } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = t('auth.validation.passwordMinLength');
     }
 
     if (!confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = t('auth.validation.confirmPasswordRequired');
     } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = t('auth.validation.passwordsNotMatch');
     }
 
     setErrors(newErrors);
@@ -90,14 +92,14 @@ const Register = () => {
 
         {/* Form Card */}
         <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-gray-700">
-          <h2 className="text-3xl font-bold text-white mb-2">Create Account</h2>
-          <p className="text-gray-400 mb-8">Join us and start watching</p>
+          <h2 className="text-3xl font-bold text-white mb-2">{t('auth.createAccount')}</h2>
+          <p className="text-gray-400 mb-8">{t('auth.joinUs')}</p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <Input
               type="text"
-              label="Full Name"
-              placeholder="John Doe"
+              label={t('auth.fullName')}
+              placeholder={t('auth.fullNamePlaceholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               error={errors.name}
@@ -106,8 +108,8 @@ const Register = () => {
 
             <Input
               type="email"
-              label="Email"
-              placeholder="your@email.com"
+              label={t('auth.email')}
+              placeholder={t('auth.emailPlaceholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               error={errors.email}
@@ -116,8 +118,8 @@ const Register = () => {
 
             <Input
               type="password"
-              label="Password"
-              placeholder="••••••••"
+              label={t('auth.password')}
+              placeholder={t('auth.passwordPlaceholder')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               error={errors.password}
@@ -126,8 +128,8 @@ const Register = () => {
 
             <Input
               type="password"
-              label="Confirm Password"
-              placeholder="••••••••"
+              label={t('auth.confirmPassword')}
+              placeholder={t('auth.passwordPlaceholder')}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               error={errors.confirmPassword}
@@ -141,13 +143,13 @@ const Register = () => {
                 required
               />
               <label className="ml-2 text-sm text-gray-300">
-                I agree to the{' '}
+                {t('auth.agreeToTerms')}{' '}
                 <Link to="/terms" className="text-primary-600 hover:text-primary-500">
-                  Terms of Service
+                  {t('auth.termsOfService')}
                 </Link>{' '}
-                and{' '}
+                {t('auth.and')}{' '}
                 <Link to="/privacy" className="text-primary-600 hover:text-primary-500">
-                  Privacy Policy
+                  {t('auth.privacyPolicy')}
                 </Link>
               </label>
             </div>
@@ -159,18 +161,18 @@ const Register = () => {
               className="w-full"
               isLoading={isLoading}
             >
-              Create Account
+              {t('auth.createAccountButton')}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-gray-400">
-              Already have an account?{' '}
+              {t('auth.alreadyHaveAccount')}{' '}
               <Link
                 to="/login"
                 className="text-primary-600 hover:text-primary-500 font-semibold transition-colors"
               >
-                Sign in
+                {t('auth.signIn')}
               </Link>
             </p>
           </div>
@@ -182,7 +184,7 @@ const Register = () => {
             to="/"
             className="text-gray-400 hover:text-white transition-colors text-sm"
           >
-            ← Back to Home
+            {t('common.backToHome')}
           </Link>
         </div>
       </motion.div>
