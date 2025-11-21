@@ -2,6 +2,7 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 import middleware from 'i18next-http-middleware';
 import connectDB from './config/database';
 import errorHandler from './middleware/errorHandler';
@@ -78,12 +79,29 @@ app.use('/api/movies', movieRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/users', userRoutes);
 
-// Health check
+// Health check with database status
 app.get('/health', (_req: Request, res: Response) => {
-  res.status(200).json({
-    success: true,
-    message: 'Server is healthy',
+  const dbStatus = mongoose.connection.readyState;
+  const dbStates: Record<number, string> = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting'
+  };
+
+  const isHealthy = dbStatus === 1; // 1 = connected
+
+  res.status(isHealthy ? 200 : 503).json({
+    success: isHealthy,
+    message: isHealthy ? 'Server is healthy' : 'Server is unhealthy',
     timestamp: new Date().toISOString(),
+    database: {
+      status: dbStates[dbStatus] || 'unknown',
+      readyState: dbStatus,
+      connected: isHealthy,
+      host: mongoose.connection.host || 'N/A',
+      name: mongoose.connection.name || 'N/A',
+    },
   });
 });
 

@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import i18next from '../config/i18n';
 
 interface CustomError extends Error {
   statusCode?: number;
@@ -24,7 +25,58 @@ const errorHandler = (
   console.error('Error:', err);
 
   // Get translation function from request
-  const t: TFunction = (req as unknown as { t: TFunction }).t || ((key: string) => key);
+  // i18next-http-middleware attaches 't' to req object
+  // Fallback to i18next directly if req.t is not available
+  const getTranslationFunction = (): TFunction => {
+    // Try to get from req.t (injected by i18next-http-middleware)
+    if ((req as any).t) {
+      return (req as any).t;
+    }
+    
+    // Fallback: use i18next directly with language from Accept-Language header
+    const language = req.headers['accept-language']?.split(',')[0]?.split('-')[0] || 'en';
+    return (key: string, options?: Record<string, unknown>) => {
+      try {
+        return i18next.t(key, { lng: language, ...options });
+      } catch {
+        return key;
+      }
+    };
+  };
+
+  const t = getTranslationFunction();
+
+  // Helper function to translate message if it's a translation key
+  const translateMessage = (msg: string): string => {
+    if (!msg) return msg;
+    
+    // Check if message looks like a translation key (contains dots like 'auth.invalidCredentials')
+    if (msg.includes('.')) {
+      try {
+        const translated = t(msg);
+        // If translation works and returns different value, use it
+        if (translated && translated !== msg) {
+          return translated;
+        }
+        // If translation returns the same key, try with default language
+        const defaultTranslated = i18next.t(msg, { lng: 'en' });
+        if (defaultTranslated && defaultTranslated !== msg) {
+          return defaultTranslated;
+        }
+        // Fallback: return message as is (might be a key that doesn't exist)
+        return msg;
+      } catch (error) {
+        // If translation fails, try direct i18next call
+        try {
+          const directTranslated = i18next.t(msg, { lng: 'en' });
+          return directTranslated !== msg ? directTranslated : msg;
+        } catch {
+          return msg;
+        }
+      }
+    }
+    return msg;
+  };
 
   // Mongoose bad ObjectId
   if (err.name === 'CastError') {
@@ -57,9 +109,12 @@ const errorHandler = (
     error = { ...error, statusCode: 401, message };
   }
 
+  // Translate the error message if it's a translation key
+  const finalMessage = translateMessage(error.message || t('server.internalError'));
+
   res.status(error.statusCode || 500).json({
     success: false,
-    message: error.message || t('server.internalError'),
+    message: finalMessage,
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 };
