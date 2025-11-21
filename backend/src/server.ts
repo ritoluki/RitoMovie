@@ -34,7 +34,7 @@ app.use(cors({
     if (!origin) {
       return callback(null, true);
     }
-    
+
     // Check if origin is in allowed list
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -73,11 +73,13 @@ import authRoutes from './routes/auth';
 import movieRoutes from './routes/movies';
 import videoRoutes from './routes/videos';
 import userRoutes from './routes/users';
+import commentRoutes from './routes/comments';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/movies', movieRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/comments', commentRoutes);
 
 // Health check with database status
 app.get('/health', (_req: Request, res: Response) => {

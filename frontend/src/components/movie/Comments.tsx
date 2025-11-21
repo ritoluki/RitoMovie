@@ -1,193 +1,586 @@
-import { useState } from 'react';
-
-interface Comment {
-  id: string;
-  user: {
-    name: string;
-    avatar: string;
-  };
-  text: string;
-  timestamp: string;
-  rating?: number;
-  likes: number;
-  isVerified?: boolean;
-}
+import { useState, useRef, useEffect } from 'react';
+import { AiOutlineLike, AiFillLike, AiOutlineDislike, AiFillDislike } from 'react-icons/ai';
+import { useAuthStore } from '../../store/authStore';
+import {
+  useMovieComments,
+  useCreateComment,
+  useLikeComment,
+  useDislikeComment,
+  useCommentReplies,
+} from '../../hooks/useComments';
+import LoadingSpinner from '../common/LoadingSpinner';
+import { Comment } from '../../services/commentService';
 
 interface CommentsProps {
   movieId: number;
 }
 
-// Mock comments data
-const mockComments: Comment[] = [
-  {
-    id: '1',
-    user: {
-      name: 'nhtanf',
-      avatar: 'https://i.pravatar.cc/150?img=1',
-    },
-    text: 'Thiết sự đẹn doạn Ah Jin sống trong hạnh phúc 1 năm đỗ tói ko dám xem tiếp các đông phim a',
-    timestamp: '26 phút trước',
-    likes: 0,
-    isVerified: true,
-  },
-  {
-    id: '2',
-    user: {
-      name: 'tỉu bíu',
-      avatar: 'https://i.pravatar.cc/150?img=2',
-    },
-    text: 'ở chỗ ai có 1 , thảu sử đối mà sẽm hầu đủ nhất của lần huấn',
-    timestamp: '1 giờ trước',
-    rating: 10,
-    likes: 4,
-  },
-  {
-    id: '3',
-    user: {
-      name: 'nhâu nhâu',
-      avatar: 'https://i.pravatar.cc/150?img=3',
-    },
-    text: 'Phim hay quá, diễn xuất tuyệt vời. Mong có thêm nhiều phim hay như thế này!',
-    timestamp: '2 giờ trước',
-    rating: 9,
-    likes: 12,
-  },
-];
+// Format time ago
+const formatTimeAgo = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-const Comments = ({ movieId }: CommentsProps) => {
-  const [activeTab, setActiveTab] = useState<'comments' | 'ratings'>('comments');
-  const [commentText, setCommentText] = useState('');
-  const [isSpoiler, setIsSpoiler] = useState(false);
+  if (seconds < 60) return 'Vừa xong';
+  if (seconds < 3600) return `${Math.floor(seconds / 60)} phút trước`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)} giờ trước`;
+  if (seconds < 2592000) return `${Math.floor(seconds / 86400)} ngày trước`;
+  if (seconds < 31536000) return `${Math.floor(seconds / 2592000)} tháng trước`;
+  return `${Math.floor(seconds / 31536000)} năm trước`;
+};
 
-  const handleSubmit = (e: React.FormEvent) => {
+// Reply Item Component
+const ReplyItem = ({
+  reply,
+  onLike,
+  onDislike,
+  currentUserId,
+  onReplySubmit,
+  isFormActive,
+  onFormToggle,
+}: {
+  reply: Comment;
+  onLike: (id: string) => void;
+  onDislike: (id: string) => void;
+  currentUserId?: string;
+  onReplySubmit: (parentId: string, text: string) => void;
+  isFormActive: boolean;
+  onFormToggle: (replyId: string) => void;
+}) => {
+  const [replyText, setReplyText] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { user } = useAuthStore();
+
+  // Set cursor position after textarea value changes
+  useEffect(() => {
+    if (isFormActive && textareaRef.current && replyText) {
+      const length = replyText.length;
+      textareaRef.current.focus();
+      textareaRef.current.setSelectionRange(length, length);
+    }
+  }, [isFormActive, replyText]);
+
+  const handleReplySubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement comment submission
-    console.log('Submit comment:', { movieId, commentText, isSpoiler });
-    setCommentText('');
-    setIsSpoiler(false);
+    if (replyText.trim()) {
+      onReplySubmit(reply.parentComment || reply._id, replyText.trim());
+      setReplyText('');
+      onFormToggle(reply._id); // Đóng form
+    }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Tab Selection */}
-      <div className="flex items-center gap-4">
-        <h3 className="text-xl font-bold text-white">
-          Bình luận ({mockComments.length})
-        </h3>
-        <div className="flex gap-2 ml-4">
+    <div className="flex gap-3">
+      {/* Reply Avatar */}
+      <img
+        src={
+          reply.user.avatar ||
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(
+            reply.user.name
+          )}&background=dc2626&color=fff`
+        }
+        alt={reply.user.name}
+        className="w-10 h-10 rounded-full flex-shrink-0"
+      />
+
+      {/* Reply Content */}
+      <div className="flex-1 min-w-0">
+        {/* Reply Header */}
+        <div className="flex items-center gap-2 mb-1">
+          <h5 className="text-white font-semibold text-sm">{reply.user.name}</h5>
+          <span className="text-gray-500 text-xs">{formatTimeAgo(reply.createdAt)}</span>
+        </div>
+
+        {/* Reply Text */}
+        <p className="text-gray-300 text-sm leading-relaxed mb-2">{reply.text}</p>
+
+        {/* Reply Actions */}
+        <div className="flex items-center gap-3 text-xs">
           <button
-            onClick={() => setActiveTab('comments')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              activeTab === 'comments'
-                ? 'bg-white text-gray-900'
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700'
-            }`}
+            onClick={() => onLike(reply._id)}
+            className={`flex items-center gap-1.5 transition-colors ${currentUserId && reply.likes.includes(currentUserId)
+              ? 'text-white'
+              : 'text-gray-400 hover:text-white'
+              }`}
           >
-            Bình luận
+            {currentUserId && reply.likes.includes(currentUserId) ? (
+              <AiFillLike className="text-base" />
+            ) : (
+              <AiOutlineLike className="text-base" />
+            )}
+            {reply.likesCount > 0 && <span className="font-medium">{reply.likesCount}</span>}
           </button>
+
           <button
-            onClick={() => setActiveTab('ratings')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              activeTab === 'ratings'
-                ? 'bg-white text-gray-900'
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700'
-            }`}
+            onClick={() => onDislike(reply._id)}
+            className={`flex items-center gap-1.5 transition-colors ${currentUserId && reply.dislikes.includes(currentUserId)
+              ? 'text-white'
+              : 'text-gray-400 hover:text-white'
+              }`}
           >
-            Đánh giá
+            {currentUserId && reply.dislikes.includes(currentUserId) ? (
+              <AiFillDislike className="text-base" />
+            ) : (
+              <AiOutlineDislike className="text-base" />
+            )}
+            {reply.dislikesCount > 0 && <span className="font-medium">{reply.dislikesCount}</span>}
+          </button>
+
+          <button
+            onClick={() => {
+              onFormToggle(reply._id);
+              if (!isFormActive) {
+                setReplyText(`@${reply.user.name} `);
+              }
+            }}
+            className="text-gray-400 hover:text-white transition-colors font-medium"
+          >
+            Trả lời
           </button>
         </div>
-      </div>
 
-      {/* Comment Input */}
-      <div className="bg-gray-800 rounded-lg p-4">
-        <p className="text-gray-400 text-sm mb-3">
-          Vui lòng <span className="text-red-600 font-semibold">đăng nhập</span> để tham gia bình luận.
-        </p>
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <textarea
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            placeholder="Viết bình luận"
-            className="w-full bg-gray-900 text-white rounded-lg p-4 resize-none focus:outline-none focus:ring-2 focus:ring-red-600 min-h-[100px]"
-            maxLength={1000}
-          />
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-              </label>
-              <span className="text-xs text-gray-500">
-                {commentText.length} / 1000
-              </span>
-            </div>
-            <button
-              type="submit"
-              disabled={!commentText.trim()}
-              className="bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:text-gray-500 text-white font-semibold px-8 py-2 rounded-lg transition-colors"
-            >
-              Gửi
-            </button>
-          </div>
-        </form>
-      </div>
-
-      {/* Comments List */}
-      <div className="space-y-4">
-        {mockComments.map((comment) => (
-          <div
-            key={comment.id}
-            className="bg-gray-800 rounded-lg p-4 space-y-3"
-          >
-            <div className="flex items-start gap-3">
-              {/* Avatar */}
-              <img
-                src={comment.user.avatar}
-                alt={comment.user.name}
-                className="w-10 h-10 rounded-full flex-shrink-0"
-              />
-
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h4 className="text-white font-semibold text-sm">
-                    {comment.user.name}
-                  </h4>
-                  {comment.isVerified && (
-                    <span className="inline-flex items-center justify-center w-5 h-5 bg-yellow-400 rounded-full text-gray-900 text-xs">
-                      ∞
-                    </span>
-                  )}
-                  {comment.rating && (
-                    <span className="text-xs text-gray-400 ml-2">
-                      P {comment.rating} - Tập 7
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-gray-400 mb-2">{comment.timestamp}</p>
-                <p className="text-gray-300 text-sm leading-relaxed">
-                  {comment.text}
-                </p>
-
-                {/* Actions */}
-                <div className="flex items-center gap-4 mt-3 text-xs text-gray-400">
-                  <button className="flex items-center gap-1 hover:text-white transition-colors">
-                    <span>👍</span>
-                    <span>{comment.likes}</span>
-                  </button>
-                  <button className="flex items-center gap-1 hover:text-white transition-colors">
-                    <span>👎</span>
-                  </button>
-                  <button className="hover:text-white transition-colors">
-                    Trả lời
-                  </button>
-                  <button className="hover:text-white transition-colors">
-                    Thêm
+        {/* Reply Form */}
+        {isFormActive && user && (
+          <div className="mt-3">
+            <form onSubmit={handleReplySubmit}>
+              <div className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden">
+                <textarea
+                  ref={textareaRef}
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  placeholder="Viết bình luận"
+                  className="w-full bg-transparent text-white p-3 resize-none focus:outline-none min-h-[60px] placeholder-gray-500 text-sm"
+                  maxLength={1000}
+                />
+                <div className="flex items-center justify-between px-3 py-2 bg-gray-800/80 border-t border-gray-700">
+                  <span className="text-xs text-gray-500">
+                    {replyText.length} / 1000
+                  </span>
+                  <button
+                    type="submit"
+                    disabled={!replyText.trim()}
+                    className="bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-700 disabled:text-gray-500 text-gray-900 font-bold px-4 py-1.5 rounded transition-colors flex items-center gap-2 text-sm"
+                  >
+                    <span>Gửi</span>
+                    <span>▶</span>
                   </button>
                 </div>
               </div>
+            </form>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Comment Item Component
+const CommentItem = ({
+  comment,
+  onLike,
+  onDislike,
+  currentUserId,
+  onReplySubmit,
+}: {
+  comment: Comment;
+  onLike: (id: string) => void;
+  onDislike: (id: string) => void;
+  currentUserId?: string;
+  onReplySubmit: (parentId: string, text: string) => void;
+}) => {
+  const [showReplies, setShowReplies] = useState(false);
+  const [showReplyForm, setShowReplyForm] = useState(false);
+  const [activeReplyFormId, setActiveReplyFormId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const hasLiked = currentUserId ? comment.likes.includes(currentUserId) : false;
+  const hasDisliked = currentUserId ? comment.dislikes.includes(currentUserId) : false;
+  const { user } = useAuthStore();
+
+  // Load replies when showReplies is true
+  const { data: repliesData } = useCommentReplies(showReplies ? comment._id : null);
+  const replies = repliesData?.data || [];
+
+  // Set cursor position after textarea value changes
+  useEffect(() => {
+    if (showReplyForm && textareaRef.current && replyText) {
+      const length = replyText.length;
+      textareaRef.current.focus();
+      textareaRef.current.setSelectionRange(length, length);
+    }
+  }, [showReplyForm, replyText]);
+
+  const handleReplySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (replyText.trim()) {
+      onReplySubmit(comment._id, replyText.trim());
+      setReplyText('');
+      setShowReplyForm(false);
+    }
+  };
+
+  return (
+    <div className="flex gap-3 py-4">
+      {/* Avatar */}
+      <img
+        src={
+          comment.user.avatar ||
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(
+            comment.user.name
+          )}&background=dc2626&color=fff`
+        }
+        alt={comment.user.name}
+        className="w-12 h-12 rounded-full flex-shrink-0"
+      />
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        {/* Header: Name + Badge + Time */}
+        <div className="flex items-center gap-2 mb-1">
+          <h4 className="text-white font-semibold text-base">{comment.user.name}</h4>
+          {comment.rating && (
+            <span className="inline-flex items-center justify-center w-5 h-5 bg-yellow-500 rounded-full text-gray-900 text-xs font-bold">
+              ∞
+            </span>
+          )}
+          <span className="text-gray-500 text-sm">{formatTimeAgo(comment.createdAt)}</span>
+        </div>
+
+        {/* Comment Text */}
+        <p className="text-gray-300 text-base leading-relaxed mb-3">{comment.text}</p>
+
+        {/* Actions */}
+        <div className="flex items-center gap-4 text-sm">
+          <button
+            onClick={() => onLike(comment._id)}
+            className={`flex items-center gap-1.5 transition-colors ${hasLiked ? 'text-white' : 'text-gray-400 hover:text-white'
+              }`}
+          >
+            {hasLiked ? (
+              <AiFillLike className="text-lg" />
+            ) : (
+              <AiOutlineLike className="text-lg" />
+            )}
+            {comment.likesCount > 0 && <span className="font-medium">{comment.likesCount}</span>}
+          </button>
+
+          <button
+            onClick={() => onDislike(comment._id)}
+            className={`flex items-center gap-1.5 transition-colors ${hasDisliked ? 'text-white' : 'text-gray-400 hover:text-white'
+              }`}
+          >
+            {hasDisliked ? (
+              <AiFillDislike className="text-lg" />
+            ) : (
+              <AiOutlineDislike className="text-lg" />
+            )}
+            {comment.dislikesCount > 0 && <span className="font-medium">{comment.dislikesCount}</span>}
+          </button>
+
+          <button
+            onClick={() => {
+              setShowReplyForm(!showReplyForm);
+              setActiveReplyFormId(null); // Đóng tất cả form của replies
+              if (!showReplyForm) {
+                setReplyText(`@${comment.user.name} `);
+              }
+            }}
+            className="text-gray-400 hover:text-white transition-colors font-medium"
+          >
+            Trả lời
+          </button>
+        </div>
+
+        {/* Reply Form */}
+        {showReplyForm && user && (
+          <div className="mt-4">
+            <form onSubmit={handleReplySubmit}>
+              <div className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden">
+                <textarea
+                  ref={textareaRef}
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  placeholder="Viết bình luận"
+                  className="w-full bg-transparent text-white p-4 resize-none focus:outline-none min-h-[80px] placeholder-gray-500"
+                  maxLength={1000}
+                />
+                <div className="flex items-center justify-between px-4 py-3 bg-gray-800/80 border-t border-gray-700">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      className="text-gray-400 hover:text-gray-300 text-sm transition-colors"
+                    >
+                      Tiết lộ?
+                    </button>
+                    <span className="text-xs text-gray-500">
+                      {replyText.length} / 1000
+                    </span>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={!replyText.trim()}
+                    className="bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-700 disabled:text-gray-500 text-gray-900 font-bold px-6 py-2 rounded transition-colors flex items-center gap-2"
+                  >
+                    <span>Gửi</span>
+                    <span>▶</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Replies Section */}
+        {comment.repliesCount > 0 && (
+          <div className="mt-3">
+            <button
+              onClick={() => setShowReplies(!showReplies)}
+              className="flex items-center gap-2 text-yellow-500 text-sm font-medium hover:text-yellow-400 transition-colors"
+            >
+              <span className={`transform transition-transform ${showReplies ? 'rotate-90' : ''}`}>
+                ▶
+              </span>
+              {comment.repliesCount} bình luận
+            </button>
+
+            {/* Display Replies */}
+            {showReplies && replies.length > 0 && (
+              <div className="mt-4 space-y-4">
+                {replies.map((reply) => (
+                  <ReplyItem
+                    key={reply._id}
+                    reply={reply}
+                    onLike={onLike}
+                    onDislike={onDislike}
+                    currentUserId={currentUserId}
+                    onReplySubmit={onReplySubmit}
+                    isFormActive={activeReplyFormId === reply._id}
+                    onFormToggle={(replyId: string) => {
+                      if (activeReplyFormId === replyId) {
+                        setActiveReplyFormId(null);
+                      } else {
+                        setActiveReplyFormId(replyId);
+                        setShowReplyForm(false); // Đóng form của comment cha
+                      }
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const Comments = ({ movieId }: CommentsProps) => {
+  const [commentText, setCommentText] = useState('');
+  const [page, setPage] = useState(1);
+  const [sort, setSort] = useState<'recent' | 'popular' | 'oldest'>('recent');
+
+  const { user } = useAuthStore();
+
+  // Queries & Mutations
+  const { data, isLoading, error } = useMovieComments(movieId, page, 10, sort);
+  const createCommentMutation = useCreateComment(movieId);
+  const likeMutation = useLikeComment();
+  const dislikeMutation = useDislikeComment();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!user) {
+      return;
+    }
+
+    if (!commentText.trim()) {
+      return;
+    }
+
+    createCommentMutation.mutate(
+      {
+        movie: movieId,
+        text: commentText.trim(),
+      },
+      {
+        onSuccess: () => {
+          setCommentText('');
+        },
+      }
+    );
+  };
+
+  const handleLike = (commentId: string) => {
+    if (!user) return;
+    likeMutation.mutate(commentId);
+  };
+
+  const handleDislike = (commentId: string) => {
+    if (!user) return;
+    dislikeMutation.mutate(commentId);
+  };
+
+  const handleReplySubmit = (parentId: string, text: string) => {
+    if (!user) return;
+    createCommentMutation.mutate({
+      movie: movieId,
+      text,
+      parentComment: parentId,
+    });
+  };
+
+  const comments = data?.data?.comments || [];
+  const pagination = data?.data?.pagination;
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h3 className="text-xl font-bold text-white">
+          Bình luận ({pagination?.total || 0})
+        </h3>
+
+        {/* Sort Options */}
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as any)}
+          className="bg-gray-800 text-white border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+        >
+          <option value="recent">Mới nhất</option>
+          <option value="popular">Phổ biến</option>
+          <option value="oldest">Cũ nhất</option>
+        </select>
+      </div>
+
+      {/* Comment Input */}
+      <div className="mb-6">
+        {!user ? (
+          <div className="flex gap-3">
+            <div className="w-12 h-12 rounded-full bg-gray-700 flex-shrink-0" />
+            <div className="flex-1">
+              <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                <p className="text-gray-400 text-sm">
+                  Vui lòng{' '}
+                  <a href="/login" className="text-yellow-500 font-semibold hover:text-yellow-400">
+                    đăng nhập
+                  </a>{' '}
+                  để tham gia bình luận.
+                </p>
+              </div>
             </div>
           </div>
-        ))}
+        ) : (
+          <div className="flex gap-3">
+            {/* Avatar */}
+            <img
+              src={
+                user.avatar ||
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  user.name
+                )}&background=dc2626&color=fff`
+              }
+              alt={user.name}
+              className="w-12 h-12 rounded-full flex-shrink-0"
+            />
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="flex-1">
+              <div className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden">
+                <textarea
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder="Viết bình luận..."
+                  className="w-full bg-transparent text-white p-4 resize-none focus:outline-none min-h-[100px] placeholder-gray-500"
+                  maxLength={1000}
+                />
+                <div className="flex items-center justify-between px-4 py-3 bg-gray-800/80 border-t border-gray-700">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      className="text-gray-400 hover:text-gray-300 text-sm transition-colors"
+                    >
+                      Tiết lộ?
+                    </button>
+                    <span className="text-xs text-gray-500">
+                      {commentText.length} / 1000
+                    </span>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={!commentText.trim() || createCommentMutation.isPending}
+                    className="bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-700 disabled:text-gray-500 text-gray-900 font-bold px-6 py-2 rounded transition-colors flex items-center gap-2"
+                  >
+                    <span>{createCommentMutation.isPending ? 'Đang gửi...' : 'Gửi'}</span>
+                    <span>▶</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
+
+      {/* Comments List */}
+      {isLoading && (
+        <div className="flex justify-center py-8">
+          <LoadingSpinner />
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-900/20 border border-red-600 rounded-lg p-4 text-center">
+          <p className="text-red-500">
+            Không thể tải bình luận. Vui lòng thử lại sau.
+          </p>
+        </div>
+      )}
+
+      {!isLoading && !error && comments.length === 0 && (
+        <div className="py-12 text-center">
+          <p className="text-gray-400">
+            Chưa có bình luận nào. Hãy là người đầu tiên bình luận!
+          </p>
+        </div>
+      )}
+
+      {!isLoading && !error && comments.length > 0 && (
+        <div>
+          {comments.map((comment) => (
+            <CommentItem
+              key={comment._id}
+              comment={comment}
+              onLike={handleLike}
+              onDislike={handleDislike}
+              onReplySubmit={handleReplySubmit}
+              currentUserId={user?._id}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {pagination && pagination.pages > 1 && (
+        <div className="flex justify-center gap-2 mt-6">
+          <button
+            onClick={() => setPage(page - 1)}
+            disabled={page === 1}
+            className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Trước
+          </button>
+          <span className="px-4 py-2 text-gray-300">
+            Trang {page} / {pagination.pages}
+          </span>
+          <button
+            onClick={() => setPage(page + 1)}
+            disabled={page === pagination.pages}
+            className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Sau
+          </button>
+        </div>
+      )}
     </div>
   );
 };
