@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { Movie } from '@/types';
 import MovieCard from './MovieCard';
@@ -10,6 +10,25 @@ interface MovieRowProps {
 
 const MovieRow = ({ title, movies }: MovieRowProps) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
+
+  const checkScrollPosition = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setShowLeftArrow(scrollLeft > 0);
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  useEffect(() => {
+    checkScrollPosition();
+    const scrollContainer = scrollContainerRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', checkScrollPosition);
+      return () => scrollContainer.removeEventListener('scroll', checkScrollPosition);
+    }
+  }, [movies]);
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
@@ -39,14 +58,16 @@ const MovieRow = ({ title, movies }: MovieRowProps) => {
 
       {/* Scrollable Container */}
       <div className="relative">
-        {/* Left Arrow */}
-        <button
-          onClick={() => scroll('left')}
-          className="absolute left-0 top-0 bottom-0 z-10 w-12 bg-gradient-to-r from-gray-900 to-transparent opacity-0 group-hover/row:opacity-100 transition-opacity duration-300 flex items-center justify-center"
-          aria-label="Scroll left"
-        >
-          <FiChevronLeft size={32} className="text-white drop-shadow-lg" />
-        </button>
+        {/* Left Arrow - Only show when not at start */}
+        {showLeftArrow && (
+          <button
+            onClick={() => scroll('left')}
+            className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 bg-black/80 hover:bg-black/90 backdrop-blur-sm rounded-full p-3 md:p-4 opacity-0 group-hover/row:opacity-100 transition-all duration-300 shadow-xl hover:scale-110"
+            aria-label="Scroll left"
+          >
+            <FiChevronLeft size={28} className="text-white" />
+          </button>
+        )}
 
         {/* Movies */}
         <div
@@ -63,14 +84,16 @@ const MovieRow = ({ title, movies }: MovieRowProps) => {
           ))}
         </div>
 
-        {/* Right Arrow */}
-        <button
-          onClick={() => scroll('right')}
-          className="absolute right-0 top-0 bottom-0 z-10 w-12 bg-gradient-to-l from-gray-900 to-transparent opacity-0 group-hover/row:opacity-100 transition-opacity duration-300 flex items-center justify-center"
-          aria-label="Scroll right"
-        >
-          <FiChevronRight size={32} className="text-white drop-shadow-lg" />
-        </button>
+        {/* Right Arrow - Always show when there's more content */}
+        {showRightArrow && (
+          <button
+            onClick={() => scroll('right')}
+            className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 bg-black/80 hover:bg-black/90 backdrop-blur-sm rounded-full p-3 md:p-4 opacity-0 group-hover/row:opacity-100 transition-all duration-300 shadow-xl hover:scale-110"
+            aria-label="Scroll right"
+          >
+            <FiChevronRight size={28} className="text-white" />
+          </button>
+        )}
       </div>
     </div>
   );
