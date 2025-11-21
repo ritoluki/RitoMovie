@@ -176,3 +176,9 @@ export const getMovieReleaseDates = async (movieId: number) => {
   return response.data;
 };
 
+// Get movie images (backdrops, posters, logos)
+export const getMovieImages = async (movieId: number) => {
+  const response = await tmdbAxios.get(`/movie/${movieId}/images`);
+  return response.data;
+};
+

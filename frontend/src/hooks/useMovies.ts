@@ -92,6 +92,15 @@ export const useMovies = () => {
     });
   };
 
+  const useMovieImages = (movieId: number) => {
+    return useQuery({
+      queryKey: ['movie', movieId, 'images'],
+      queryFn: () => movieService.getImages(movieId),
+      enabled: !!movieId,
+      staleTime: 10 * 60 * 1000, // 10 minutes - images don't change often
+    });
+  };
+
   return {
     useTrending,
     usePopular,
@@ -104,6 +113,7 @@ export const useMovies = () => {
     useMoviesByGenre,
     useSearchMovies,
     useReleaseDates,
+    useMovieImages,
   };
 };
 

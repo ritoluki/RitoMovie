@@ -1,5 +1,5 @@
 import axios from '@/lib/axios';
-import { Movie, MovieDetails, Video, Credits, PaginatedResponse, Genre, ReleaseDatesResponse } from '@/types';
+import { Movie, MovieDetails, Video, Credits, PaginatedResponse, Genre, ReleaseDatesResponse, MovieImages } from '@/types';
 
 export const movieService = {
   // Get trending movies
@@ -126,6 +126,14 @@ export const movieService = {
   getReleaseDates: async (movieId: number): Promise<ReleaseDatesResponse> => {
     const response = await axios.get<ReleaseDatesResponse>(
       `/movies/${movieId}/release-dates`
+    );
+    return response.data;
+  },
+
+  // Get movie images (backdrops, posters, logos)
+  getImages: async (movieId: number): Promise<MovieImages> => {
+    const response = await axios.get<MovieImages>(
+      `/movies/${movieId}/images`
     );
     return response.data;
   },

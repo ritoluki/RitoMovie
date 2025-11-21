@@ -1,23 +1,30 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { FiPlay, FiPlus, FiCheck, FiClock, FiCalendar, FiStar } from 'react-icons/fi';
+import { FiPlay } from 'react-icons/fi';
 import { useMovies } from '@/hooks/useMovies';
 import { useAuthStore } from '@/store/authStore';
 import { useMovieStore } from '@/store/movieStore';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import MovieRow from '@/components/movie/MovieRow';
-import { getImageUrl, formatRuntime, formatDate, getYouTubeEmbedUrl } from '@/utils/helpers';
+import { getImageUrl } from '@/utils/helpers';
 import { motion } from 'framer-motion';
+import EpisodesTab from '@/components/movie/tabs/EpisodesTab';
+import CastTab from '@/components/movie/tabs/CastTab';
+import GalleryTab from '@/components/movie/tabs/GalleryTab';
+import RecommendationsTab from '@/components/movie/tabs/RecommendationsTab';
+
+type TabType = 'episodes' | 'gallery' | 'cast' | 'recommendations';
 
 const MovieDetails = () => {
   const { id } = useParams<{ id: string }>();
   const movieId = parseInt(id || '0');
+  const [activeTab, setActiveTab] = useState<TabType>('episodes');
   
-  const { useMovieDetails, useMovieVideos, useMovieCredits, useSimilarMovies } = useMovies();
+  const { useMovieDetails, useMovieCredits, useSimilarMovies, useMovieImages } = useMovies();
   
   const { data: movie, isLoading: movieLoading } = useMovieDetails(movieId);
-  const { data: videos } = useMovieVideos(movieId);
   const { data: credits } = useMovieCredits(movieId);
   const { data: similar } = useSimilarMovies(movieId);
+  const { data: images } = useMovieImages(movieId);
   
   const { isAuthenticated } = useAuthStore();
   const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useMovieStore();
@@ -38,6 +45,19 @@ const MovieDetails = () => {
     }
   };
 
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: movie?.title,
+        text: movie?.overview,
+        url: window.location.href,
+      });
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(window.location.href);
+    }
+  };
+
   if (movieLoading) {
     return <LoadingSpinner fullScreen />;
   }
@@ -50,169 +70,264 @@ const MovieDetails = () => {
     );
   }
 
-  const trailer = videos?.results.find(v => v.type === 'Trailer' && v.site === 'YouTube');
-  const cast = credits?.cast.slice(0, 10) || [];
+  const cast = credits?.cast || [];
+  const recommendedMovies = similar?.results || [];
+
+  // Generate clip-path for tilted poster (matching TopMoviesTiltedSection style)
+  const clipPathRight = 'polygon(94.239% 100%, 5.761% 100%, 5.761% 100%, 4.826% 99.95%, 3.94% 99.803%, 3.113% 99.569%, 2.358% 99.256%, 1.687% 98.87%, 1.111% 98.421%, .643% 97.915%, .294% 97.362%, .075% 96.768%, 0 96.142%, 0 3.858%, 0 3.858%, .087% 3.185%, .338% 2.552%, .737% 1.968%, 1.269% 1.442%, 1.92% .984%, 2.672% .602%, 3.512% .306%, 4.423% .105%, 5.391% .008%, 6.4% .024%, 94.879% 6.625%, 94.879% 6.625%, 95.731% 6.732%, 96.532% 6.919%, 97.272% 7.178%, 97.942% 7.503%, 98.533% 7.887%, 99.038% 8.323%, 99.445% 8.805%, 99.747% 9.326%, 99.935% 9.88%, 100% 10.459%, 100% 96.142%, 100% 96.142%, 99.925% 96.768%, 99.706% 97.362%, 99.357% 97.915%, 98.889% 98.421%, 98.313% 98.87%, 97.642% 99.256%, 96.887% 99.569%, 96.06% 99.803%, 95.174% 99.95%, 94.239% 100%)';
+
+  const tabs = [
+    { id: 'episodes' as TabType, label: 'Tập phim' },
+    { id: 'gallery' as TabType, label: 'Gallery' },
+    { id: 'cast' as TabType, label: 'Diễn viên' },
+    { id: 'recommendations' as TabType, label: 'Đề xuất' },
+  ];
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <div className="relative h-[60vh] md:h-[70vh]">
+    <div className="min-h-screen bg-gray-900 -mt-16 md:-mt-20">
+      {/* Hero Banner - Backdrop image only */}
+      <div className="relative h-[calc(60vh+4rem)] md:h-[calc(70vh+5rem)]">
         <div className="absolute inset-0">
           <img
             src={getImageUrl(movie.backdrop_path, 'backdrop', 'original')}
             alt={movie.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-center"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/80 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent" />
+          {/* Enhanced gradient overlays */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-gray-900" />
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-900/50 via-transparent to-transparent" />
         </div>
+      </div>
 
-        <div className="relative h-full container mx-auto px-4 md:px-8 flex items-end pb-12">
-          <div className="flex flex-col md:flex-row gap-6 md:gap-8 w-full">
-            {/* Poster */}
+      {/* Content Below Banner */}
+      <div className="container mx-auto px-4 md:px-8 -mt-32 md:-mt-40 relative z-10">
+        <div className="flex flex-col md:flex-row items-start md:items-end gap-6 md:gap-8">
+            {/* Poster with decorative frame */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="flex-none"
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              className="flex-shrink-0"
             >
-              <img
-                src={getImageUrl(movie.poster_path, 'poster', 'large')}
-                alt={movie.title}
-                className="w-48 md:w-64 rounded-lg shadow-2xl"
-              />
+              <div className="relative bg-gradient-to-br from-gray-800/40 to-gray-900/40 backdrop-blur-md border border-gray-700/50 rounded-2xl p-4 shadow-2xl">
+                {/* Decorative corner accents */}
+                <div className="absolute -top-2 -left-2 w-10 h-10 border-t-2 border-l-2 border-red-500/60 rounded-tl-2xl"></div>
+                <div className="absolute -bottom-2 -right-2 w-10 h-10 border-b-2 border-r-2 border-red-500/60 rounded-br-2xl"></div>
+                
+                {/* Tilted Poster */}
+                <div className="relative w-[180px] md:w-[260px]">
+                  <div 
+                    className="relative aspect-[2/3] overflow-hidden bg-gray-900 shadow-2xl"
+                    style={{
+                      clipPath: clipPathRight,
+                      WebkitClipPath: clipPathRight,
+                    }}
+                  >
+                    <img
+                      src={getImageUrl(movie.poster_path, 'poster', 'large')}
+                      alt={movie.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  
+                  {/* Movie Title & Year Below Poster */}
+                  <div className="mt-4 text-center space-y-2">
+                    <h2 className="text-white font-bold text-base md:text-lg line-clamp-2">
+                      {movie.title}
+                    </h2>
+                    {movie.original_title && movie.original_title !== movie.title && (
+                      <p className="text-gray-400 text-xs italic">
+                        {movie.original_title}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
             </motion.div>
 
-            {/* Info */}
+            {/* Movie Info - Right Side */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="flex-1 space-y-4"
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="flex-1 max-w-3xl space-y-5"
             >
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white">
-                {movie.title}
-              </h1>
-
-              {movie.tagline && (
-                <p className="text-gray-300 italic text-lg">{movie.tagline}</p>
-              )}
-
-              <div className="flex flex-wrap items-center gap-4 text-gray-300">
-                <div className="flex items-center space-x-2">
-                  <FiStar className="text-yellow-400" size={20} />
-                  <span className="font-semibold text-white">
-                    {movie.vote_average.toFixed(1)}
-                  </span>
-                  <span className="text-sm">({movie.vote_count} votes)</span>
+              {/* Title & Meta */}
+              <div className="space-y-3">
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white text-shadow-lg">
+                  {movie.title}
+                </h1>
+                
+                {/* Badges Row */}
+                <div className="flex items-center flex-wrap gap-3">
+                  {/* Rating Badge */}
+                  <div className="flex items-center gap-1.5 bg-yellow-500/20 backdrop-blur-sm border border-yellow-500/40 px-3 py-1.5 rounded-lg">
+                    <span className="text-yellow-400 font-bold text-sm">★</span>
+                    <span className="text-white font-semibold text-sm">
+                      {movie.vote_average.toFixed(1)}
+                    </span>
+                  </div>
+                  
+                  {/* Age Rating */}
+                  <div className="bg-white/15 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded-lg">
+                    <span className="text-white font-bold text-sm">T13</span>
+                  </div>
+                  
+                  {/* Year */}
+                  {movie.release_date && (
+                    <div className="bg-white/15 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded-lg">
+                      <span className="text-white font-semibold text-sm">
+                        {new Date(movie.release_date).getFullYear()}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Runtime */}
+                  {movie.runtime && (
+                    <div className="bg-white/15 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded-lg">
+                      <span className="text-white font-semibold text-sm">
+                        {Math.floor(movie.runtime / 60)}h {movie.runtime % 60}m
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                {movie.runtime && (
-                  <div className="flex items-center space-x-2">
-                    <FiClock size={18} />
-                    <span>{formatRuntime(movie.runtime)}</span>
-                  </div>
-                )}
-
-                {movie.release_date && (
-                  <div className="flex items-center space-x-2">
-                    <FiCalendar size={18} />
-                    <span>{formatDate(movie.release_date)}</span>
+                {/* Genres */}
+                {movie.genres && movie.genres.length > 0 && (
+                  <div className="flex items-center flex-wrap gap-2">
+                    {movie.genres.map((genre) => (
+                      <span
+                        key={genre.id}
+                        className="text-white text-xs font-medium px-3 py-1.5 bg-gray-800/60 backdrop-blur-sm rounded-full border border-gray-600/50"
+                      >
+                        {genre.name}
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>
 
-              {movie.genres && movie.genres.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {movie.genres.map((genre) => (
-                    <span
-                      key={genre.id}
-                      className="px-3 py-1 bg-gray-800/80 backdrop-blur-sm text-white text-sm rounded-full"
-                    >
-                      {genre.name}
-                    </span>
-                  ))}
+              {/* Watch Button */}
+              <Link
+                to={`/watch/${movie.id}`}
+                className="inline-flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 text-white font-bold px-10 py-3.5 rounded-full transition-all shadow-xl hover:shadow-2xl hover:scale-105 text-base"
+              >
+                <FiPlay size={22} />
+                <span>Xem Ngay</span>
+              </Link>
+
+              {/* Overview */}
+              <div className="bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-xl p-5 space-y-3">
+                <h3 className="text-white font-bold text-base">Giới thiệu:</h3>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  {movie.overview || 'Chưa có thông tin giới thiệu'}
+                </p>
+              </div>
+
+              {/* Additional Info Grid */}
+              <div className="bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-xl p-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  {movie.production_countries && movie.production_countries.length > 0 && (
+                    <div>
+                      <span className="text-gray-400 block mb-1">Quốc gia:</span>
+                      <span className="text-white font-medium">{movie.production_countries[0].name}</span>
+                    </div>
+                  )}
+                  
+                  {movie.production_companies && movie.production_companies.length > 0 && (
+                    <div>
+                      <span className="text-gray-400 block mb-1">Networks:</span>
+                      <span className="text-white font-medium">{movie.production_companies[0].name}</span>
+                    </div>
+                  )}
+                  
+                  {movie.production_companies && movie.production_companies.length > 0 && (
+                    <div className="md:col-span-2">
+                      <span className="text-gray-400 block mb-1">Sản xuất:</span>
+                      <span className="text-white font-medium">
+                        {movie.production_companies.slice(0, 3).map(c => c.name).join(', ')}
+                      </span>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap gap-4 pt-2">
-                <Link
-                  to={`/watch/${movie.id}`}
-                  className="inline-flex items-center space-x-2 bg-white hover:bg-gray-200 text-gray-900 font-semibold px-8 py-3 rounded-lg transition-colors duration-200"
+              <div className="flex items-center gap-3 flex-wrap pt-2">
+                <button
+                  onClick={handleWatchlistClick}
+                  disabled={!isAuthenticated}
+                  className="px-5 py-2.5 bg-gray-800/70 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-all backdrop-blur-sm border border-gray-600/50 hover:border-gray-500"
                 >
-                  <FiPlay size={20} />
-                  <span>Play</span>
-                </Link>
-
-                {isAuthenticated && (
-                  <button
-                    onClick={handleWatchlistClick}
-                    className="inline-flex items-center space-x-2 bg-gray-800/80 hover:bg-gray-700/80 text-white font-semibold px-8 py-3 rounded-lg backdrop-blur-sm transition-colors duration-200"
-                  >
-                    {inWatchlist ? <FiCheck size={20} /> : <FiPlus size={20} />}
-                    <span>{inWatchlist ? 'In My List' : 'Add to List'}</span>
-                  </button>
-                )}
+                  Yêu thích
+                </button>
+                <button
+                  onClick={handleWatchlistClick}
+                  disabled={!isAuthenticated}
+                  className="px-5 py-2.5 bg-gray-800/70 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-all backdrop-blur-sm border border-gray-600/50 hover:border-gray-500"
+                >
+                  Thêm vào
+                </button>
+                <button
+                  onClick={handleShare}
+                  className="px-5 py-2.5 bg-gray-800/70 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-all backdrop-blur-sm border border-gray-600/50 hover:border-gray-500"
+                >
+                  Chia sẻ
+                </button>
+                <button
+                  className="px-5 py-2.5 bg-gray-800/70 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-all backdrop-blur-sm border border-gray-600/50 hover:border-gray-500"
+                >
+                  Bình luận
+                </button>
               </div>
             </motion.div>
           </div>
         </div>
+
+      {/* Tabs Navigation */}
+      <div className="border-b border-gray-800 bg-gray-900/95 backdrop-blur-md sticky top-16 md:top-20 z-40">
+        <div className="container mx-auto px-4 md:px-8">
+          <div className="flex gap-8">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative py-4 text-sm md:text-base font-medium transition-colors ${
+                  activeTab === tab.id
+                    ? 'text-red-500'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                {tab.label}
+                {activeTab === tab.id && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute bottom-0 left-0 right-0 h-1 bg-red-500"
+                  />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Content Sections */}
-      <div className="container mx-auto px-4 md:px-8 py-12 space-y-12">
-        {/* Overview */}
-        <section>
-          <h2 className="text-2xl font-bold text-white mb-4">Overview</h2>
-          <p className="text-gray-300 text-lg leading-relaxed">{movie.overview}</p>
-        </section>
-
-        {/* Trailer */}
-        {trailer && (
-          <section>
-            <h2 className="text-2xl font-bold text-white mb-4">Trailer</h2>
-            <div className="aspect-video rounded-lg overflow-hidden bg-gray-800">
-              <iframe
-                width="100%"
-                height="100%"
-                src={getYouTubeEmbedUrl(trailer.key)}
-                title={trailer.name}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="w-full h-full"
-              />
-            </div>
-          </section>
+      {/* Tab Content */}
+      <div className="container mx-auto px-4 md:px-8 py-8 md:py-12">
+        {activeTab === 'episodes' && (
+          <EpisodesTab movieId={movieId} movieTitle={movie?.title || ''} />
         )}
-
-        {/* Cast */}
-        {cast.length > 0 && (
-          <section>
-            <h2 className="text-2xl font-bold text-white mb-4">Cast</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {cast.map((person) => (
-                <div key={person.id} className="text-center">
-                  <div className="aspect-[2/3] rounded-lg overflow-hidden bg-gray-800 mb-2">
-                    <img
-                      src={getImageUrl(person.profile_path, 'profile', 'medium')}
-                      alt={person.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <p className="text-white font-medium text-sm">{person.name}</p>
-                  <p className="text-gray-400 text-xs">{person.character}</p>
-                </div>
-              ))}
-            </div>
-          </section>
+        {activeTab === 'gallery' && (
+          <GalleryTab movieId={movieId} images={images} isLoading={!images} />
         )}
-
-        {/* Similar Movies */}
-        {similar?.results && similar.results.length > 0 && (
-          <section>
-            <MovieRow title="Similar Movies" movies={similar.results} />
-          </section>
+        {activeTab === 'cast' && (
+          <CastTab movieId={movieId} cast={cast} isLoading={!credits} />
+        )}
+        {activeTab === 'recommendations' && (
+          <RecommendationsTab 
+            movieId={movieId} 
+            movies={recommendedMovies} 
+            isLoading={!similar} 
+          />
         )}
       </div>
     </div>
@@ -220,4 +335,3 @@ const MovieDetails = () => {
 };
 
 export default MovieDetails;
-

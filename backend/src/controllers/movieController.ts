@@ -323,3 +323,23 @@ export const getMovieReleaseDates = asyncHandler(
   }
 );
 
+// @desc    Get movie images (backdrops, posters, logos)
+// @route   GET /api/movies/:id/images
+// @access  Public
+export const getMovieImages = asyncHandler(
+  async (req: Request, res: Response, __next: NextFunction) => {
+    const movieId = parseInt(req.params.id);
+
+    if (isNaN(movieId)) {
+      throw new ApiError(400, 'Invalid movie ID');
+    }
+
+    const data = await tmdbService.getMovieImages(movieId);
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+  }
+);
+

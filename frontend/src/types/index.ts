@@ -104,6 +104,23 @@ export interface Credits {
   crew: Crew[];
 }
 
+export interface MovieImage {
+  aspect_ratio: number;
+  file_path: string;
+  height: number;
+  width: number;
+  iso_639_1: string | null;
+  vote_average: number;
+  vote_count: number;
+}
+
+export interface MovieImages {
+  id: number;
+  backdrops: MovieImage[];
+  posters: MovieImage[];
+  logos: MovieImage[];
+}
+
 // User types
 export interface User {
   _id: string;
