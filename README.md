@@ -2,6 +2,26 @@
 
 A modern, full-featured movie streaming website built with React, TypeScript, Node.js, Express, and MongoDB.
 
+## ⚠️ IMPORTANT NOTICE
+
+**This project is for EDUCATIONAL and PERSONAL USE ONLY - NOT for commercial use.**
+
+This is a learning project created to demonstrate web development skills and modern technologies. It is **NOT intended for commercial purposes, monetization, or business use**. The project uses TMDB API for educational purposes and all movie data belongs to their respective copyright owners.
+
+🚫 **Prohibited Uses:**
+- ❌ Commercial deployment or hosting
+- ❌ Selling or monetizing this software
+- ❌ Using for business purposes
+- ❌ Distributing copyrighted content illegally
+
+✅ **Permitted Uses:**
+- ✔️ Learning and educational purposes
+- ✔️ Portfolio demonstration
+- ✔️ Personal development and testing
+- ✔️ Contributing to open-source improvements
+
+---
+
 ## 🎬 Features
 
 - **Browse Movies**: Explore trending, popular movies and filter by genres
@@ -222,7 +242,22 @@ PersonalProject/
 
 ## 📝 License
 
-This project is licensed under the MIT License.
+**NON-COMMERCIAL USE LICENSE**
+
+This project is provided for **educational and personal use only**. 
+
+### Terms:
+- ✅ You MAY use this code for learning, studying, and personal projects
+- ✅ You MAY modify and improve the code for educational purposes
+- ✅ You MAY showcase this project in your portfolio (non-commercial)
+- ❌ You MAY NOT use this project for any commercial purposes
+- ❌ You MAY NOT sell, rent, or monetize this software or derivatives
+- ❌ You MAY NOT deploy this for business or profit-making activities
+- ❌ You MAY NOT distribute copyrighted content through this platform
+
+**Copyright Notice:** This software is provided "AS IS" without warranty of any kind. All movie data, images, and related content are property of their respective copyright holders (TMDB, movie studios, etc.). This project does not claim ownership of any third-party content.
+
+For any commercial inquiries or licensing questions, please contact the maintainers.
 
 ## 👥 Contributing
 
@@ -240,5 +275,22 @@ For any questions or suggestions, please open an issue or contact the maintainer
 
 ---
 
-Built with ❤️ using React and Node.js
+## ⚠️ DISCLAIMER
+
+**This is a NON-COMMERCIAL educational project.**
+
+RitoMovie is created solely for learning purposes and portfolio demonstration. It is NOT intended for production use, commercial deployment, or any profit-making activities. The developer(s) do not encourage or support piracy or illegal distribution of copyrighted content.
+
+All trademarks, movie titles, images, and data are property of their respective owners. This project uses TMDB API for educational purposes under their terms of service.
+
+**If you plan to create a commercial streaming platform, you must:**
+1. Obtain proper licenses for content distribution
+2. Comply with copyright laws in your jurisdiction
+3. Secure commercial API agreements with data providers
+4. Implement proper content protection (DRM, etc.)
+5. Follow all applicable regulations and legal requirements
+
+---
+
+Built with ❤️ using React and Node.js | **For Educational Purposes Only** | **Not for Commercial Use**
 
