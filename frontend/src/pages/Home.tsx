@@ -37,7 +37,7 @@ const Home = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen -mt-16 md:-mt-20">
       {/* Hero Banner */}
       {trending?.results && trending.results.length > 0 && (
         <HeroBanner movies={trending.results.slice(0, 5)} />
