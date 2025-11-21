@@ -5,34 +5,34 @@ export const userService = {
   // Watchlist
   getWatchlist: async (): Promise<number[]> => {
     const response = await axios.get<ApiResponse<number[]>>('/users/watchlist');
-    return response.data;
+    return response.data.data;
   },
 
   addToWatchlist: async (movieId: number): Promise<number[]> => {
     const response = await axios.post<ApiResponse<number[]>>(
       `/users/watchlist/${movieId}`
     );
-    return response.data;
+    return response.data.data;
   },
 
   removeFromWatchlist: async (movieId: number): Promise<number[]> => {
     const response = await axios.delete<ApiResponse<number[]>>(
       `/users/watchlist/${movieId}`
     );
-    return response.data;
+    return response.data.data;
   },
 
   checkWatchlist: async (movieId: number): Promise<{ inWatchlist: boolean }> => {
     const response = await axios.get<ApiResponse<{ inWatchlist: boolean }>>(
       `/users/watchlist/${movieId}/check`
     );
-    return response.data;
+    return response.data.data;
   },
 
   // Watch History
   getHistory: async (): Promise<WatchHistory[]> => {
     const response = await axios.get<ApiResponse<WatchHistory[]>>('/users/history');
-    return response.data;
+    return response.data.data;
   },
 
   saveProgress: async (
@@ -45,7 +45,7 @@ export const userService = {
       progress,
       duration,
     });
-    return response.data;
+    return response.data.data;
   },
 
   getMovieProgress: async (movieId: number): Promise<WatchHistory | null> => {
@@ -53,7 +53,7 @@ export const userService = {
       const response = await axios.get<ApiResponse<WatchHistory>>(
         `/users/history/${movieId}`
       );
-      return response.data;
+      return response.data.data;
     } catch {
       return null;
     }
@@ -74,7 +74,7 @@ export const userService = {
       rating,
       review,
     });
-    return response.data;
+    return response.data.data;
   },
 
   getMovieRating: async (movieId: number): Promise<Rating | null> => {
@@ -82,7 +82,7 @@ export const userService = {
       const response = await axios.get<ApiResponse<Rating>>(
         `/users/ratings/${movieId}`
       );
-      return response.data;
+      return response.data.data;
     } catch {
       return null;
     }
@@ -90,7 +90,7 @@ export const userService = {
 
   getUserRatings: async (): Promise<Rating[]> => {
     const response = await axios.get<ApiResponse<Rating[]>>('/users/ratings');
-    return response.data;
+    return response.data.data;
   },
 
   deleteRating: async (movieId: number): Promise<void> => {
@@ -103,7 +103,7 @@ export const userService = {
     const response = await axios.get<ApiResponse<{ average: number; count: number }>>(
       `/users/ratings/${movieId}/average`
     );
-    return response.data;
+    return response.data.data;
   },
 };
 
