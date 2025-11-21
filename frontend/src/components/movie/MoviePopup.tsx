@@ -64,20 +64,20 @@ const MoviePopup = ({ movie, movieDetails, isLoading, isVisible, onClose, cardRe
       const popupHeight = 500; // Approximate height
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-      const spacing = 8; // Gap between card and popup
+      const overlap = 40; // Overlap with card to prevent losing hover
 
       let top = cardRect.top;
       let left = cardRect.left;
 
-      // Horizontal positioning
-      if (cardRect.right + popupWidth + spacing <= viewportWidth) {
-        // Show on right of card
-        left = cardRect.right + spacing;
-      } else if (cardRect.left - popupWidth - spacing >= 0) {
-        // Show on left of card
-        left = cardRect.left - popupWidth - spacing;
+      // Horizontal positioning - overlap with card to maintain hover
+      if (cardRect.right + popupWidth - overlap <= viewportWidth) {
+        // Show on right of card with overlap
+        left = cardRect.right - overlap;
+      } else if (cardRect.left - popupWidth + overlap >= 0) {
+        // Show on left of card with overlap
+        left = cardRect.left - popupWidth + overlap;
       } else {
-        // Show aligned with card left, but check viewport bounds
+        // Show aligned with card, overlapping
         left = Math.min(cardRect.left, viewportWidth - popupWidth - 20);
         left = Math.max(20, left);
       }
