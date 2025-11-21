@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { FiGithub, FiTwitter, FiFacebook, FiInstagram } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
+import { LogoLink } from '@/components/common/Logo';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -31,11 +32,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="md:col-span-1">
-            <Link to="/" className="inline-block mb-4">
-              <div className="text-2xl font-bold text-primary-600 font-display">
-                RitoMovie
-              </div>
-            </Link>
+            <LogoLink to="/" size="md" animated={false} className="mb-4" />
             <p className="text-gray-400 text-sm mb-4">
               {t('footer.tagline')}
             </p>

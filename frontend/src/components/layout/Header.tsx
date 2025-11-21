@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
+import { LogoLink } from '@/components/common/Logo';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -56,14 +57,10 @@ const Header = () => {
         isScrolled ? 'bg-gray-900/95 backdrop-blur-md shadow-lg' : 'bg-gradient-to-b from-gray-900/80 to-transparent'
       }`}
     >
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-2 md:px-1">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="text-2xl md:text-3xl font-bold text-primary-600 font-display">
-              RitoMovie
-            </div>
-          </Link>
+          <LogoLink to="/" size="md" animated={true} />
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">

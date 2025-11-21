@@ -101,13 +101,13 @@ const MovieDetails = () => {
 
       {/* Content Below Banner */}
       <div className="container mx-auto px-4 md:px-8 -mt-32 md:-mt-40 relative z-10">
-        <div className="flex flex-col md:flex-row items-start md:items-end gap-6 md:gap-8">
+        <div className="flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-8">
             {/* Poster with decorative frame */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
-              className="flex-shrink-0"
+              className="flex-shrink-0 w-full md:w-auto flex justify-center md:justify-start"
             >
               <div className="relative bg-gradient-to-br from-gray-800/40 to-gray-900/40 backdrop-blur-md border border-gray-700/50 rounded-2xl p-4 shadow-2xl">
                 {/* Decorative corner accents */}
@@ -150,7 +150,7 @@ const MovieDetails = () => {
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="flex-1 max-w-3xl space-y-5"
+              className="flex-1 max-w-3xl space-y-5 w-full text-center md:text-left"
             >
               {/* Title & Meta */}
               <div className="space-y-3">
@@ -159,7 +159,7 @@ const MovieDetails = () => {
                 </h1>
                 
                 {/* Badges Row */}
-                <div className="flex items-center flex-wrap gap-3">
+                <div className="flex items-center flex-wrap gap-3 justify-center md:justify-start">
                   {/* Rating Badge */}
                   <div className="flex items-center gap-1.5 bg-yellow-500/20 backdrop-blur-sm border border-yellow-500/40 px-3 py-1.5 rounded-lg">
                     <span className="text-yellow-400 font-bold text-sm">★</span>
@@ -194,7 +194,7 @@ const MovieDetails = () => {
 
                 {/* Genres */}
                 {movie.genres && movie.genres.length > 0 && (
-                  <div className="flex items-center flex-wrap gap-2">
+                  <div className="flex items-center flex-wrap gap-2 justify-center md:justify-start">
                     {movie.genres.map((genre) => (
                       <span
                         key={genre.id}
@@ -208,13 +208,15 @@ const MovieDetails = () => {
               </div>
 
               {/* Watch Button */}
-              <Link
-                to={`/watch/${movie.id}`}
-                className="inline-flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 text-white font-bold px-10 py-3.5 rounded-full transition-all shadow-xl hover:shadow-2xl hover:scale-105 text-base"
-              >
+              <div className="flex justify-center md:justify-start">
+                <Link
+                  to={`/watch/${movie.id}`}
+                  className="inline-flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 text-white font-bold px-10 py-3.5 rounded-full transition-all shadow-xl hover:shadow-2xl hover:scale-105 text-base"
+                >
                 <FiPlay size={22} />
                 <span>Xem Ngay</span>
               </Link>
+              </div>
 
               {/* Overview */}
               <div className="bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-xl p-5 space-y-3">

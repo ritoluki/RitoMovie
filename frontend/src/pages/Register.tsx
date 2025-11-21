@@ -5,6 +5,7 @@ import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { LogoLink } from '@/components/common/Logo';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -84,11 +85,9 @@ const Register = () => {
         className="max-w-md w-full"
       >
         {/* Logo */}
-        <Link to="/" className="block text-center mb-8">
-          <h1 className="text-4xl font-bold text-primary-600 font-display">
-            RitoMovie
-          </h1>
-        </Link>
+        <div className="flex justify-center mb-8">
+          <LogoLink to="/" size="lg" animated={true} />
+        </div>
 
         {/* Form Card */}
         <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-gray-700">

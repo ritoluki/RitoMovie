@@ -80,7 +80,7 @@ const HeroBanner = ({ movies }: HeroBannerProps) => {
           </div>
 
           {/* Content */}
-          <div className="relative h-full flex items-start pt-32 md:pt-40 lg:pt-44 pl-6 md:pl-16 lg:pl-24 xl:pl-32 pr-4">
+          <div className="relative h-full flex items-start pt-60 md:pt-40 lg:pt-44 pl-6 md:pl-16 lg:pl-24 xl:pl-32 pr-4">
             <div className="max-w-3xl space-y-3 md:space-y-5">
               {/* Tagline/Original Title */}
               {currentMovie.original_title && currentMovie.original_title !== currentMovie.title && (
