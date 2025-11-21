@@ -31,9 +31,10 @@ export const useMovieStore = create<MovieState>((set, get) => ({
     try {
       set({ isLoading: true });
       const watchlist = await userService.getWatchlist();
-      set({ watchlist, isLoading: false });
+      // Ensure watchlist is always an array
+      set({ watchlist: Array.isArray(watchlist) ? watchlist : [], isLoading: false });
     } catch (error) {
-      set({ isLoading: false });
+      set({ isLoading: false, watchlist: [] }); // Set to empty array on error
       console.error('Error fetching watchlist:', error);
     }
   },

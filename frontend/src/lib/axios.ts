@@ -40,6 +40,8 @@ axiosInstance.interceptors.request.use(
 // Response interceptor
 axiosInstance.interceptors.response.use(
   (response) => {
+    // The API response structure is: { success: true, data: {...}, message: '...' }
+    // Return the response data directly (which includes success, data, message)
     return response.data;
   },
   (error) => {
@@ -48,17 +50,24 @@ axiosInstance.interceptors.response.use(
       const { status, data } = error.response;
       
       if (status === 401) {
-        // Unauthorized - clear Zustand auth storage and redirect to login
-        localStorage.removeItem('auth-storage');
-        window.location.href = '/login';
+        // Unauthorized - only redirect if not already on login/register page
+        // This prevents redirect loops during login attempts
+        const currentPath = window.location.pathname;
+        if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
+          localStorage.removeItem('auth-storage');
+          window.location.href = '/login';
+        }
       }
       
-      return Promise.reject(data.message || 'An error occurred');
+      // Extract error message from response
+      // API error response structure: { success: false, message: '...', data: null }
+      const errorMessage = data?.message || error.message || 'An error occurred';
+      return Promise.reject(errorMessage);
     } else if (error.request) {
-      // Request made but no response
+      // Request made but no response (network error, server down, etc.)
       return Promise.reject('Network error. Please check your connection.');
     } else {
-      // Something else happened
+      // Something else happened (request setup error, etc.)
       return Promise.reject(error.message || 'An unexpected error occurred');
     }
   }

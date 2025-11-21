@@ -18,9 +18,36 @@ connectDB();
 
 // Middleware
 app.use(helmet()); // Security headers
+
+// CORS configuration - support multiple origins
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:5173',
+  'http://localhost:5173',
+  'http://152.42.172.52',
+  'http://152.42.172.52:5173',
+].filter(Boolean); // Remove any undefined/null values
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      // In development, log the blocked origin for debugging
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`CORS blocked origin: ${origin}. Allowed origins:`, allowedOrigins);
+      }
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept-Language'],
 }));
 app.use(express.json()); // Body parser
 app.use(express.urlencoded({ extended: true }));

@@ -45,8 +45,8 @@ const HeroBanner = ({ movies }: HeroBannerProps) => {
   // Get genre names
   const genreNames = genresData ? getGenreNames(currentMovie.genre_ids, genresData.genres) : [];
   
-  // Check if in watchlist
-  const isInWatchlist = watchlist.includes(currentMovie.id);
+  // Check if in watchlist (with null/undefined safety check)
+  const isInWatchlist = watchlist && Array.isArray(watchlist) ? watchlist.includes(currentMovie.id) : false;
 
   const handleToggleWatchlist = () => {
     if (isInWatchlist) {

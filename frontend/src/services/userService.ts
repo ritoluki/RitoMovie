@@ -4,35 +4,60 @@ import { WatchHistory, Rating, ApiResponse } from '@/types';
 export const userService = {
   // Watchlist
   getWatchlist: async (): Promise<number[]> => {
-    const response = await axios.get<ApiResponse<number[]>>('/users/watchlist');
-    return response.data.data;
+    try {
+      // Axios interceptor returns response.data which is ApiResponse<T>
+      const response = await axios.get<ApiResponse<number[]>>('/users/watchlist');
+      // Response is already ApiResponse<T>, so response.data is the actual data
+      const watchlist = (response as any).data;
+      return Array.isArray(watchlist) ? watchlist : [];
+    } catch (error) {
+      // Return empty array on error instead of throwing
+      console.error('Error fetching watchlist:', error);
+      return [];
+    }
   },
 
   addToWatchlist: async (movieId: number): Promise<number[]> => {
-    const response = await axios.post<ApiResponse<number[]>>(
-      `/users/watchlist/${movieId}`
-    );
-    return response.data.data;
+    try {
+      const response = await axios.post<ApiResponse<number[]>>(
+        `/users/watchlist/${movieId}`
+      );
+      // Response is already ApiResponse<T>, so response.data is the actual data
+      const watchlist = (response as any).data;
+      return Array.isArray(watchlist) ? watchlist : [];
+    } catch (error) {
+      console.error('Error adding to watchlist:', error);
+      throw error;
+    }
   },
 
   removeFromWatchlist: async (movieId: number): Promise<number[]> => {
-    const response = await axios.delete<ApiResponse<number[]>>(
-      `/users/watchlist/${movieId}`
-    );
-    return response.data.data;
+    try {
+      const response = await axios.delete<ApiResponse<number[]>>(
+        `/users/watchlist/${movieId}`
+      );
+      // Response is already ApiResponse<T>, so response.data is the actual data
+      const watchlist = (response as any).data;
+      return Array.isArray(watchlist) ? watchlist : [];
+    } catch (error) {
+      console.error('Error removing from watchlist:', error);
+      throw error;
+    }
   },
 
   checkWatchlist: async (movieId: number): Promise<{ inWatchlist: boolean }> => {
     const response = await axios.get<ApiResponse<{ inWatchlist: boolean }>>(
       `/users/watchlist/${movieId}/check`
     );
-    return response.data.data;
+    // Response is already ApiResponse<T>, so response.data is the actual data
+    return (response as any).data;
   },
 
   // Watch History
   getHistory: async (): Promise<WatchHistory[]> => {
     const response = await axios.get<ApiResponse<WatchHistory[]>>('/users/history');
-    return response.data.data;
+    // Response is already ApiResponse<T>, so response.data is the actual data
+    return (response as any).data;
   },
 
   saveProgress: async (

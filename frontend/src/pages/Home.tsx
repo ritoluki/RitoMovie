@@ -27,8 +27,15 @@ const Home = () => {
   // Fetch user data if authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      fetchWatchlist();
-      fetchHistory();
+      // Add error handling to prevent crashes if fetch fails
+      fetchWatchlist().catch((error) => {
+        console.error('Failed to fetch watchlist:', error);
+        // Error is handled in movieStore, but we catch here to prevent unhandled promise rejection
+      });
+      fetchHistory().catch((error) => {
+        console.error('Failed to fetch history:', error);
+        // Error is handled in movieStore, but we catch here to prevent unhandled promise rejection
+      });
     }
   }, [isAuthenticated, fetchWatchlist, fetchHistory]);
 

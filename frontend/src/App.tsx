@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import AppRoutes from './routes';
 import ScrollToTop from './components/common/ScrollToTop';
 import LoadingSpinner from './components/common/LoadingSpinner';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import './i18n/config';
 
 const queryClient = new QueryClient({
@@ -26,22 +27,24 @@ function App() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <ScrollToTop />
-        {isBooting ? <LoadingSpinner fullScreen /> : <AppRoutes />}
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 3000,
-            style: {
-              background: '#1f2937',
-              color: '#fff',
-            },
-          }}
-        />
-      </BrowserRouter>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <ScrollToTop />
+          {isBooting ? <LoadingSpinner fullScreen /> : <AppRoutes />}
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: '#1f2937',
+                color: '#fff',
+              },
+            }}
+          />
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
