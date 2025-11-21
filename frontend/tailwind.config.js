@@ -25,8 +25,8 @@ export default {
         display: ['Poppins', 'system-ui', 'sans-serif'],
       },
       animation: {
-        'fade-in': 'fadeIn 0.5s ease-in-out',
-        'slide-up': 'slideUp 0.5s ease-out',
+        'fade-in': 'fadeIn 0.8s ease-in-out',
+        'slide-up': 'slideUp 0.8s ease-out',
         'slide-down': 'slideDown 0.5s ease-out',
       },
       keyframes: {

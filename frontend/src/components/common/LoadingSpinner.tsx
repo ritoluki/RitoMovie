@@ -19,8 +19,8 @@ const LoadingSpinner = ({ fullScreen = false, size = 'md' }: LoadingSpinnerProps
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#05060b] text-center px-6">
-        <div className="flex flex-col items-center space-y-8">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#05060b] text-center px-6 animate-fade-in">
+        <div className="flex flex-col items-center space-y-8 animate-slide-up">
           <div className="flex flex-col items-center space-y-6">
             <div className="relative flex flex-col items-center space-y-3">
               <div className="relative flex items-center justify-center">
@@ -45,7 +45,6 @@ const LoadingSpinner = ({ fullScreen = false, size = 'md' }: LoadingSpinnerProps
               <div className="w-8 h-8 border-4 border-red-500/60 border-t-transparent rounded-full animate-spin" />
               <span className="tracking-normal text-gray-400 uppercase">Đang tải</span>
             </div>
-            <div className="h-px w-24 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
           </div>
         </div>
       </div>
