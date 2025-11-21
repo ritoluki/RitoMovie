@@ -61,10 +61,6 @@ const MovieCard = ({ movie }: MovieCardProps) => {
             transition={{ duration: 0.2 }}
             className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent flex flex-col justify-end p-4"
           >
-            <h3 className="text-white font-semibold text-sm mb-2 line-clamp-2">
-              {movie.title}
-            </h3>
-            
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-1">
                 <span className="text-yellow-400 text-sm">★</span>
@@ -101,6 +97,18 @@ const MovieCard = ({ movie }: MovieCardProps) => {
               )}
             </div>
           </motion.div>
+        </div>
+
+        {/* Movie Title - Always Visible */}
+        <div className="mt-3 px-1">
+          <h3 className="text-white font-semibold text-sm md:text-base line-clamp-2 group-hover:text-red-500 transition-colors duration-200">
+            {movie.title}
+          </h3>
+          {movie.release_date && (
+            <p className="text-gray-400 text-xs mt-1">
+              {new Date(movie.release_date).getFullYear()}
+            </p>
+          )}
         </div>
       </motion.div>
     </Link>
