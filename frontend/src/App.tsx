@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import AppRoutes from './routes';
 import ScrollToTop from './components/common/ScrollToTop';
+import LoadingSpinner from './components/common/LoadingSpinner';
 import './i18n/config';
 
 const queryClient = new QueryClient({
@@ -16,11 +18,18 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  const [isBooting, setIsBooting] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsBooting(false), 1800);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <ScrollToTop />
-        <AppRoutes />
+        {isBooting ? <LoadingSpinner fullScreen /> : <AppRoutes />}
         <Toaster
           position="top-right"
           toastOptions={{
