@@ -1,11 +1,11 @@
 import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiChevronLeft, FiChevronRight, FiPlay, FiPlus, FiCheck } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { Movie } from '@/types';
 import { getImageUrl, formatRating } from '@/utils/helpers';
-import { useMovieStore } from '@/store/movieStore';
-import { useAuthStore } from '@/store/authStore';
+import { useMovies } from '@/hooks/useMovies';
+import MoviePopup from './MoviePopup';
 
 interface TopMoviesTiltedSectionProps {
   title: string;
@@ -16,8 +16,6 @@ const TopMoviesTiltedSection = ({ title, movies }: TopMoviesTiltedSectionProps) 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
-  const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useMovieStore();
-  const { isAuthenticated } = useAuthStore();
 
   const checkScrollPosition = () => {
     if (scrollContainerRef.current) {
@@ -91,16 +89,6 @@ const TopMoviesTiltedSection = ({ title, movies }: TopMoviesTiltedSectionProps) 
               key={movie.id}
               movie={movie}
               rank={index + 1}
-              isInWatchlist={isInWatchlist(movie.id)}
-              onWatchlistToggle={() => {
-                if (!isAuthenticated) return;
-                if (isInWatchlist(movie.id)) {
-                  removeFromWatchlist(movie.id);
-                } else {
-                  addToWatchlist(movie.id);
-                }
-              }}
-              isAuthenticated={isAuthenticated}
             />
           ))}
         </div>
@@ -123,21 +111,66 @@ const TopMoviesTiltedSection = ({ title, movies }: TopMoviesTiltedSectionProps) 
 interface TiltedMovieCardProps {
   movie: Movie;
   rank: number;
-  isInWatchlist: boolean;
-  onWatchlistToggle: () => void;
-  isAuthenticated: boolean;
 }
 
-const TiltedMovieCard = ({ movie, rank, isInWatchlist, onWatchlistToggle, isAuthenticated }: TiltedMovieCardProps) => {
-  const [isHovered, setIsHovered] = useState(false);
+const TiltedMovieCard = ({ movie, rank }: TiltedMovieCardProps) => {
+  const [showPopup, setShowPopup] = useState(false);
+  const [shouldFetchDetails, setShouldFetchDetails] = useState(false);
+  const [popupPosition, setPopupPosition] = useState<'left' | 'right'>('left');
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const { useMovieDetails } = useMovies();
+
+  // Fetch details - React Query will cache the results
+  const { data: movieDetails, isLoading: detailsLoading } = useMovieDetails(movie.id);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Xác định card nghiêng trái hay phải (lẻ = phải, chẵn = trái)
   const isOddRank = rank % 2 === 1;
 
-  const handleWatchlistClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onWatchlistToggle();
+  const handleMouseEnter = () => {
+    // Calculate smart positioning based on card position in viewport
+    if (cardRef.current) {
+      const rect = cardRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const popupWidth = 450; // Width of popup
+      
+      // If card is in right half of viewport and there's not enough space on right
+      // or if card is too close to right edge, position popup to the left
+      if (rect.right + popupWidth > viewportWidth && rect.left > popupWidth) {
+        setPopupPosition('right'); // Show popup on the right (which means popup extends to left)
+      } else {
+        setPopupPosition('left');
+      }
+    }
+    
+    // Set timeout to show popup after 500ms
+    hoverTimeoutRef.current = setTimeout(() => {
+      setShouldFetchDetails(true);
+      setShowPopup(true);
+    }, 500);
+  };
+
+  const handleMouseLeave = () => {
+    setShowPopup(false);
+    
+    // Clear timeout if mouse leaves before 1000ms
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+  };
+
+  const handlePopupClose = () => {
+    setShowPopup(false);
   };
 
   // Clip-path nghiêng phải (cho cards lẻ: 1, 3, 5, 7, 9)
@@ -147,17 +180,34 @@ const TiltedMovieCard = ({ movie, rank, isInWatchlist, onWatchlistToggle, isAuth
   const clipPathLeft = 'polygon(5.761% 100%, 94.239% 100%, 94.239% 100%, 95.174% 99.95%, 96.06% 99.803%, 96.887% 99.569%, 97.642% 99.256%, 98.313% 98.87%, 98.889% 98.421%, 99.357% 97.915%, 99.706% 97.362%, 99.925% 96.768%, 100% 96.142%, 100% 3.858%, 100% 3.858%, 99.913% 3.185%, 99.662% 2.552%, 99.263% 1.968%, 98.731% 1.442%, 98.08% .984%, 97.328% .602%, 96.488% .306%, 95.577% .105%, 94.609% .008%, 93.6% .024%, 5.121% 6.625%, 5.121% 6.625%, 4.269% 6.732%, 3.468% 6.919%, 2.728% 7.178%, 2.058% 7.503%, 1.467% 7.887%, 0.962% 8.323%, 0.555% 8.805%, 0.253% 9.326%, 0.065% 9.88%, 0% 10.459%, 0% 96.142%, 0% 96.142%, 0.075% 96.768%, 0.294% 97.362%, 0.643% 97.915%, 1.111% 98.421%, 1.687% 98.87%, 2.358% 99.256%, 3.113% 99.569%, 3.94% 99.803%, 4.826% 99.95%, 5.761% 100%)';
 
   return (
-    <Link to={`/movie/${movie.id}`} className="flex-none w-[240px] md:w-[280px] lg:w-[320px]">
-      <motion.div
-        className="relative group/card cursor-pointer"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        whileHover={{ 
-          scale: 1.05,
-          y: -8,
-        }}
-        transition={{ duration: 0.3, ease: 'easeOut' }}
-      >
+    <div
+      className={`flex-none w-[240px] md:w-[280px] lg:w-[320px] transition-all duration-300 ${showPopup ? 'z-40' : 'z-0'}`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <Link to={`/movie/${movie.id}`}>
+        <motion.div
+          className="relative group/card cursor-pointer"
+          whileHover={{ 
+            scale: 1.05,
+            y: -8,
+          }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+        >
+        {/* Show popup on desktop only (hidden on mobile) - Outside clip-path */}
+        <div ref={cardRef} className="hidden md:block absolute inset-0 pointer-events-none z-50">
+          <div className="pointer-events-auto">
+            <MoviePopup
+              movie={movie}
+              movieDetails={shouldFetchDetails ? movieDetails : undefined}
+              isLoading={shouldFetchDetails && detailsLoading}
+              isVisible={showPopup}
+              onClose={handlePopupClose}
+              position={popupPosition}
+            />
+          </div>
+        </div>
+
         {/* Card with Clip-Path - Alternate direction */}
         <div 
           className="relative aspect-[2/3] overflow-hidden bg-gray-900 shadow-2xl"
@@ -176,37 +226,7 @@ const TiltedMovieCard = ({ movie, rank, isInWatchlist, onWatchlistToggle, isAuth
 
             {/* Gradient Overlay - Subtle, bottom only */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-            {/* Hover Overlay with Actions */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: isHovered ? 1 : 0 }}
-              transition={{ duration: 0.2 }}
-              className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/60 z-10 flex flex-col items-center justify-center gap-3 p-4"
-            >
-              {/* Play Button */}
-              <Link
-                to={`/watch/${movie.id}`}
-                className="flex items-center gap-2 bg-white hover:bg-gray-200 text-black font-bold py-2 px-4 rounded transition-colors duration-200"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <FiPlay size={16} />
-                <span className="text-sm">Xem ngay</span>
-              </Link>
-              
-              {/* Watchlist Button */}
-              {isAuthenticated && (
-                <button
-                  onClick={handleWatchlistClick}
-                  className="flex items-center gap-2 bg-gray-800/80 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded transition-colors duration-200"
-                  aria-label={isInWatchlist ? 'Xóa khỏi danh sách' : 'Thêm vào danh sách'}
-                >
-                  {isInWatchlist ? <FiCheck size={16} /> : <FiPlus size={16} />}
-                  <span className="text-sm">{isInWatchlist ? 'Đã lưu' : 'Thêm'}</span>
-                </button>
-              )}
-            </motion.div>
-          </div>
+        </div>
 
         {/* Movie Info - Below Card */}
         <div className="mt-3">
@@ -255,6 +275,7 @@ const TiltedMovieCard = ({ movie, rank, isInWatchlist, onWatchlistToggle, isAuth
         </div>
       </motion.div>
     </Link>
+    </div>
   );
 };
 

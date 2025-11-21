@@ -1,11 +1,11 @@
 import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiChevronLeft, FiChevronRight, FiPlay, FiPlus, FiCheck } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { Movie } from '@/types';
 import { getImageUrl, formatRating } from '@/utils/helpers';
-import { useMovieStore } from '@/store/movieStore';
-import { useAuthStore } from '@/store/authStore';
+import { useMovies } from '@/hooks/useMovies';
+import MoviePopup from './MoviePopup';
 
 interface TopMoviesSectionProps {
   title: string;
@@ -16,8 +16,6 @@ const TopMoviesSection = ({ title, movies }: TopMoviesSectionProps) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
-  const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useMovieStore();
-  const { isAuthenticated } = useAuthStore();
 
   const checkScrollPosition = () => {
     if (scrollContainerRef.current) {
@@ -91,16 +89,6 @@ const TopMoviesSection = ({ title, movies }: TopMoviesSectionProps) => {
               key={movie.id}
               movie={movie}
               rank={index + 1}
-              isInWatchlist={isInWatchlist(movie.id)}
-              onWatchlistToggle={() => {
-                if (!isAuthenticated) return;
-                if (isInWatchlist(movie.id)) {
-                  removeFromWatchlist(movie.id);
-                } else {
-                  addToWatchlist(movie.id);
-                }
-              }}
-              isAuthenticated={isAuthenticated}
             />
           ))}
         </div>
@@ -123,13 +111,27 @@ const TopMoviesSection = ({ title, movies }: TopMoviesSectionProps) => {
 interface TopMovieCardProps {
   movie: Movie;
   rank: number;
-  isInWatchlist: boolean;
-  onWatchlistToggle: () => void;
-  isAuthenticated: boolean;
 }
 
-const TopMovieCard = ({ movie, rank, isInWatchlist, onWatchlistToggle, isAuthenticated }: TopMovieCardProps) => {
-  const [isHovered, setIsHovered] = useState(false);
+const TopMovieCard = ({ movie, rank }: TopMovieCardProps) => {
+  const [showPopup, setShowPopup] = useState(false);
+  const [shouldFetchDetails, setShouldFetchDetails] = useState(false);
+  const [popupPosition, setPopupPosition] = useState<'left' | 'right'>('left');
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const { useMovieDetails } = useMovies();
+
+  // Fetch details - React Query will cache the results
+  const { data: movieDetails, isLoading: detailsLoading } = useMovieDetails(movie.id);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Get age rating based on vote average (simplified example)
   const getAgeRating = () => {
@@ -148,21 +150,55 @@ const TopMovieCard = ({ movie, rank, isInWatchlist, onWatchlistToggle, isAuthent
     return 'bg-gray-500/90';
   };
 
-  const handleWatchlistClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onWatchlistToggle();
+  const handleMouseEnter = () => {
+    // Calculate smart positioning based on card position in viewport
+    if (cardRef.current) {
+      const rect = cardRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const popupWidth = 450; // Width of popup
+      
+      // If card is in right half of viewport and there's not enough space on right
+      // or if card is too close to right edge, position popup to the left
+      if (rect.right + popupWidth > viewportWidth && rect.left > popupWidth) {
+        setPopupPosition('right'); // Show popup on the right (which means popup extends to left)
+      } else {
+        setPopupPosition('left');
+      }
+    }
+    
+    // Set timeout to show popup after 500ms
+    hoverTimeoutRef.current = setTimeout(() => {
+      setShouldFetchDetails(true);
+      setShowPopup(true);
+    }, 500);
+  };
+
+  const handleMouseLeave = () => {
+    setShowPopup(false);
+    
+    // Clear timeout if mouse leaves before 1000ms
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+  };
+
+  const handlePopupClose = () => {
+    setShowPopup(false);
   };
 
   return (
-    <Link to={`/movie/${movie.id}`} className="flex-none w-[240px] md:w-[280px] lg:w-[320px]">
-      <motion.div
-        className="relative group/card cursor-pointer"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        whileHover={{ y: -8 }}
-        transition={{ duration: 0.3, ease: 'easeOut' }}
-      >
+    <div 
+      className={`flex-none w-[240px] md:w-[280px] lg:w-[320px] transition-all duration-300 ${showPopup ? 'z-40' : 'z-0'}`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <Link to={`/movie/${movie.id}`}>
+        <motion.div
+          className="relative group/card cursor-pointer"
+          whileHover={{ y: -8 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+        >
         {/* Rank Number */}
         <div className="absolute -left-2 top-1/2 -translate-y-1/2 z-20">
           <div className="relative">
@@ -177,6 +213,20 @@ const TopMovieCard = ({ movie, rank, isInWatchlist, onWatchlistToggle, isAuthent
 
         {/* Movie Card */}
         <div className="relative ml-12 md:ml-14 lg:ml-16">
+          {/* Show popup on desktop only (hidden on mobile) - Outside overflow containers */}
+          <div ref={cardRef} className="hidden md:block absolute inset-0 pointer-events-none z-50">
+            <div className="pointer-events-auto">
+              <MoviePopup
+                movie={movie}
+                movieDetails={shouldFetchDetails ? movieDetails : undefined}
+                isLoading={shouldFetchDetails && detailsLoading}
+                isVisible={showPopup}
+                onClose={handlePopupClose}
+                position={popupPosition}
+              />
+            </div>
+          </div>
+
           {/* Poster Container */}
           <div className="relative aspect-[2/3] rounded-2xl overflow-hidden bg-gray-900 shadow-2xl">
             <img
@@ -205,58 +255,6 @@ const TopMovieCard = ({ movie, rank, isInWatchlist, onWatchlistToggle, isAuthent
                 TOP 10
               </div>
             </div>
-
-            {/* Hover Overlay */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: isHovered ? 1 : 0 }}
-              transition={{ duration: 0.3 }}
-              className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent"
-            >
-              <div className="absolute inset-0 flex flex-col justify-end p-4 md:p-5">
-                {/* Action Buttons */}
-                <div className="flex items-center gap-2 mb-3">
-                  <Link
-                    to={`/watch/${movie.id}`}
-                    className="flex-1 flex items-center justify-center gap-2 bg-white hover:bg-gray-200 text-gray-900 font-bold py-2.5 md:py-3 rounded-lg transition-all duration-200 shadow-lg"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <FiPlay size={18} />
-                    <span className="text-sm">Xem ngay</span>
-                  </Link>
-                  
-                  {isAuthenticated && (
-                    <button
-                      onClick={handleWatchlistClick}
-                      className="p-2.5 md:p-3 bg-gray-800/90 hover:bg-gray-700 text-white rounded-lg transition-all duration-200 shadow-lg"
-                      aria-label={isInWatchlist ? 'Xóa khỏi danh sách' : 'Thêm vào danh sách'}
-                    >
-                      {isInWatchlist ? <FiCheck size={18} /> : <FiPlus size={18} />}
-                    </button>
-                  )}
-                </div>
-
-                {/* Movie Info */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1">
-                      <span className="text-yellow-400 text-lg">★</span>
-                      <span className="text-white font-bold text-sm">
-                        {formatRating(movie.vote_average)}
-                      </span>
-                    </div>
-                    {movie.release_date && (
-                      <>
-                        <span className="text-gray-400">•</span>
-                        <span className="text-gray-300 text-sm">
-                          {new Date(movie.release_date).getFullYear()}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
           </div>
 
           {/* Movie Title - Below Poster */}
@@ -278,6 +276,7 @@ const TopMovieCard = ({ movie, rank, isInWatchlist, onWatchlistToggle, isAuthent
         </div>
       </motion.div>
     </Link>
+    </div>
   );
 };
 
