@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { FiPlay, FiDownload, FiHeart, FiShare2, FiMessageCircle } from 'react-icons/fi';
+import { FiDownload, FiHeart, FiShare2, FiMessageCircle } from 'react-icons/fi';
 import { AiFillHeart } from 'react-icons/ai';
+import { IoPlay } from 'react-icons/io5';
 import { useMovies } from '@/hooks/useMovies';
 import { useAuthStore } from '@/store/authStore';
 import { useMovieStore } from '@/store/movieStore';
@@ -232,7 +233,7 @@ const MovieDetails = () => {
                 to={`/watch/${movie.id}`}
                 className="inline-flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 text-white font-bold px-10 py-3.5 rounded-full transition-all shadow-xl hover:shadow-2xl hover:scale-105 text-base"
               >
-                <FiPlay size={22} />
+                <IoPlay size={22} />
                 <span>Xem Ngay</span>
               </Link>
             </div>

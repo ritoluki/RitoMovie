@@ -1,4 +1,4 @@
-import { FiPlay } from 'react-icons/fi';
+import { IoPlay } from 'react-icons/io5';
 import Logo from '@/components/common/Logo';
 
 interface LoadingSpinnerProps {
@@ -28,7 +28,7 @@ const LoadingSpinner = ({ fullScreen = false, size = 'md' }: LoadingSpinnerProps
                 <div className="relative w-32 h-32 md:w-36 md:h-36 rounded-full bg-[#080c18] border border-red-500/50 shadow-[0_25px_60px_rgba(0,0,0,0.6)] flex items-center justify-center">
                   <div className="absolute inset-3 rounded-full border border-white/10" />
                   <div className="relative w-16 h-16 rounded-full bg-white text-red-600 flex items-center justify-center shadow-lg">
-                    <FiPlay className="translate-x-0.5" size={28} />
+                    <IoPlay className="translate-x-0.5" size={28} />
                   </div>
                 </div>
               </div>

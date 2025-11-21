@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiPlay, FiPlus, FiCheck, FiInfo } from 'react-icons/fi';
+import { FiPlus, FiCheck, FiInfo } from 'react-icons/fi';
+import { IoPlay } from 'react-icons/io5';
 import { Movie, MovieDetails, Genre } from '@/types';
 import { getImageUrl, formatRating, formatRuntime } from '@/utils/helpers';
 import { useMovieStore } from '@/store/movieStore';
@@ -34,7 +35,7 @@ const MoviePopup = ({ movie, movieDetails, isLoading, isVisible, onClose, cardRe
   const handleWatchlistClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (!isAuthenticated) return;
 
     try {
@@ -100,8 +101,8 @@ const MoviePopup = ({ movie, movieDetails, isLoading, isVisible, onClose, cardRe
           initial={{ opacity: 0, y: 20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.95 }}
-          transition={{ 
-            duration: 0.25, 
+          transition={{
+            duration: 0.25,
             ease: [0.4, 0, 0.2, 1],
             opacity: { duration: 0.2 }
           }}
@@ -123,7 +124,7 @@ const MoviePopup = ({ movie, movieDetails, isLoading, isVisible, onClose, cardRe
             />
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent" />
-            
+
             {/* Top Badges */}
             <div className="absolute top-3 left-3 flex items-center gap-2">
               <span className="px-2.5 py-1 bg-black/80 backdrop-blur-sm text-white text-xs font-bold rounded border border-white/30">
@@ -141,10 +142,10 @@ const MoviePopup = ({ movie, movieDetails, isLoading, isVisible, onClose, cardRe
                 onClick={handleLinkClick}
                 className="flex items-center justify-center gap-2 flex-1 bg-white hover:bg-gray-200 text-gray-900 font-bold py-2.5 px-4 rounded-lg transition-all duration-200 shadow-lg"
               >
-                <FiPlay size={18} />
+                <IoPlay size={18} />
                 <span className="text-sm">{t('movie.watchNow')}</span>
               </Link>
-              
+
               {isAuthenticated && (
                 <button
                   onClick={handleWatchlistClick}
@@ -190,7 +191,7 @@ const MoviePopup = ({ movie, movieDetails, isLoading, isVisible, onClose, cardRe
                   <span className="text-gray-500">•</span>
                 </>
               )}
-              
+
               {movieDetails?.runtime && !isLoading && (
                 <>
                   <span>{formatRuntime(movieDetails.runtime)}</span>

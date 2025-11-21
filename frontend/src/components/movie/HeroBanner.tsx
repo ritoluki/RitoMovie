@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiPlay, FiInfo, FiHeart } from 'react-icons/fi';
+import { FiInfo, FiHeart } from 'react-icons/fi';
+import { IoPlay } from 'react-icons/io5';
 import { Movie } from '@/types';
 import { getImageUrl, truncateText, formatRuntime, getCertificationFromReleaseDates, getGenreNames } from '@/utils/helpers';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,7 +20,7 @@ const HeroBanner = ({ movies }: HeroBannerProps) => {
   const { t } = useTranslation();
 
   const currentMovie = movies[currentIndex];
-  
+
   // Fetch detailed info for current movie
   const { data: movieDetails } = useMovieDetails(currentMovie?.id);
   const { data: releaseDates } = useReleaseDates(currentMovie?.id);
@@ -41,10 +42,10 @@ const HeroBanner = ({ movies }: HeroBannerProps) => {
 
   // Get certification
   const certification = releaseDates ? getCertificationFromReleaseDates(releaseDates.results) : null;
-  
+
   // Get genre names
   const genreNames = genresData ? getGenreNames(currentMovie.genre_ids, genresData.genres) : [];
-  
+
   // Check if in watchlist (with null/undefined safety check)
   const isInWatchlist = watchlist && Array.isArray(watchlist) ? watchlist.includes(currentMovie.id) : false;
 
@@ -190,17 +191,16 @@ const HeroBanner = ({ movies }: HeroBannerProps) => {
                   to={`/watch/${currentMovie.id}`}
                   className="inline-flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-500 text-white font-bold px-4 md:px-8 py-3 rounded-full transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
-                  <FiPlay size={20} />
+                  <IoPlay size={20} />
                   <span className="hidden md:inline">{t('movie.play')}</span>
                 </Link>
-                
+
                 <button
                   onClick={handleToggleWatchlist}
-                  className={`inline-flex items-center justify-center space-x-2 font-semibold px-4 md:px-8 py-3 rounded-full backdrop-blur-sm transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 ${
-                    isInWatchlist
+                  className={`inline-flex items-center justify-center space-x-2 font-semibold px-4 md:px-8 py-3 rounded-full backdrop-blur-sm transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 ${isInWatchlist
                       ? 'bg-red-500/80 hover:bg-red-500 text-white border-2 border-red-400'
                       : 'bg-gray-800/80 hover:bg-gray-700/80 text-white border-2 border-gray-600'
-                  }`}
+                    }`}
                 >
                   <FiHeart size={20} className={isInWatchlist ? 'fill-current' : ''} />
                   <span className="hidden md:inline">{isInWatchlist ? t('movie.inList') : t('movie.myList')}</span>
@@ -223,11 +223,10 @@ const HeroBanner = ({ movies }: HeroBannerProps) => {
               <button
                 key={movie.id}
                 onClick={() => setCurrentIndex(index)}
-                className={`relative overflow-hidden rounded transition-all duration-300 ${
-                  index === currentIndex
+                className={`relative overflow-hidden rounded transition-all duration-300 ${index === currentIndex
                     ? 'ring-4 ring-red-500 scale-110'
                     : 'opacity-70 hover:opacity-100 hover:scale-105'
-                }`}
+                  }`}
               >
                 <img
                   src={getImageUrl(movie.poster_path, 'poster', 'small')}
