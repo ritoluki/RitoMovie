@@ -4,6 +4,7 @@ import { getImageUrl } from '@/utils/helpers';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 
 interface GalleryTabProps {
   movieId: number;
@@ -12,6 +13,7 @@ interface GalleryTabProps {
 }
 
 const GalleryTab = ({ movieId, images, isLoading }: GalleryTabProps) => {
+  const { t } = useTranslation();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageType, setImageType] = useState<'backdrops' | 'posters'>('backdrops');
 
@@ -26,7 +28,7 @@ const GalleryTab = ({ movieId, images, isLoading }: GalleryTabProps) => {
   if (!images) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-400">Không có hình ảnh</p>
+        <p className="text-gray-400">{t('movie.noImages')}</p>
       </div>
     );
   }
@@ -37,27 +39,25 @@ const GalleryTab = ({ movieId, images, isLoading }: GalleryTabProps) => {
     <div className="space-y-6">
       {/* Tab Selection */}
       <div className="flex items-center gap-4">
-        <h3 className="text-2xl font-bold text-white">Gallery</h3>
+        <h3 className="text-2xl font-bold text-white">{t('movie.gallery')}</h3>
         <div className="flex gap-2 ml-4">
           <button
             onClick={() => setImageType('backdrops')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              imageType === 'backdrops'
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${imageType === 'backdrops'
                 ? 'bg-red-600 text-white'
                 : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-            }`}
+              }`}
           >
-            Backdrops ({images.backdrops?.length || 0})
+            {t('movie.backdrops')} ({images.backdrops?.length || 0})
           </button>
           <button
             onClick={() => setImageType('posters')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              imageType === 'posters'
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${imageType === 'posters'
                 ? 'bg-red-600 text-white'
                 : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-            }`}
+              }`}
           >
-            Posters ({images.posters?.length || 0})
+            {t('movie.posters')} ({images.posters?.length || 0})
           </button>
         </div>
       </div>
@@ -80,13 +80,13 @@ const GalleryTab = ({ movieId, images, isLoading }: GalleryTabProps) => {
                 loading="lazy"
               />
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <span className="text-white text-sm font-semibold">View Full Size</span>
+                <span className="text-white text-sm font-semibold">{t('movie.viewFullSize')}</span>
               </div>
             </motion.div>
           ))
         ) : (
           <div className="col-span-full text-center py-12">
-            <p className="text-gray-400">Không có {imageType === 'backdrops' ? 'backdrops' : 'posters'}</p>
+            <p className="text-gray-400">{t('movie.noImages')}</p>
           </div>
         )}
       </div>

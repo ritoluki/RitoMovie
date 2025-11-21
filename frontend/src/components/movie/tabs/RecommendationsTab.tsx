@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { getImageUrl, formatRating } from '@/utils/helpers';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface RecommendationsTabProps {
   movieId: number;
@@ -11,6 +12,8 @@ interface RecommendationsTabProps {
 }
 
 const RecommendationsTab = ({ movieId, movies, isLoading }: RecommendationsTabProps) => {
+  const { t } = useTranslation();
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
@@ -22,7 +25,7 @@ const RecommendationsTab = ({ movieId, movies, isLoading }: RecommendationsTabPr
   if (!movies || movies.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-400">Không có phim đề xuất</p>
+        <p className="text-gray-400">{t('movie.noRecommendations')}</p>
       </div>
     );
   }
@@ -31,7 +34,7 @@ const RecommendationsTab = ({ movieId, movies, isLoading }: RecommendationsTabPr
     <div className="space-y-6">
       {/* Title */}
       <div>
-        <h3 className="text-2xl font-bold text-white mb-6">Có thể bạn sẽ thích</h3>
+        <h3 className="text-2xl font-bold text-white mb-6">{t('movie.youMightLike')}</h3>
       </div>
 
       {/* Movies Grid */}
@@ -71,7 +74,7 @@ const RecommendationsTab = ({ movieId, movies, isLoading }: RecommendationsTabPr
                 {/* Episode badges */}
                 <div className="absolute top-2 left-2 flex flex-col gap-1">
                   <span className="inline-flex items-center px-2 py-1 bg-green-500 text-white text-xs font-bold rounded">
-                    PĐ. 8
+                    {t('movie.part')} 8
                   </span>
                   <span className="inline-flex items-center px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded">
                     TM. 6
@@ -81,7 +84,7 @@ const RecommendationsTab = ({ movieId, movies, isLoading }: RecommendationsTabPr
                 {/* Season/Episode indicator */}
                 <div className="absolute top-2 right-2">
                   <span className="inline-flex items-center px-2 py-1 bg-gray-900/80 backdrop-blur-sm text-white text-xs font-bold rounded">
-                    PĐ. {Math.min(Math.floor(movie.popularity / 100) || 4, 10)}
+                    {t('movie.part')} {Math.min(Math.floor(movie.popularity / 100) || 4, 10)}
                   </span>
                 </div>
               </div>

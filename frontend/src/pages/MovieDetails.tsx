@@ -14,10 +14,12 @@ import EpisodesTab from '@/components/movie/tabs/EpisodesTab';
 import CastTab from '@/components/movie/tabs/CastTab';
 import GalleryTab from '@/components/movie/tabs/GalleryTab';
 import RecommendationsTab from '@/components/movie/tabs/RecommendationsTab';
+import { useTranslation } from 'react-i18next';
 
 type TabType = 'episodes' | 'gallery' | 'cast' | 'recommendations';
 
 const MovieDetails = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const movieId = parseInt(id || '0');
   const [activeTab, setActiveTab] = useState<TabType>('episodes');
@@ -75,7 +77,7 @@ const MovieDetails = () => {
 
   const handleDownload = () => {
     // Placeholder for download functionality
-    alert('Tính năng tải xuống sẽ được cập nhật sớm!');
+    alert(t('movie.downloadComingSoon'));
   };
 
   if (movieLoading) {
@@ -85,7 +87,7 @@ const MovieDetails = () => {
   if (!movie) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <p className="text-white">Movie not found</p>
+        <p className="text-white">{t('errors.pageNotFound')}</p>
       </div>
     );
   }
@@ -97,10 +99,10 @@ const MovieDetails = () => {
   const clipPathRight = 'polygon(94.239% 100%, 5.761% 100%, 5.761% 100%, 4.826% 99.95%, 3.94% 99.803%, 3.113% 99.569%, 2.358% 99.256%, 1.687% 98.87%, 1.111% 98.421%, .643% 97.915%, .294% 97.362%, .075% 96.768%, 0 96.142%, 0 3.858%, 0 3.858%, .087% 3.185%, .338% 2.552%, .737% 1.968%, 1.269% 1.442%, 1.92% .984%, 2.672% .602%, 3.512% .306%, 4.423% .105%, 5.391% .008%, 6.4% .024%, 94.879% 6.625%, 94.879% 6.625%, 95.731% 6.732%, 96.532% 6.919%, 97.272% 7.178%, 97.942% 7.503%, 98.533% 7.887%, 99.038% 8.323%, 99.445% 8.805%, 99.747% 9.326%, 99.935% 9.88%, 100% 10.459%, 100% 96.142%, 100% 96.142%, 99.925% 96.768%, 99.706% 97.362%, 99.357% 97.915%, 98.889% 98.421%, 98.313% 98.87%, 97.642% 99.256%, 96.887% 99.569%, 96.06% 99.803%, 95.174% 99.95%, 94.239% 100%)';
 
   const tabs = [
-    { id: 'episodes' as TabType, label: 'Tập phim' },
-    { id: 'gallery' as TabType, label: 'Gallery' },
-    { id: 'cast' as TabType, label: 'Diễn viên' },
-    { id: 'recommendations' as TabType, label: 'Đề xuất' },
+    { id: 'episodes' as TabType, label: t('movie.episodes') },
+    { id: 'gallery' as TabType, label: t('movie.gallery') },
+    { id: 'cast' as TabType, label: t('movie.cast') },
+    { id: 'recommendations' as TabType, label: t('movie.recommendations') },
   ];
 
   return (
@@ -234,15 +236,15 @@ const MovieDetails = () => {
                 className="inline-flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 text-white font-bold px-10 py-3.5 rounded-full transition-all shadow-xl hover:shadow-2xl hover:scale-105 text-base"
               >
                 <IoPlay size={22} />
-                <span>Xem Ngay</span>
+                <span>{t('movie.watchNow')}</span>
               </Link>
             </div>
 
             {/* Overview */}
             <div className="bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-xl p-5 space-y-3">
-              <h3 className="text-white font-bold text-base">Giới thiệu:</h3>
+              <h3 className="text-white font-bold text-base">{t('movie.introduction')}</h3>
               <p className="text-gray-300 text-sm leading-relaxed">
-                {movie.overview || 'Chưa có thông tin giới thiệu'}
+                {movie.overview || t('movie.noOverview')}
               </p>
             </div>
 
@@ -251,21 +253,21 @@ const MovieDetails = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 {movie.production_countries && movie.production_countries.length > 0 && (
                   <div>
-                    <span className="text-gray-400 block mb-1">Quốc gia:</span>
+                    <span className="text-gray-400 block mb-1">{t('movie.country')}</span>
                     <span className="text-white font-medium">{movie.production_countries[0].name}</span>
                   </div>
                 )}
 
                 {movie.production_companies && movie.production_companies.length > 0 && (
                   <div>
-                    <span className="text-gray-400 block mb-1">Networks:</span>
+                    <span className="text-gray-400 block mb-1">{t('movie.networks')}</span>
                     <span className="text-white font-medium">{movie.production_companies[0].name}</span>
                   </div>
                 )}
 
                 {movie.production_companies && movie.production_companies.length > 0 && (
                   <div className="md:col-span-2">
-                    <span className="text-gray-400 block mb-1">Sản xuất:</span>
+                    <span className="text-gray-400 block mb-1">{t('movie.production')}</span>
                     <span className="text-white font-medium">
                       {movie.production_companies.slice(0, 3).map(c => c.name).join(', ')}
                     </span>
@@ -288,7 +290,7 @@ const MovieDetails = () => {
                 ) : (
                   <FiHeart className="mr-1" size={16} />
                 )}
-                {inWatchlist ? 'Đã yêu thích' : 'Yêu thích'}
+                {inWatchlist ? t('movie.favorited') : t('movie.favorite')}
               </Button>
               <Button
                 onClick={handleDownload}
@@ -296,7 +298,7 @@ const MovieDetails = () => {
                 size="sm"
               >
                 <FiDownload className="mr-1" size={16} />
-                Tải xuống
+                {t('movie.download')}
               </Button>
               <Button
                 onClick={handleShare}
@@ -304,7 +306,7 @@ const MovieDetails = () => {
                 size="sm"
               >
                 <FiShare2 className="mr-1" size={16} />
-                Chia sẻ
+                {t('movie.share')}
               </Button>
               <Button
                 onClick={handleScrollToComments}
@@ -312,7 +314,7 @@ const MovieDetails = () => {
                 size="sm"
               >
                 <FiMessageCircle className="mr-1" size={16} />
-                Bình luận
+                {t('movie.comments')}
               </Button>
             </div>
           </motion.div>

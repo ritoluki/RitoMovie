@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Comments from '../Comments';
 import Dropdown from '@/components/common/Dropdown';
 import Button from '@/components/common/Button';
+import { useTranslation } from 'react-i18next';
 
 interface EpisodesTabProps {
   movieId: number;
@@ -9,6 +10,7 @@ interface EpisodesTabProps {
 }
 
 const EpisodesTab = ({ movieId, movieTitle }: EpisodesTabProps) => {
+  const { t } = useTranslation();
   const [selectedSeason, setSelectedSeason] = useState('1');
   const [selectedFilter, setSelectedFilter] = useState<'subtitle' | 'dub'>('subtitle');
   const [isCompact, setIsCompact] = useState(false);
@@ -17,15 +19,15 @@ const EpisodesTab = ({ movieId, movieTitle }: EpisodesTabProps) => {
   const totalEpisodes = 8;
   const episodes = Array.from({ length: totalEpisodes }, (_, i) => ({
     number: i + 1,
-    title: `Tập ${i + 1}`,
+    title: `${t('movie.episode')} ${i + 1}`,
     isWatched: false,
   }));
 
   // Prepare season options
   const seasonOptions = [
-    { value: '1', label: 'Phần 1' },
-    { value: '2', label: 'Phần 2' },
-    { value: '3', label: 'Phần 3' },
+    { value: '1', label: `${t('movie.season')} 1` },
+    { value: '2', label: `${t('movie.season')} 2` },
+    { value: '3', label: `${t('movie.season')} 3` },
   ];
 
   return (
@@ -47,7 +49,7 @@ const EpisodesTab = ({ movieId, movieTitle }: EpisodesTabProps) => {
           variant={selectedFilter === 'subtitle' ? 'danger' : 'outline'}
           size="sm"
         >
-          Phụ đề
+          {t('movie.subtitle')}
         </Button>
 
         <Button
@@ -56,12 +58,12 @@ const EpisodesTab = ({ movieId, movieTitle }: EpisodesTabProps) => {
           size="sm"
           className={selectedFilter === 'dub' ? 'bg-purple-600 hover:bg-purple-700' : ''}
         >
-          Thuyết minh giọng Nam
+          {t('movie.dubbed')}
         </Button>
 
         {/* Compact Toggle */}
         <div className="ml-auto flex items-center gap-2">
-          <span className="text-gray-400 text-sm">Rút gọn</span>
+          <span className="text-gray-400 text-sm">{t('movie.compact')}</span>
           <button
             onClick={() => setIsCompact(!isCompact)}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isCompact ? 'bg-red-600' : 'bg-gray-700'
@@ -83,7 +85,7 @@ const EpisodesTab = ({ movieId, movieTitle }: EpisodesTabProps) => {
             className="group relative bg-gray-800 hover:bg-red-600 rounded-lg px-4 py-3 transition-all duration-200 border border-gray-700 hover:border-red-500"
           >
             <span className="text-white text-sm font-medium">
-              Tập {episode.number}
+              {episode.title}
             </span>
             {episode.isWatched && (
               <div className="absolute top-1 right-1 w-2 h-2 bg-yellow-400 rounded-full" />

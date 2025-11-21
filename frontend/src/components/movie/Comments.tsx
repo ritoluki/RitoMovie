@@ -11,23 +11,37 @@ import {
 } from '../../hooks/useComments';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { Comment } from '../../services/commentService';
+import { useTranslation } from 'react-i18next';
 
 interface CommentsProps {
   movieId: number;
 }
 
-// Format time ago
-const formatTimeAgo = (dateString: string): string => {
+// Format time ago - will use translation in component
+const getTimeAgoValues = (dateString: string) => {
   const date = new Date(dateString);
   const now = new Date();
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-  if (seconds < 60) return 'Vừa xong';
-  if (seconds < 3600) return `${Math.floor(seconds / 60)} phút trước`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)} giờ trước`;
-  if (seconds < 2592000) return `${Math.floor(seconds / 86400)} ngày trước`;
-  if (seconds < 31536000) return `${Math.floor(seconds / 2592000)} tháng trước`;
-  return `${Math.floor(seconds / 31536000)} năm trước`;
+  if (seconds < 60) return { key: 'justNow', count: 0 };
+  if (seconds < 3600) {
+    const count = Math.floor(seconds / 60);
+    return { key: count === 1 ? 'oneMinuteAgo' : 'minutesAgo', count };
+  }
+  if (seconds < 86400) {
+    const count = Math.floor(seconds / 3600);
+    return { key: count === 1 ? 'oneHourAgo' : 'hoursAgo', count };
+  }
+  if (seconds < 2592000) {
+    const count = Math.floor(seconds / 86400);
+    return { key: count === 1 ? 'oneDayAgo' : 'daysAgo', count };
+  }
+  if (seconds < 31536000) {
+    const count = Math.floor(seconds / 2592000);
+    return { key: count === 1 ? 'oneMonthAgo' : 'monthsAgo', count };
+  }
+  const count = Math.floor(seconds / 31536000);
+  return { key: count === 1 ? 'oneYearAgo' : 'yearsAgo', count };
 };
 
 // Reply Item Component
@@ -39,6 +53,7 @@ const ReplyItem = ({
   onReplySubmit,
   isFormActive,
   onFormToggle,
+  t,
 }: {
   reply: Comment;
   onLike: (id: string) => void;
@@ -47,6 +62,7 @@ const ReplyItem = ({
   onReplySubmit: (parentId: string, text: string) => void;
   isFormActive: boolean;
   onFormToggle: (replyId: string) => void;
+  t: any;
 }) => {
   const [replyText, setReplyText] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -70,6 +86,11 @@ const ReplyItem = ({
     }
   };
 
+  const timeAgo = getTimeAgoValues(reply.createdAt);
+  const timeAgoText = timeAgo.key === 'justNow'
+    ? t(`comments.${timeAgo.key}`)
+    : t(`comments.${timeAgo.key}`, { count: timeAgo.count });
+
   return (
     <div className="flex gap-3">
       {/* Reply Avatar */}
@@ -89,7 +110,7 @@ const ReplyItem = ({
         {/* Reply Header */}
         <div className="flex items-center gap-2 mb-1">
           <h5 className="text-white font-semibold text-sm">{reply.user.name}</h5>
-          <span className="text-gray-500 text-xs">{formatTimeAgo(reply.createdAt)}</span>
+          <span className="text-gray-500 text-xs">{timeAgoText}</span>
         </div>
 
         {/* Reply Text */}
@@ -136,7 +157,7 @@ const ReplyItem = ({
             }}
             className="text-gray-400 hover:text-white transition-colors font-medium"
           >
-            Trả lời
+            {t('comments.reply')}
           </button>
         </div>
 
@@ -149,7 +170,7 @@ const ReplyItem = ({
                   ref={textareaRef}
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
-                  placeholder="Viết bình luận"
+                  placeholder={t('comments.writeComment')}
                   className="w-full bg-transparent text-white p-3 resize-none focus:outline-none min-h-[60px] placeholder-gray-500 text-sm"
                   maxLength={1000}
                 />
@@ -162,7 +183,7 @@ const ReplyItem = ({
                     disabled={!replyText.trim()}
                     className="bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-700 disabled:text-gray-500 text-gray-900 font-bold px-4 py-1.5 rounded transition-colors flex items-center gap-2 text-sm"
                   >
-                    <span>Gửi</span>
+                    <span>{t('comments.submit')}</span>
                     <span>▶</span>
                   </button>
                 </div>
@@ -182,12 +203,14 @@ const CommentItem = ({
   onDislike,
   currentUserId,
   onReplySubmit,
+  t,
 }: {
   comment: Comment;
   onLike: (id: string) => void;
   onDislike: (id: string) => void;
   currentUserId?: string;
   onReplySubmit: (parentId: string, text: string) => void;
+  t: any;
 }) => {
   const [showReplies, setShowReplies] = useState(false);
   const [showReplyForm, setShowReplyForm] = useState(false);
@@ -220,6 +243,11 @@ const CommentItem = ({
     }
   };
 
+  const timeAgo = getTimeAgoValues(comment.createdAt);
+  const timeAgoText = timeAgo.key === 'justNow'
+    ? t(`comments.${timeAgo.key}`)
+    : t(`comments.${timeAgo.key}`, { count: timeAgo.count });
+
   return (
     <div className="flex gap-3 py-4">
       {/* Avatar */}
@@ -244,7 +272,7 @@ const CommentItem = ({
               ∞
             </span>
           )}
-          <span className="text-gray-500 text-sm">{formatTimeAgo(comment.createdAt)}</span>
+          <span className="text-gray-500 text-sm">{timeAgoText}</span>
         </div>
 
         {/* Comment Text */}
@@ -288,7 +316,7 @@ const CommentItem = ({
             }}
             className="text-gray-400 hover:text-white transition-colors font-medium"
           >
-            Trả lời
+            {t('comments.reply')}
           </button>
         </div>
 
@@ -301,18 +329,12 @@ const CommentItem = ({
                   ref={textareaRef}
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
-                  placeholder="Viết bình luận"
+                  placeholder={t('comments.writeComment')}
                   className="w-full bg-transparent text-white p-4 resize-none focus:outline-none min-h-[80px] placeholder-gray-500"
                   maxLength={1000}
                 />
                 <div className="flex items-center justify-between px-4 py-3 bg-gray-800/80 border-t border-gray-700">
                   <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      className="text-gray-400 hover:text-gray-300 text-sm transition-colors"
-                    >
-                      Tiết lộ?
-                    </button>
                     <span className="text-xs text-gray-500">
                       {replyText.length} / 1000
                     </span>
@@ -322,7 +344,7 @@ const CommentItem = ({
                     disabled={!replyText.trim()}
                     className="bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-700 disabled:text-gray-500 text-gray-900 font-bold px-6 py-2 rounded transition-colors flex items-center gap-2"
                   >
-                    <span>Gửi</span>
+                    <span>{t('comments.submit')}</span>
                     <span>▶</span>
                   </button>
                 </div>
@@ -341,7 +363,9 @@ const CommentItem = ({
               <span className={`transform transition-transform ${showReplies ? 'rotate-90' : ''}`}>
                 ▶
               </span>
-              {comment.repliesCount} bình luận
+              {comment.repliesCount === 1
+                ? t('comments.oneReply')
+                : t('comments.replies', { count: comment.repliesCount })}
             </button>
 
             {/* Display Replies */}
@@ -364,6 +388,7 @@ const CommentItem = ({
                         setShowReplyForm(false); // Đóng form của comment cha
                       }
                     }}
+                    t={t}
                   />
                 ))}
               </div>
@@ -376,6 +401,7 @@ const CommentItem = ({
 };
 
 const Comments = ({ movieId }: CommentsProps) => {
+  const { t } = useTranslation();
   const [commentText, setCommentText] = useState('');
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<'recent' | 'popular' | 'oldest'>('recent');
@@ -436,9 +462,9 @@ const Comments = ({ movieId }: CommentsProps) => {
 
   // Prepare sort options
   const sortOptions = [
-    { value: 'recent', label: 'Mới nhất' },
-    { value: 'popular', label: 'Phổ biến' },
-    { value: 'oldest', label: 'Cũ nhất' },
+    { value: 'recent', label: t('comments.newest') },
+    { value: 'popular', label: t('comments.topRated') },
+    { value: 'oldest', label: t('comments.oldest') },
   ];
 
   return (
@@ -446,7 +472,7 @@ const Comments = ({ movieId }: CommentsProps) => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-bold text-white">
-          Bình luận ({pagination?.total || 0})
+          {t('comments.commentCount', { count: pagination?.total || 0 })}
         </h3>
 
         {/* Sort Options */}
@@ -467,11 +493,11 @@ const Comments = ({ movieId }: CommentsProps) => {
             <div className="flex-1">
               <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
                 <p className="text-gray-400 text-sm">
-                  Vui lòng{' '}
+                  {t('common.signIn')}{' '}
                   <a href="/login" className="text-yellow-500 font-semibold hover:text-yellow-400">
-                    đăng nhập
+                    {t('header.signIn')}
                   </a>{' '}
-                  để tham gia bình luận.
+                  {t('comments.signInToComment')}
                 </p>
               </div>
             </div>
@@ -496,18 +522,12 @@ const Comments = ({ movieId }: CommentsProps) => {
                 <textarea
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
-                  placeholder="Viết bình luận..."
+                  placeholder={t('comments.writeComment')}
                   className="w-full bg-transparent text-white p-4 resize-none focus:outline-none min-h-[100px] placeholder-gray-500"
                   maxLength={1000}
                 />
                 <div className="flex items-center justify-between px-4 py-3 bg-gray-800/80 border-t border-gray-700">
                   <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      className="text-gray-400 hover:text-gray-300 text-sm transition-colors"
-                    >
-                      Tiết lộ?
-                    </button>
                     <span className="text-xs text-gray-500">
                       {commentText.length} / 1000
                     </span>
@@ -517,7 +537,7 @@ const Comments = ({ movieId }: CommentsProps) => {
                     disabled={!commentText.trim() || createCommentMutation.isPending}
                     className="bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-700 disabled:text-gray-500 text-gray-900 font-bold px-6 py-2 rounded transition-colors flex items-center gap-2"
                   >
-                    <span>{createCommentMutation.isPending ? 'Đang gửi...' : 'Gửi'}</span>
+                    <span>{createCommentMutation.isPending ? t('comments.submitting') : t('comments.submit')}</span>
                     <span>▶</span>
                   </button>
                 </div>
@@ -537,7 +557,7 @@ const Comments = ({ movieId }: CommentsProps) => {
       {error && (
         <div className="bg-red-900/20 border border-red-600 rounded-lg p-4 text-center">
           <p className="text-red-500">
-            Không thể tải bình luận. Vui lòng thử lại sau.
+            {t('comments.loadError')}
           </p>
         </div>
       )}
@@ -545,7 +565,7 @@ const Comments = ({ movieId }: CommentsProps) => {
       {!isLoading && !error && comments.length === 0 && (
         <div className="py-12 text-center">
           <p className="text-gray-400">
-            Chưa có bình luận nào. Hãy là người đầu tiên bình luận!
+            {t('comments.noComments')}. {t('comments.beFirstToComment')}
           </p>
         </div>
       )}
@@ -560,6 +580,7 @@ const Comments = ({ movieId }: CommentsProps) => {
               onDislike={handleDislike}
               onReplySubmit={handleReplySubmit}
               currentUserId={user?._id}
+              t={t}
             />
           ))}
         </div>
@@ -573,17 +594,17 @@ const Comments = ({ movieId }: CommentsProps) => {
             disabled={page === 1}
             className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Trước
+            {t('common.previous', 'Trước')}
           </button>
           <span className="px-4 py-2 text-gray-300">
-            Trang {page} / {pagination.pages}
+            {t('common.page', 'Trang')} {page} / {pagination.pages}
           </span>
           <button
             onClick={() => setPage(page + 1)}
             disabled={page === pagination.pages}
             className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Sau
+            {t('common.next', 'Sau')}
           </button>
         </div>
       )}

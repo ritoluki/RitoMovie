@@ -2,6 +2,7 @@ import { Cast } from '@/types';
 import { getImageUrl } from '@/utils/helpers';
 import Comments from '../Comments';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import { useTranslation } from 'react-i18next';
 
 interface CastTabProps {
   movieId: number;
@@ -10,6 +11,8 @@ interface CastTabProps {
 }
 
 const CastTab = ({ movieId, cast, isLoading }: CastTabProps) => {
+  const { t } = useTranslation();
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
@@ -21,7 +24,7 @@ const CastTab = ({ movieId, cast, isLoading }: CastTabProps) => {
   if (!cast || cast.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-400">Không có thông tin diễn viên</p>
+        <p className="text-gray-400">{t('movie.noCastInfo')}</p>
       </div>
     );
   }
@@ -30,7 +33,7 @@ const CastTab = ({ movieId, cast, isLoading }: CastTabProps) => {
     <div className="space-y-8">
       {/* Cast Grid */}
       <div>
-        <h3 className="text-2xl font-bold text-white mb-6">Diễn viên</h3>
+        <h3 className="text-2xl font-bold text-white mb-6">{t('movie.cast')}</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {cast.map((person) => (
             <div
