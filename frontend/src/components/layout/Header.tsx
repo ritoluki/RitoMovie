@@ -52,11 +52,28 @@ const Header = () => {
   ];
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-gray-900/95 backdrop-blur-md shadow-lg' : 'bg-gradient-to-b from-gray-900/80 to-transparent'
-      }`}
-    >
+    <>
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.button
+            key="mobile-menu-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            aria-label="Close menu overlay"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="fixed inset-0 z-40 bg-gray-900/70 backdrop-blur-sm md:hidden"
+          />
+        )}
+      </AnimatePresence>
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          isScrolled || isMobileMenuOpen
+            ? 'bg-gray-900/95 backdrop-blur-md shadow-lg'
+            : 'bg-gradient-to-b from-gray-900/80 to-transparent'
+        }`}
+      >
       <div className="container mx-auto px-2 md:px-1">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
@@ -245,6 +262,7 @@ const Header = () => {
         </AnimatePresence>
       </div>
     </header>
+  </>
   );
 };
 

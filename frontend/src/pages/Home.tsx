@@ -46,7 +46,7 @@ const Home = () => {
       )}
 
       {/* Movie Rows */}
-      <div className="relative mt-8 md:-mt-32 lg:-mt-48 z-10 space-y-8 pb-16">
+      <div className="relative mt-8 md:mt-12 lg:mt-16 z-10 space-y-8 pb-16">
         {/* Top 10 Section with Beautiful Design */}
         {trending?.results && (
           <TopMoviesSection 

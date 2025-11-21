@@ -80,7 +80,7 @@ const HeroBanner = ({ movies }: HeroBannerProps) => {
           </div>
 
           {/* Content */}
-          <div className="relative h-full flex items-start pt-60 md:pt-40 lg:pt-44 pl-6 md:pl-16 lg:pl-24 xl:pl-32 pr-4">
+          <div className="relative h-full flex items-end pt-24 sm:pt-32 md:pt-28 lg:pt-32 pl-6 md:pl-16 lg:pl-24 xl:pl-32 pr-4 pb-20 md:pb-24 lg:pb-28">
             <div className="max-w-3xl space-y-3 md:space-y-5">
               {/* Tagline/Original Title */}
               {currentMovie.original_title && currentMovie.original_title !== currentMovie.title && (
@@ -238,21 +238,6 @@ const HeroBanner = ({ movies }: HeroBannerProps) => {
             ))}
           </div>
 
-          {/* Mobile Navigation Dots */}
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex md:hidden space-x-2">
-            {movies.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  index === currentIndex
-                    ? 'bg-red-500 w-8'
-                    : 'bg-white/50 hover:bg-white/75'
-                }`}
-                aria-label={`Go to slide ${index + 1}`}
-              />
-            ))}
-          </div>
         </motion.div>
       </AnimatePresence>
     </div>

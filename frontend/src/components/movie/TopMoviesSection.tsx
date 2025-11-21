@@ -118,6 +118,7 @@ const TopMovieCard = ({ movie, rank }: TopMovieCardProps) => {
   const [shouldFetchDetails, setShouldFetchDetails] = useState(false);
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
   const { useMovieDetails } = useMovies();
 
   // Fetch details - React Query will cache the results
@@ -130,6 +131,16 @@ const TopMovieCard = ({ movie, rank }: TopMovieCardProps) => {
         clearTimeout(hoverTimeoutRef.current);
       }
     };
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // Get age rating based on vote average (simplified example)
@@ -150,6 +161,7 @@ const TopMovieCard = ({ movie, rank }: TopMovieCardProps) => {
   };
 
   const handleMouseEnter = () => {
+    if (isMobile) return;
     // Set timeout to show popup after 500ms
     hoverTimeoutRef.current = setTimeout(() => {
       setShouldFetchDetails(true);
@@ -158,6 +170,7 @@ const TopMovieCard = ({ movie, rank }: TopMovieCardProps) => {
   };
 
   const handleMouseLeave = () => {
+    if (isMobile) return;
     setShowPopup(false);
     
     // Clear timeout if mouse leaves before 1000ms
@@ -179,7 +192,7 @@ const TopMovieCard = ({ movie, rank }: TopMovieCardProps) => {
       onMouseLeave={handleMouseLeave}
     >
       {/* Show popup with fixed positioning */}
-      {showPopup && (
+      {!isMobile && showPopup && (
         <MoviePopup
           movie={movie}
           movieDetails={shouldFetchDetails ? movieDetails : undefined}
