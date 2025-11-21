@@ -87,8 +87,8 @@ const Header = () => {
       </AnimatePresence>
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled || isMobileMenuOpen
-            ? 'bg-gray-900/95 backdrop-blur-md shadow-lg'
-            : 'bg-gradient-to-b from-gray-900/80 to-transparent'
+          ? 'bg-gray-900/95 backdrop-blur-md shadow-lg'
+          : 'bg-gradient-to-b from-gray-900/80 to-transparent'
           }`}
       >
         <div className="container mx-auto px-2 md:px-1">
@@ -188,11 +188,11 @@ const Header = () => {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl py-2 z-50"
+                        className="absolute right-0 mt-2 w-64 bg-gray-800 rounded-lg shadow-xl py-2 z-50"
                       >
-                        <div className="px-4 py-2 border-b border-gray-700">
-                          <p className="text-white font-medium truncate">{user?.name}</p>
-                          <p className="text-gray-400 text-sm truncate">{user?.email}</p>
+                        <div className="px-4 py-3 border-b border-gray-700">
+                          <p className="text-white font-medium whitespace-nowrap">{user?.name}</p>
+                          <p className="text-gray-400 text-sm whitespace-nowrap">{user?.email}</p>
                         </div>
 
                         <Link
