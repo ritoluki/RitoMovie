@@ -5,6 +5,7 @@ import { Movie, MovieDetails, Genre } from '@/types';
 import { getImageUrl, formatRating, formatRuntime } from '@/utils/helpers';
 import { useMovieStore } from '@/store/movieStore';
 import { useAuthStore } from '@/store/authStore';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface MoviePopupProps {
@@ -13,10 +14,10 @@ interface MoviePopupProps {
   isLoading: boolean;
   isVisible: boolean;
   onClose: () => void;
-  position?: 'left' | 'right';
+  cardRef: React.RefObject<HTMLDivElement>;
 }
 
-const MoviePopup = ({ movie, movieDetails, isLoading, isVisible, onClose, position = 'left' }: MoviePopupProps) => {
+const MoviePopup = ({ movie, movieDetails, isLoading, isVisible, onClose, cardRef }: MoviePopupProps) => {
   const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useMovieStore();
   const { isAuthenticated } = useAuthStore();
   const inWatchlist = isInWatchlist(movie.id);
@@ -52,14 +53,49 @@ const MoviePopup = ({ movie, movieDetails, isLoading, isVisible, onClose, positi
     onClose();
   };
 
-  // Position classes based on position prop
-  const positionClasses = position === 'left' 
-    ? 'top-4 left-0' 
-    : 'top-0 right-0';
+  // Calculate popup position based on card position
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [isPositioned, setIsPositioned] = useState(false);
+
+  useEffect(() => {
+    if (isVisible && cardRef.current) {
+      const cardRect = cardRef.current.getBoundingClientRect();
+      const popupWidth = 450;
+      const popupHeight = 500; // Approximate height
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const spacing = 8; // Gap between card and popup
+
+      let top = cardRect.top;
+      let left = cardRect.left;
+
+      // Horizontal positioning
+      if (cardRect.right + popupWidth + spacing <= viewportWidth) {
+        // Show on right of card
+        left = cardRect.right + spacing;
+      } else if (cardRect.left - popupWidth - spacing >= 0) {
+        // Show on left of card
+        left = cardRect.left - popupWidth - spacing;
+      } else {
+        // Show aligned with card left, but check viewport bounds
+        left = Math.min(cardRect.left, viewportWidth - popupWidth - 20);
+        left = Math.max(20, left);
+      }
+
+      // Vertical positioning - ensure popup doesn't go off screen
+      if (top + popupHeight > viewportHeight) {
+        top = Math.max(20, viewportHeight - popupHeight - 20);
+      }
+      top = Math.max(20, top); // Minimum 20px from top
+
+      setPosition({ top, left });
+      setIsPositioned(true);
+    }
+  }, [isVisible, cardRef]);
 
   return (
     <AnimatePresence>
-      {isVisible && (
+      {isVisible && isPositioned && (
         <motion.div
           initial={{ opacity: 0, y: 20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -69,14 +105,16 @@ const MoviePopup = ({ movie, movieDetails, isLoading, isVisible, onClose, positi
             ease: [0.4, 0, 0.2, 1],
             opacity: { duration: 0.2 }
           }}
-          className={`absolute ${positionClasses} z-50 w-[450px] max-w-[90vw] bg-gray-900 rounded-xl shadow-2xl backdrop-blur-xl border-2 border-white/20`}
+          className="fixed z-[9999] w-[450px] max-w-[90vw] bg-gray-900 rounded-xl shadow-2xl backdrop-blur-xl border-2 border-white/20"
           style={{
+            top: `${position.top}px`,
+            left: `${position.left}px`,
             boxShadow: '0 25px 70px -12px rgba(0, 0, 0, 0.9), 0 10px 25px -5px rgba(0, 0, 0, 0.7)',
           }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Backdrop Image Header */}
-          <div className="relative h-52 overflow-hidden rounded-t-xl">
+          <div className="relative h-68 overflow-hidden rounded-t-xl">
             <img
               src={getImageUrl(movie.backdrop_path || movie.poster_path, 'backdrop', 'large')}
               alt={movie.title}
@@ -129,14 +167,14 @@ const MoviePopup = ({ movie, movieDetails, isLoading, isVisible, onClose, positi
           </div>
 
           {/* Content Section */}
-          <div className="p-4 space-y-2.5 rounded-b-xl overflow-hidden">
+          <div className="p-5 space-y-3 rounded-b-xl overflow-hidden">
             {/* Title */}
             <div>
-              <h3 className="text-white font-bold text-base line-clamp-1 leading-tight">
+              <h3 className="text-white font-bold text-lg line-clamp-2 leading-tight">
                 {movie.title}
               </h3>
               {movie.original_title && movie.original_title !== movie.title && (
-                <p className="text-gray-400 text-xs mt-0.5 line-clamp-1">
+                <p className="text-gray-400 text-xs mt-1 line-clamp-1">
                   {movie.original_title}
                 </p>
               )}
@@ -195,7 +233,7 @@ const MoviePopup = ({ movie, movieDetails, isLoading, isVisible, onClose, positi
 
             {/* Overview */}
             {movie.overview && (
-              <p className="text-gray-400 text-xs leading-relaxed line-clamp-2">
+              <p className="text-gray-400 text-xs leading-relaxed line-clamp-4">
                 {movie.overview}
               </p>
             )}

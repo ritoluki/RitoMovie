@@ -116,7 +116,6 @@ interface TiltedMovieCardProps {
 const TiltedMovieCard = ({ movie, rank }: TiltedMovieCardProps) => {
   const [showPopup, setShowPopup] = useState(false);
   const [shouldFetchDetails, setShouldFetchDetails] = useState(false);
-  const [popupPosition, setPopupPosition] = useState<'left' | 'right'>('left');
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const { useMovieDetails } = useMovies();
@@ -137,21 +136,6 @@ const TiltedMovieCard = ({ movie, rank }: TiltedMovieCardProps) => {
   const isOddRank = rank % 2 === 1;
 
   const handleMouseEnter = () => {
-    // Calculate smart positioning based on card position in viewport
-    if (cardRef.current) {
-      const rect = cardRef.current.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const popupWidth = 450; // Width of popup
-      
-      // If card is in right half of viewport and there's not enough space on right
-      // or if card is too close to right edge, position popup to the left
-      if (rect.right + popupWidth > viewportWidth && rect.left > popupWidth) {
-        setPopupPosition('right'); // Show popup on the right (which means popup extends to left)
-      } else {
-        setPopupPosition('left');
-      }
-    }
-    
     // Set timeout to show popup after 500ms
     hoverTimeoutRef.current = setTimeout(() => {
       setShouldFetchDetails(true);
@@ -181,10 +165,23 @@ const TiltedMovieCard = ({ movie, rank }: TiltedMovieCardProps) => {
 
   return (
     <div
+      ref={cardRef}
       className={`flex-none w-[240px] md:w-[280px] lg:w-[320px] transition-all duration-300 ${showPopup ? 'z-40' : 'z-0'}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
+      {/* Show popup with fixed positioning */}
+      {showPopup && (
+        <MoviePopup
+          movie={movie}
+          movieDetails={shouldFetchDetails ? movieDetails : undefined}
+          isLoading={shouldFetchDetails && detailsLoading}
+          isVisible={showPopup}
+          onClose={handlePopupClose}
+          cardRef={cardRef}
+        />
+      )}
+
       <Link to={`/movie/${movie.id}`}>
         <motion.div
           className="relative group/card cursor-pointer"
@@ -194,20 +191,6 @@ const TiltedMovieCard = ({ movie, rank }: TiltedMovieCardProps) => {
           }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
         >
-        {/* Show popup on desktop only (hidden on mobile) - Outside clip-path */}
-        <div ref={cardRef} className="hidden md:block absolute inset-0 pointer-events-none z-50">
-          <div className="pointer-events-auto">
-            <MoviePopup
-              movie={movie}
-              movieDetails={shouldFetchDetails ? movieDetails : undefined}
-              isLoading={shouldFetchDetails && detailsLoading}
-              isVisible={showPopup}
-              onClose={handlePopupClose}
-              position={popupPosition}
-            />
-          </div>
-        </div>
-
         {/* Card with Clip-Path - Alternate direction */}
         <div 
           className="relative aspect-[2/3] overflow-hidden bg-gray-900 shadow-2xl"

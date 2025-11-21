@@ -34,21 +34,6 @@ const MovieCard = ({ movie }: MovieCardProps) => {
   }, []);
 
   const handleMouseEnter = () => {
-    // Calculate smart positioning based on card position in viewport
-    if (cardRef.current) {
-      const rect = cardRef.current.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const popupWidth = 450; // Width of popup
-      
-      // If card is in right half of viewport and there's not enough space on right
-      // or if card is too close to right edge, position popup to the left
-      if (rect.right + popupWidth > viewportWidth && rect.left > popupWidth) {
-        setPopupPosition('right'); // Show popup on the right (which means popup extends to left)
-      } else {
-        setPopupPosition('left');
-      }
-    }
-    
     // Set timeout to show popup after 500ms
     hoverTimeoutRef.current = setTimeout(() => {
       setShouldFetchDetails(true);
@@ -72,23 +57,22 @@ const MovieCard = ({ movie }: MovieCardProps) => {
 
   return (
     <div 
+      ref={cardRef}
       className={`relative transition-all duration-300 ${showPopup ? 'z-40' : 'z-0'}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Show popup on desktop only (hidden on mobile) - Outside overflow containers */}
-      <div ref={cardRef} className="hidden md:block absolute inset-0 pointer-events-none z-50">
-        <div className="pointer-events-auto">
-          <MoviePopup
-            movie={movie}
-            movieDetails={shouldFetchDetails ? movieDetails : undefined}
-            isLoading={shouldFetchDetails && detailsLoading}
-            isVisible={showPopup}
-            onClose={handlePopupClose}
-            position={popupPosition}
-          />
-        </div>
-      </div>
+      {/* Show popup on desktop only (hidden on mobile) - Fixed position for full viewport */}
+      {showPopup && (
+        <MoviePopup
+          movie={movie}
+          movieDetails={shouldFetchDetails ? movieDetails : undefined}
+          isLoading={shouldFetchDetails && detailsLoading}
+          isVisible={showPopup}
+          onClose={handlePopupClose}
+          cardRef={cardRef}
+        />
+      )}
 
       <Link to={`/movie/${movie.id}`}>
         <motion.div
