@@ -58,13 +58,13 @@ const MovieRow = ({ title, movies, link }: MovieRowProps) => {
         <h2 className="text-2xl md:text-3xl font-bold text-white">
           {title}
         </h2>
-        
+
         {link && (
           <Link
             to={link}
-            className="group/more flex items-center justify-center gap-2 px-1.5 pl-4 py-1 rounded-full group-hover/more:rounded-lg border-2 border-white/30 group-hover/more:border-red-500/50 hover:bg-red-500/10 text-white transition-all duration-300"
+            className="group/more flex items-center justify-center gap-0 px-2 py-1 rounded-full group-hover/more:rounded-lg border-2 border-white/30 group-hover/more:border-red-500/50 hover:bg-red-500/10 text-white transition-all duration-300"
           >
-            <span className="text-sm font-medium text-red-500 max-w-0 group-hover/more:max-w-[80px] opacity-0 group-hover/more:opacity-100 transition-all duration-300 ease-out whitespace-nowrap overflow-hidden">
+            <span className="text-sm font-medium text-red-500 max-w-0 group-hover/more:max-w-[80px] group-hover/more:pl-2 group-hover/more:pr-1 opacity-0 group-hover/more:opacity-100 transition-all duration-300 ease-out whitespace-nowrap overflow-hidden">
               Xem thêm
             </span>
             <FiChevronRight size={16} className="flex-shrink-0" />
@@ -74,11 +74,11 @@ const MovieRow = ({ title, movies, link }: MovieRowProps) => {
 
       {/* Scrollable Container */}
       <div className="relative">
-        {/* Left Arrow - Only show when not at start */}
+        {/* Left Arrow - Only show on desktop when not at start */}
         {showLeftArrow && (
           <button
             onClick={() => scroll('left')}
-            className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 bg-black/80 hover:bg-black/90 backdrop-blur-sm rounded-full p-3 md:p-4 opacity-0 group-hover/row:opacity-100 transition-all duration-300 shadow-xl hover:scale-110"
+            className="hidden md:block absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 bg-black/80 hover:bg-black/90 backdrop-blur-sm rounded-full p-3 md:p-4 opacity-0 group-hover/row:opacity-100 transition-all duration-300 shadow-xl hover:scale-110"
             aria-label="Scroll left"
           >
             <FiChevronLeft size={28} className="text-white" />
@@ -100,11 +100,11 @@ const MovieRow = ({ title, movies, link }: MovieRowProps) => {
           ))}
         </div>
 
-        {/* Right Arrow - Always show when there's more content */}
+        {/* Right Arrow - Only show on desktop when there's more content */}
         {showRightArrow && (
           <button
             onClick={() => scroll('right')}
-            className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 bg-black/80 hover:bg-black/90 backdrop-blur-sm rounded-full p-3 md:p-4 opacity-0 group-hover/row:opacity-100 transition-all duration-300 shadow-xl hover:scale-110"
+            className="hidden md:block absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 bg-black/80 hover:bg-black/90 backdrop-blur-sm rounded-full p-3 md:p-4 opacity-0 group-hover/row:opacity-100 transition-all duration-300 shadow-xl hover:scale-110"
             aria-label="Scroll right"
           >
             <FiChevronRight size={28} className="text-white" />

@@ -19,9 +19,9 @@ const MovieCard = ({ movie }: MovieCardProps) => {
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
-  
+
   const { useMovieDetails } = useMovies();
-  
+
   // Fetch details - React Query will cache the results
   const { data: movieDetails, isLoading: detailsLoading } = useMovieDetails(movie.id);
 
@@ -56,7 +56,7 @@ const MovieCard = ({ movie }: MovieCardProps) => {
   const handleMouseLeave = () => {
     if (isMobile) return;
     setShowPopup(false);
-    
+
     // Clear timeout if mouse leaves before 1000ms
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
@@ -69,7 +69,7 @@ const MovieCard = ({ movie }: MovieCardProps) => {
   };
 
   return (
-    <div 
+    <div
       ref={cardRef}
       className={`relative transition-all duration-300 ${showPopup ? 'z-40' : 'z-0'}`}
       onMouseEnter={handleMouseEnter}
@@ -90,32 +90,32 @@ const MovieCard = ({ movie }: MovieCardProps) => {
       <Link to={`/movie/${movie.id}`}>
         <motion.div
           className="movie-card group"
-          whileHover={{ scale: 1.05 }}
+          whileHover={isMobile ? {} : { scale: 1.05 }}
           transition={{ duration: 0.3 }}
         >
-        {/* Poster */}
-        <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gray-800">
-          <img
-            src={getImageUrl(movie.poster_path, 'poster', 'medium')}
-            alt={movie.title}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-        </div>
+          {/* Poster */}
+          <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gray-800">
+            <img
+              src={getImageUrl(movie.poster_path, 'poster', 'medium')}
+              alt={movie.title}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </div>
 
-        {/* Movie Title - Always Visible */}
-        <div className="mt-3 px-1">
-          <h3 className="text-white font-semibold text-sm md:text-base line-clamp-2 group-hover:text-red-500 transition-colors duration-200">
-            {movie.title}
-          </h3>
-          {movie.release_date && (
-            <p className="text-gray-400 text-xs mt-1">
-              {new Date(movie.release_date).getFullYear()}
-            </p>
-          )}
-        </div>
-      </motion.div>
-    </Link>
+          {/* Movie Title - Always Visible */}
+          <div className="mt-3 px-1">
+            <h3 className="text-white font-semibold text-sm md:text-base line-clamp-2 md:group-hover:text-red-500 transition-colors duration-200">
+              {movie.title}
+            </h3>
+            {movie.release_date && (
+              <p className="text-gray-400 text-xs mt-1">
+                {new Date(movie.release_date).getFullYear()}
+              </p>
+            )}
+          </div>
+        </motion.div>
+      </Link>
     </div>
   );
 };
