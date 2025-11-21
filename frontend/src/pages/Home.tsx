@@ -1,6 +1,8 @@
 import { useMovies } from '@/hooks/useMovies';
 import HeroBanner from '@/components/movie/HeroBanner';
 import MovieRow from '@/components/movie/MovieRow';
+import TopMoviesSection from '@/components/movie/TopMoviesSection';
+import TopMoviesTiltedSection from '@/components/movie/TopMoviesTiltedSection';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useEffect } from 'react';
 import { useMovieStore } from '@/store/movieStore';
@@ -45,6 +47,14 @@ const Home = () => {
 
       {/* Movie Rows */}
       <div className="relative -mt-48 z-10 space-y-8 pb-16">
+        {/* Top 10 Section with Beautiful Design */}
+        {trending?.results && (
+          <TopMoviesSection 
+            title="Top 10 phim bộ hôm nay" 
+            movies={trending.results}
+          />
+        )}
+        
         {trending?.results && (
           <MovieRow 
             title={t('home.trendingNow')} 
@@ -74,6 +84,14 @@ const Home = () => {
             title={t('home.actionMovies')} 
             movies={action.results}
             link="/browse?genre=28"
+          />
+        )}
+        
+        {/* Top 10 Phim Lẻ with Tilted Style - Ở giữa các section */}
+        {topRated?.results && (
+          <TopMoviesTiltedSection 
+            title="Top 10 phim lẻ đáng xem nhất" 
+            movies={topRated.results}
           />
         )}
         
