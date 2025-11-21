@@ -18,6 +18,7 @@ const MovieCard = ({ movie }: MovieCardProps) => {
   const [popupPosition, setPopupPosition] = useState<'left' | 'right'>('left');
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
   
   const { useMovieDetails } = useMovies();
   
@@ -33,7 +34,18 @@ const MovieCard = ({ movie }: MovieCardProps) => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleMouseEnter = () => {
+    if (isMobile) return;
     // Set timeout to show popup after 500ms
     hoverTimeoutRef.current = setTimeout(() => {
       setShouldFetchDetails(true);
@@ -42,6 +54,7 @@ const MovieCard = ({ movie }: MovieCardProps) => {
   };
 
   const handleMouseLeave = () => {
+    if (isMobile) return;
     setShowPopup(false);
     
     // Clear timeout if mouse leaves before 1000ms
@@ -63,7 +76,7 @@ const MovieCard = ({ movie }: MovieCardProps) => {
       onMouseLeave={handleMouseLeave}
     >
       {/* Show popup on desktop only (hidden on mobile) - Fixed position for full viewport */}
-      {showPopup && (
+      {!isMobile && showPopup && (
         <MoviePopup
           movie={movie}
           movieDetails={shouldFetchDetails ? movieDetails : undefined}
