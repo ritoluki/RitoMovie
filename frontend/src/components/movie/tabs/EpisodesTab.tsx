@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import Comments from '../Comments';
+import Dropdown from '@/components/common/Dropdown';
+import Button from '@/components/common/Button';
 
 interface EpisodesTabProps {
   movieId: number;
@@ -19,59 +21,55 @@ const EpisodesTab = ({ movieId, movieTitle }: EpisodesTabProps) => {
     isWatched: false,
   }));
 
+  // Prepare season options
+  const seasonOptions = [
+    { value: '1', label: 'Phần 1' },
+    { value: '2', label: 'Phần 2' },
+    { value: '3', label: 'Phần 3' },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Controls */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Season Dropdown */}
-        <div className="flex items-center gap-2">
-          <select
+        <div className="w-36">
+          <Dropdown
             value={selectedSeason}
-            onChange={(e) => setSelectedSeason(e.target.value)}
-            className="bg-gray-800 text-white text-sm px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:border-yellow-400 cursor-pointer"
-          >
-            <option value="1">Phần 1</option>
-            <option value="2">Phần 2</option>
-            <option value="3">Phần 3</option>
-          </select>
+            onChange={setSelectedSeason}
+            options={seasonOptions}
+          />
         </div>
 
         {/* Filter Buttons */}
-        <button
+        <Button
           onClick={() => setSelectedFilter('subtitle')}
-          className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
-            selectedFilter === 'subtitle'
-              ? 'bg-red-600 text-white'
-              : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700'
-          }`}
+          variant={selectedFilter === 'subtitle' ? 'danger' : 'outline'}
+          size="sm"
         >
           Phụ đề
-        </button>
+        </Button>
 
-        <button
+        <Button
           onClick={() => setSelectedFilter('dub')}
-          className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
-            selectedFilter === 'dub'
-              ? 'bg-purple-600 text-white'
-              : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700'
-          }`}
+          variant={selectedFilter === 'dub' ? 'primary' : 'outline'}
+          size="sm"
+          className={selectedFilter === 'dub' ? 'bg-purple-600 hover:bg-purple-700' : ''}
         >
           Thuyết minh giọng Nam
-        </button>
+        </Button>
 
         {/* Compact Toggle */}
         <div className="ml-auto flex items-center gap-2">
           <span className="text-gray-400 text-sm">Rút gọn</span>
           <button
             onClick={() => setIsCompact(!isCompact)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              isCompact ? 'bg-red-600' : 'bg-gray-700'
-            }`}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isCompact ? 'bg-red-600' : 'bg-gray-700'
+              }`}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                isCompact ? 'translate-x-6' : 'translate-x-1'
-              }`}
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isCompact ? 'translate-x-6' : 'translate-x-1'
+                }`}
             />
           </button>
         </div>
@@ -95,7 +93,7 @@ const EpisodesTab = ({ movieId, movieTitle }: EpisodesTabProps) => {
       </div>
 
       {/* Comments Section */}
-      <div className="pt-8 border-t border-gray-800">
+      <div className="pt-8 border-t border-gray-800" data-comments-section>
         <Comments movieId={movieId} />
       </div>
     </div>

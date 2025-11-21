@@ -5,6 +5,7 @@ import { movieService } from '@/services/movieService';
 import { Movie, Genre } from '@/types';
 import MovieCard from '@/components/movie/MovieCard';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import Dropdown from '@/components/common/Dropdown';
 import { FiFilter, FiX } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -15,21 +16,21 @@ const Browse = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
-  
+
   // Read initial values from URL params
   const searchQuery = searchParams.get('q') || '';
   const genreParam = searchParams.get('genre') || '';
   const sortParam = searchParams.get('sort_by') || 'popularity.desc';
-  
+
   // Filters
   const [selectedGenre, setSelectedGenre] = useState<string>(genreParam);
   const [selectedYear, setSelectedYear] = useState<string>('');
   const [sortBy, setSortBy] = useState(sortParam);
   const { useGenres, useSearchMovies } = useMovies();
   const { data: genresData } = useGenres();
-  
+
   const genres: Genre[] = genresData?.genres || [];
-  
+
   // Sync state with URL params when they change
   useEffect(() => {
     const genreParam = searchParams.get('genre') || '';
@@ -37,14 +38,14 @@ const Browse = () => {
     setSelectedGenre(genreParam);
     setSortBy(sortParam);
   }, [searchParams]);
-  
+
   // Fetch movies based on filters or search
   useEffect(() => {
     const fetchMovies = async () => {
       setIsLoading(true);
       try {
         let data;
-        
+
         if (searchQuery) {
           // Search mode
           data = await movieService.search(searchQuery, page);
@@ -57,7 +58,7 @@ const Browse = () => {
             year: selectedYear ? parseInt(selectedYear) : undefined,
           });
         }
-        
+
         setMovies(data.results);
         setTotalPages(data.total_pages);
       } catch (error) {
@@ -104,6 +105,31 @@ const Browse = () => {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 50 }, (_, i) => currentYear - i);
 
+  // Prepare dropdown options
+  const sortOptions = [
+    { value: 'popularity.desc', label: 'Mới nhất' },
+    { value: 'vote_average.desc', label: 'Phổ biến' },
+    { value: 'release_date.desc', label: 'Cũ nhất' },
+    { value: 'release_date.asc', label: 'Oldest First' },
+    { value: 'title.asc', label: 'Title (A-Z)' },
+  ];
+
+  const genreOptions = [
+    { value: '', label: 'All Genres' },
+    ...genres.map((genre) => ({
+      value: genre.id.toString(),
+      label: genre.name,
+    })),
+  ];
+
+  const yearOptions = [
+    { value: '', label: 'All Years' },
+    ...years.map((year) => ({
+      value: year.toString(),
+      label: year.toString(),
+    })),
+  ];
+
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4 md:px-8">
@@ -114,7 +140,7 @@ const Browse = () => {
               {searchQuery ? `Search Results for "${searchQuery}"` : 'Browse Movies'}
             </h1>
             <p className="text-gray-400">
-              {searchQuery 
+              {searchQuery
                 ? `Found ${movies.length} results`
                 : 'Discover your next favorite movie'
               }
@@ -155,63 +181,34 @@ const Browse = () => {
                   </div>
 
                   {/* Sort */}
-                  <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Sort By
-                    </label>
-                    <select
-                      value={sortBy}
-                      onChange={(e) => handleSortChange(e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600"
-                    >
-                      <option value="popularity.desc">Most Popular</option>
-                      <option value="vote_average.desc">Highest Rated</option>
-                      <option value="release_date.desc">Newest First</option>
-                      <option value="release_date.asc">Oldest First</option>
-                      <option value="title.asc">Title (A-Z)</option>
-                    </select>
-                  </div>
+                  <Dropdown
+                    label="Sort By"
+                    value={sortBy}
+                    onChange={handleSortChange}
+                    options={sortOptions}
+                    className="mb-6"
+                  />
 
                   {/* Genre */}
                   {!searchQuery && (
-                    <div className="mb-6">
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Genre
-                      </label>
-                      <select
-                        value={selectedGenre}
-                        onChange={(e) => handleGenreChange(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600"
-                      >
-                        <option value="">All Genres</option>
-                        {genres.map((genre) => (
-                          <option key={genre.id} value={genre.id.toString()}>
-                            {genre.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    <Dropdown
+                      label="Genre"
+                      value={selectedGenre}
+                      onChange={handleGenreChange}
+                      options={genreOptions}
+                      className="mb-6"
+                    />
                   )}
 
                   {/* Year */}
                   {!searchQuery && (
-                    <div className="mb-6">
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Release Year
-                      </label>
-                      <select
-                        value={selectedYear}
-                        onChange={(e) => handleYearChange(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600"
-                      >
-                        <option value="">All Years</option>
-                        {years.map((year) => (
-                          <option key={year} value={year.toString()}>
-                            {year}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    <Dropdown
+                      label="Release Year"
+                      value={selectedYear}
+                      onChange={handleYearChange}
+                      options={yearOptions}
+                      className="mb-6"
+                    />
                   )}
                 </div>
               </motion.div>
@@ -240,11 +237,11 @@ const Browse = () => {
                     >
                       Previous
                     </button>
-                    
+
                     <span className="text-white px-4">
                       Page {page} of {Math.min(totalPages, 500)}
                     </span>
-                    
+
                     <button
                       onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                       disabled={page >= totalPages || page >= 500}

@@ -3,8 +3,8 @@ import { cn } from '@/utils/helpers';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   isLoading?: boolean;
 }
 
@@ -18,15 +18,17 @@ const Button = ({
   ...props
 }: ButtonProps) => {
   const baseStyles = 'font-semibold rounded-md transition-all duration-200 inline-flex items-center justify-center';
-  
+
   const variants = {
     primary: 'bg-primary-600 hover:bg-primary-700 text-white disabled:bg-primary-800',
     secondary: 'bg-gray-700 hover:bg-gray-600 text-white disabled:bg-gray-800',
     ghost: 'bg-transparent hover:bg-white/10 text-white disabled:text-gray-600',
     danger: 'bg-red-600 hover:bg-red-700 text-white disabled:bg-red-800',
+    outline: 'bg-gray-800/70 hover:bg-gray-700 text-white border border-gray-600/50 hover:border-gray-500 backdrop-blur-sm',
   };
 
   const sizes = {
+    xs: 'px-3 py-1.5 text-xs',
     sm: 'px-4 py-2 text-sm',
     md: 'px-6 py-2',
     lg: 'px-8 py-3 text-lg',

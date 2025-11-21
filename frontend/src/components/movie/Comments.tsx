@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { AiOutlineLike, AiFillLike, AiOutlineDislike, AiFillDislike } from 'react-icons/ai';
 import { useAuthStore } from '../../store/authStore';
+import Dropdown from '../common/Dropdown';
 import {
   useMovieComments,
   useCreateComment,
@@ -433,6 +434,13 @@ const Comments = ({ movieId }: CommentsProps) => {
   const comments = data?.data?.comments || [];
   const pagination = data?.data?.pagination;
 
+  // Prepare sort options
+  const sortOptions = [
+    { value: 'recent', label: 'Mới nhất' },
+    { value: 'popular', label: 'Phổ biến' },
+    { value: 'oldest', label: 'Cũ nhất' },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -442,15 +450,13 @@ const Comments = ({ movieId }: CommentsProps) => {
         </h3>
 
         {/* Sort Options */}
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value as any)}
-          className="bg-gray-800 text-white border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
-        >
-          <option value="recent">Mới nhất</option>
-          <option value="popular">Phổ biến</option>
-          <option value="oldest">Cũ nhất</option>
-        </select>
+        <div className="w-40">
+          <Dropdown
+            value={sort}
+            onChange={(value) => setSort(value as any)}
+            options={sortOptions}
+          />
+        </div>
       </div>
 
       {/* Comment Input */}

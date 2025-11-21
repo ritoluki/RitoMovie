@@ -28,9 +28,14 @@ const LanguageSwitcher = () => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   const handleLanguageChange = (languageCode: string) => {
     i18n.changeLanguage(languageCode);
@@ -42,7 +47,6 @@ const LanguageSwitcher = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-800 transition-colors duration-200"
-        aria-label="Change language"
       >
         <FiGlobe size={20} className="text-gray-300" />
         <span className="hidden md:block text-gray-300 text-sm font-medium">
@@ -53,30 +57,32 @@ const LanguageSwitcher = () => {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl py-2 z-50 border border-gray-700"
+            initial={{ opacity: 0, scale: 0.95, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+            transition={{ duration: 0.1 }}
+            className="absolute right-0 mt-2 w-48 origin-top-right rounded-lg bg-gray-800 shadow-xl border border-gray-700 overflow-hidden z-50"
           >
-            {languages.map((language) => (
-              <button
-                key={language.code}
-                onClick={() => handleLanguageChange(language.code)}
-                className={`w-full flex items-center justify-between px-4 py-2 text-left transition-colors ${
-                  currentLanguage.code === language.code
-                    ? 'bg-gray-700 text-white'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                }`}
-              >
-                <span className="flex items-center space-x-2">
-                  <span>{language.flag}</span>
-                  <span>{language.name}</span>
-                </span>
-                {currentLanguage.code === language.code && (
-                  <FiCheck size={18} className="text-primary-600" />
-                )}
-              </button>
-            ))}
+            <div className="py-1">
+              {languages.map((language) => (
+                <button
+                  key={language.code}
+                  onClick={() => handleLanguageChange(language.code)}
+                  className={`w-full flex items-center justify-between px-4 py-2.5 text-left transition-colors ${currentLanguage.code === language.code
+                      ? 'bg-gray-700/50 text-white'
+                      : 'text-gray-300 hover:bg-primary-600/20 hover:text-white'
+                    }`}
+                >
+                  <span className="flex items-center space-x-2">
+                    <span className="text-lg">{language.flag}</span>
+                    <span className="font-medium">{language.name}</span>
+                  </span>
+                  {currentLanguage.code === language.code && (
+                    <FiCheck size={18} className="text-primary-500" />
+                  )}
+                </button>
+              ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { FiPlay } from 'react-icons/fi';
+import { FiPlay, FiDownload, FiHeart, FiShare2, FiMessageCircle } from 'react-icons/fi';
+import { AiFillHeart } from 'react-icons/ai';
 import { useMovies } from '@/hooks/useMovies';
 import { useAuthStore } from '@/store/authStore';
 import { useMovieStore } from '@/store/movieStore';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import Button from '@/components/common/Button';
 import { getImageUrl } from '@/utils/helpers';
 import { motion } from 'framer-motion';
 import EpisodesTab from '@/components/movie/tabs/EpisodesTab';
@@ -18,22 +20,22 @@ const MovieDetails = () => {
   const { id } = useParams<{ id: string }>();
   const movieId = parseInt(id || '0');
   const [activeTab, setActiveTab] = useState<TabType>('episodes');
-  
+
   const { useMovieDetails, useMovieCredits, useSimilarMovies, useMovieImages } = useMovies();
-  
+
   const { data: movie, isLoading: movieLoading } = useMovieDetails(movieId);
   const { data: credits } = useMovieCredits(movieId);
   const { data: similar } = useSimilarMovies(movieId);
   const { data: images } = useMovieImages(movieId);
-  
+
   const { isAuthenticated } = useAuthStore();
   const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useMovieStore();
-  
+
   const inWatchlist = isInWatchlist(movieId);
 
   const handleWatchlistClick = async () => {
     if (!isAuthenticated) return;
-    
+
     try {
       if (inWatchlist) {
         await removeFromWatchlist(movieId);
@@ -56,6 +58,23 @@ const MovieDetails = () => {
       // Fallback: copy to clipboard
       navigator.clipboard.writeText(window.location.href);
     }
+  };
+
+  const handleScrollToComments = () => {
+    // Scroll to episodes tab (where comments are) and switch to that tab
+    setActiveTab('episodes');
+    // Wait for tab content to render, then scroll to comments
+    setTimeout(() => {
+      const commentsSection = document.querySelector('[data-comments-section]');
+      if (commentsSection) {
+        commentsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
+  const handleDownload = () => {
+    // Placeholder for download functionality
+    alert('Tính năng tải xuống sẽ được cập nhật sớm!');
   };
 
   if (movieLoading) {
@@ -102,203 +121,215 @@ const MovieDetails = () => {
       {/* Content Below Banner */}
       <div className="container mx-auto px-4 md:px-8 -mt-32 md:-mt-40 relative z-10">
         <div className="flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-8">
-            {/* Poster with decorative frame */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              className="flex-shrink-0 w-full md:w-auto flex justify-center md:justify-start"
-            >
-              <div className="relative bg-gradient-to-br from-gray-800/40 to-gray-900/40 backdrop-blur-md border border-gray-700/50 rounded-2xl p-4 shadow-2xl">
-                {/* Decorative corner accents */}
-                <div className="absolute -top-2 -left-2 w-10 h-10 border-t-2 border-l-2 border-red-500/60 rounded-tl-2xl"></div>
-                <div className="absolute -bottom-2 -right-2 w-10 h-10 border-b-2 border-r-2 border-red-500/60 rounded-br-2xl"></div>
-                
-                {/* Tilted Poster */}
-                <div className="relative w-[180px] md:w-[260px]">
-                  <div 
-                    className="relative aspect-[2/3] overflow-hidden bg-gray-900 shadow-2xl"
-                    style={{
-                      clipPath: clipPathRight,
-                      WebkitClipPath: clipPathRight,
-                    }}
-                  >
-                    <img
-                      src={getImageUrl(movie.poster_path, 'poster', 'large')}
-                      alt={movie.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  
-                  {/* Movie Title & Year Below Poster */}
-                  <div className="mt-4 text-center space-y-2">
-                    <h2 className="text-white font-bold text-base md:text-lg line-clamp-2">
-                      {movie.title}
-                    </h2>
-                    {movie.original_title && movie.original_title !== movie.title && (
-                      <p className="text-gray-400 text-xs italic">
-                        {movie.original_title}
-                      </p>
-                    )}
-                  </div>
+          {/* Poster with decorative frame */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex-shrink-0 w-full md:w-auto flex justify-center md:justify-start"
+          >
+            <div className="relative bg-gradient-to-br from-gray-800/40 to-gray-900/40 backdrop-blur-md border border-gray-700/50 rounded-2xl p-4 shadow-2xl">
+              {/* Decorative corner accents */}
+              <div className="absolute -top-2 -left-2 w-10 h-10 border-t-2 border-l-2 border-red-500/60 rounded-tl-2xl"></div>
+              <div className="absolute -bottom-2 -right-2 w-10 h-10 border-b-2 border-r-2 border-red-500/60 rounded-br-2xl"></div>
+
+              {/* Tilted Poster */}
+              <div className="relative w-[180px] md:w-[260px]">
+                <div
+                  className="relative aspect-[2/3] overflow-hidden bg-gray-900 shadow-2xl"
+                  style={{
+                    clipPath: clipPathRight,
+                    WebkitClipPath: clipPathRight,
+                  }}
+                >
+                  <img
+                    src={getImageUrl(movie.poster_path, 'poster', 'large')}
+                    alt={movie.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                {/* Movie Title & Year Below Poster */}
+                <div className="mt-4 text-center space-y-2">
+                  <h2 className="text-white font-bold text-base md:text-lg line-clamp-2">
+                    {movie.title}
+                  </h2>
+                  {movie.original_title && movie.original_title !== movie.title && (
+                    <p className="text-gray-400 text-xs italic">
+                      {movie.original_title}
+                    </p>
+                  )}
                 </div>
               </div>
-            </motion.div>
+            </div>
+          </motion.div>
 
-            {/* Movie Info - Right Side */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="flex-1 max-w-3xl space-y-5 w-full text-center md:text-left"
-            >
-              {/* Title & Meta */}
-              <div className="space-y-3">
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white text-shadow-lg">
-                  {movie.title}
-                </h1>
-                
-                {/* Badges Row */}
-                <div className="flex items-center flex-wrap gap-3 justify-center md:justify-start">
-                  {/* Rating Badge */}
-                  <div className="flex items-center gap-1.5 bg-yellow-500/20 backdrop-blur-sm border border-yellow-500/40 px-3 py-1.5 rounded-lg">
-                    <span className="text-yellow-400 font-bold text-sm">★</span>
-                    <span className="text-white font-semibold text-sm">
-                      {movie.vote_average.toFixed(1)}
-                    </span>
-                  </div>
-                  
-                  {/* Age Rating */}
-                  <div className="bg-white/15 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded-lg">
-                    <span className="text-white font-bold text-sm">T13</span>
-                  </div>
-                  
-                  {/* Year */}
-                  {movie.release_date && (
-                    <div className="bg-white/15 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded-lg">
-                      <span className="text-white font-semibold text-sm">
-                        {new Date(movie.release_date).getFullYear()}
-                      </span>
-                    </div>
-                  )}
-                  
-                  {/* Runtime */}
-                  {movie.runtime && (
-                    <div className="bg-white/15 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded-lg">
-                      <span className="text-white font-semibold text-sm">
-                        {Math.floor(movie.runtime / 60)}h {movie.runtime % 60}m
-                      </span>
-                    </div>
-                  )}
+          {/* Movie Info - Right Side */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="flex-1 max-w-3xl space-y-5 w-full text-center md:text-left"
+          >
+            {/* Title & Meta */}
+            <div className="space-y-3">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white text-shadow-lg">
+                {movie.title}
+              </h1>
+
+              {/* Badges Row */}
+              <div className="flex items-center flex-wrap gap-3 justify-center md:justify-start">
+                {/* Rating Badge */}
+                <div className="flex items-center gap-1.5 bg-yellow-500/20 backdrop-blur-sm border border-yellow-500/40 px-3 py-1.5 rounded-lg">
+                  <span className="text-yellow-400 font-bold text-sm">★</span>
+                  <span className="text-white font-semibold text-sm">
+                    {movie.vote_average.toFixed(1)}
+                  </span>
                 </div>
 
-                {/* Genres */}
-                {movie.genres && movie.genres.length > 0 && (
-                  <div className="flex items-center flex-wrap gap-2 justify-center md:justify-start">
-                    {movie.genres.map((genre) => (
-                      <span
-                        key={genre.id}
-                        className="text-white text-xs font-medium px-3 py-1.5 bg-gray-800/60 backdrop-blur-sm rounded-full border border-gray-600/50"
-                      >
-                        {genre.name}
-                      </span>
-                    ))}
+                {/* Age Rating */}
+                <div className="bg-white/15 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded-lg">
+                  <span className="text-white font-bold text-sm">T13</span>
+                </div>
+
+                {/* Year */}
+                {movie.release_date && (
+                  <div className="bg-white/15 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded-lg">
+                    <span className="text-white font-semibold text-sm">
+                      {new Date(movie.release_date).getFullYear()}
+                    </span>
+                  </div>
+                )}
+
+                {/* Runtime */}
+                {movie.runtime && (
+                  <div className="bg-white/15 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded-lg">
+                    <span className="text-white font-semibold text-sm">
+                      {Math.floor(movie.runtime / 60)}h {movie.runtime % 60}m
+                    </span>
                   </div>
                 )}
               </div>
 
-              {/* Watch Button */}
-              <div className="flex justify-center md:justify-start">
-                <Link
-                  to={`/watch/${movie.id}`}
-                  className="inline-flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 text-white font-bold px-10 py-3.5 rounded-full transition-all shadow-xl hover:shadow-2xl hover:scale-105 text-base"
-                >
+              {/* Genres */}
+              {movie.genres && movie.genres.length > 0 && (
+                <div className="flex items-center flex-wrap gap-2 justify-center md:justify-start">
+                  {movie.genres.map((genre) => (
+                    <span
+                      key={genre.id}
+                      className="text-white text-xs font-medium px-3 py-1.5 bg-gray-800/60 backdrop-blur-sm rounded-full border border-gray-600/50"
+                    >
+                      {genre.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Watch Button */}
+            <div className="flex justify-center md:justify-start">
+              <Link
+                to={`/watch/${movie.id}`}
+                className="inline-flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 text-white font-bold px-10 py-3.5 rounded-full transition-all shadow-xl hover:shadow-2xl hover:scale-105 text-base"
+              >
                 <FiPlay size={22} />
                 <span>Xem Ngay</span>
               </Link>
-              </div>
+            </div>
 
-              {/* Overview */}
-              <div className="bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-xl p-5 space-y-3">
-                <h3 className="text-white font-bold text-base">Giới thiệu:</h3>
-                <p className="text-gray-300 text-sm leading-relaxed">
-                  {movie.overview || 'Chưa có thông tin giới thiệu'}
-                </p>
-              </div>
+            {/* Overview */}
+            <div className="bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-xl p-5 space-y-3">
+              <h3 className="text-white font-bold text-base">Giới thiệu:</h3>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                {movie.overview || 'Chưa có thông tin giới thiệu'}
+              </p>
+            </div>
 
-              {/* Additional Info Grid */}
-              <div className="bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-xl p-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  {movie.production_countries && movie.production_countries.length > 0 && (
-                    <div>
-                      <span className="text-gray-400 block mb-1">Quốc gia:</span>
-                      <span className="text-white font-medium">{movie.production_countries[0].name}</span>
-                    </div>
-                  )}
-                  
-                  {movie.production_companies && movie.production_companies.length > 0 && (
-                    <div>
-                      <span className="text-gray-400 block mb-1">Networks:</span>
-                      <span className="text-white font-medium">{movie.production_companies[0].name}</span>
-                    </div>
-                  )}
-                  
-                  {movie.production_companies && movie.production_companies.length > 0 && (
-                    <div className="md:col-span-2">
-                      <span className="text-gray-400 block mb-1">Sản xuất:</span>
-                      <span className="text-white font-medium">
-                        {movie.production_companies.slice(0, 3).map(c => c.name).join(', ')}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
+            {/* Additional Info Grid */}
+            <div className="bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-xl p-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                {movie.production_countries && movie.production_countries.length > 0 && (
+                  <div>
+                    <span className="text-gray-400 block mb-1">Quốc gia:</span>
+                    <span className="text-white font-medium">{movie.production_countries[0].name}</span>
+                  </div>
+                )}
 
-              {/* Action Buttons */}
-              <div className="flex items-center gap-3 flex-wrap pt-2">
-                <button
-                  onClick={handleWatchlistClick}
-                  disabled={!isAuthenticated}
-                  className="px-5 py-2.5 bg-gray-800/70 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-all backdrop-blur-sm border border-gray-600/50 hover:border-gray-500"
-                >
-                  Yêu thích
-                </button>
-                <button
-                  onClick={handleWatchlistClick}
-                  disabled={!isAuthenticated}
-                  className="px-5 py-2.5 bg-gray-800/70 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-all backdrop-blur-sm border border-gray-600/50 hover:border-gray-500"
-                >
-                  Thêm vào
-                </button>
-                <button
-                  onClick={handleShare}
-                  className="px-5 py-2.5 bg-gray-800/70 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-all backdrop-blur-sm border border-gray-600/50 hover:border-gray-500"
-                >
-                  Chia sẻ
-                </button>
-                <button
-                  className="px-5 py-2.5 bg-gray-800/70 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-all backdrop-blur-sm border border-gray-600/50 hover:border-gray-500"
-                >
-                  Bình luận
-                </button>
+                {movie.production_companies && movie.production_companies.length > 0 && (
+                  <div>
+                    <span className="text-gray-400 block mb-1">Networks:</span>
+                    <span className="text-white font-medium">{movie.production_companies[0].name}</span>
+                  </div>
+                )}
+
+                {movie.production_companies && movie.production_companies.length > 0 && (
+                  <div className="md:col-span-2">
+                    <span className="text-gray-400 block mb-1">Sản xuất:</span>
+                    <span className="text-white font-medium">
+                      {movie.production_companies.slice(0, 3).map(c => c.name).join(', ')}
+                    </span>
+                  </div>
+                )}
               </div>
-            </motion.div>
-          </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3 flex-wrap pt-2">
+              <Button
+                onClick={handleWatchlistClick}
+                disabled={!isAuthenticated}
+                variant={inWatchlist ? 'danger' : 'outline'}
+                size="sm"
+                className={inWatchlist ? 'bg-red-600 hover:bg-red-700 border-red-600' : ''}
+              >
+                {inWatchlist ? (
+                  <AiFillHeart className="mr-1" size={16} />
+                ) : (
+                  <FiHeart className="mr-1" size={16} />
+                )}
+                {inWatchlist ? 'Đã yêu thích' : 'Yêu thích'}
+              </Button>
+              <Button
+                onClick={handleDownload}
+                variant="outline"
+                size="sm"
+              >
+                <FiDownload className="mr-1" size={16} />
+                Tải xuống
+              </Button>
+              <Button
+                onClick={handleShare}
+                variant="outline"
+                size="sm"
+              >
+                <FiShare2 className="mr-1" size={16} />
+                Chia sẻ
+              </Button>
+              <Button
+                onClick={handleScrollToComments}
+                variant="outline"
+                size="sm"
+              >
+                <FiMessageCircle className="mr-1" size={16} />
+                Bình luận
+              </Button>
+            </div>
+          </motion.div>
         </div>
+      </div>
 
       {/* Tabs Navigation */}
-      <div className="border-b border-gray-800 bg-gray-900/95 backdrop-blur-md sticky top-16 md:top-20 z-40">
+      <div className="border-b border-gray-800 bg-gray-900/95 backdrop-blur-md sticky top-16 md:top-20 z-40 mt-12">
         <div className="container mx-auto px-4 md:px-8">
           <div className="flex gap-8">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative py-4 text-sm md:text-base font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? 'text-red-500'
-                    : 'text-gray-400 hover:text-white'
-                }`}
+                className={`relative py-4 text-sm md:text-base font-medium transition-colors ${activeTab === tab.id
+                  ? 'text-red-500'
+                  : 'text-gray-400 hover:text-white'
+                  }`}
               >
                 {tab.label}
                 {activeTab === tab.id && (
@@ -325,10 +356,10 @@ const MovieDetails = () => {
           <CastTab movieId={movieId} cast={cast} isLoading={!credits} />
         )}
         {activeTab === 'recommendations' && (
-          <RecommendationsTab 
-            movieId={movieId} 
-            movies={recommendedMovies} 
-            isLoading={!similar} 
+          <RecommendationsTab
+            movieId={movieId}
+            movies={recommendedMovies}
+            isLoading={!similar}
           />
         )}
       </div>
