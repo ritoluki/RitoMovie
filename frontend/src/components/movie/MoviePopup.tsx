@@ -5,6 +5,7 @@ import { Movie, MovieDetails, Genre } from '@/types';
 import { getImageUrl, formatRating, formatRuntime } from '@/utils/helpers';
 import { useMovieStore } from '@/store/movieStore';
 import { useAuthStore } from '@/store/authStore';
+import { useTranslation } from 'react-i18next';
 
 interface MoviePopupProps {
   movie: Movie;
@@ -19,6 +20,7 @@ const MoviePopup = ({ movie, movieDetails, isLoading, isVisible, onClose, positi
   const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useMovieStore();
   const { isAuthenticated } = useAuthStore();
   const inWatchlist = isInWatchlist(movie.id);
+  const { t } = useTranslation();
 
   // Get age rating based on vote average (simplified)
   const getAgeRating = () => {
@@ -102,14 +104,14 @@ const MoviePopup = ({ movie, movieDetails, isLoading, isVisible, onClose, positi
                 className="flex items-center justify-center gap-2 flex-1 bg-white hover:bg-gray-200 text-gray-900 font-bold py-2.5 px-4 rounded-lg transition-all duration-200 shadow-lg"
               >
                 <FiPlay size={18} />
-                <span className="text-sm">Xem ngay</span>
+                <span className="text-sm">{t('movie.watchNow')}</span>
               </Link>
               
               {isAuthenticated && (
                 <button
                   onClick={handleWatchlistClick}
                   className="p-2.5 bg-gray-800/90 hover:bg-gray-700 text-white rounded-lg transition-all duration-200 shadow-lg"
-                  aria-label={inWatchlist ? 'Xóa khỏi danh sách' : 'Thêm vào danh sách'}
+                  aria-label={inWatchlist ? t('movie.removeFromList') : t('movie.addToList')}
                 >
                   {inWatchlist ? <FiCheck size={20} /> : <FiPlus size={20} />}
                 </button>
@@ -119,7 +121,7 @@ const MoviePopup = ({ movie, movieDetails, isLoading, isVisible, onClose, positi
                 to={`/movie/${movie.id}`}
                 onClick={handleLinkClick}
                 className="p-2.5 bg-gray-800/90 hover:bg-gray-700 text-white rounded-lg transition-all duration-200 shadow-lg"
-                aria-label="Chi tiết"
+                aria-label={t('movie.moreInfo')}
               >
                 <FiInfo size={20} />
               </Link>

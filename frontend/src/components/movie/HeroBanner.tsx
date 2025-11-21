@@ -6,6 +6,7 @@ import { getImageUrl, truncateText, formatRuntime, getCertificationFromReleaseDa
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMovies } from '@/hooks/useMovies';
 import { useMovieStore } from '@/store/movieStore';
+import { useTranslation } from 'react-i18next';
 
 interface HeroBannerProps {
   movies: Movie[];
@@ -15,6 +16,7 @@ const HeroBanner = ({ movies }: HeroBannerProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { useMovieDetails, useReleaseDates, useGenres } = useMovies();
   const { addToWatchlist, removeFromWatchlist, watchlist } = useMovieStore();
+  const { t } = useTranslation();
 
   const currentMovie = movies[currentIndex];
   
@@ -189,7 +191,7 @@ const HeroBanner = ({ movies }: HeroBannerProps) => {
                   className="inline-flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-500 text-white font-bold px-4 md:px-8 py-3 rounded-full transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   <FiPlay size={20} />
-                  <span className="hidden md:inline">Play</span>
+                  <span className="hidden md:inline">{t('movie.play')}</span>
                 </Link>
                 
                 <button
@@ -201,7 +203,7 @@ const HeroBanner = ({ movies }: HeroBannerProps) => {
                   }`}
                 >
                   <FiHeart size={20} className={isInWatchlist ? 'fill-current' : ''} />
-                  <span className="hidden md:inline">{isInWatchlist ? 'In List' : 'My List'}</span>
+                  <span className="hidden md:inline">{isInWatchlist ? t('movie.inList') : t('movie.myList')}</span>
                 </button>
 
                 <Link
@@ -209,7 +211,7 @@ const HeroBanner = ({ movies }: HeroBannerProps) => {
                   className="inline-flex items-center justify-center space-x-2 bg-gray-800/80 hover:bg-gray-700/80 text-white font-semibold px-4 md:px-8 py-3 rounded-full backdrop-blur-sm border-2 border-gray-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   <FiInfo size={20} />
-                  <span className="hidden md:inline">More Info</span>
+                  <span className="hidden md:inline">{t('movie.moreInfo')}</span>
                 </Link>
               </motion.div>
             </div>

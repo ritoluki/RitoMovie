@@ -50,7 +50,7 @@ const Home = () => {
         {/* Top 10 Section with Beautiful Design */}
         {trending?.results && (
           <TopMoviesSection 
-            title="Top 10 phim bộ hôm nay" 
+            title={t('home.topTVSeries')} 
             movies={trending.results}
           />
         )}
@@ -90,7 +90,7 @@ const Home = () => {
         {/* Top 10 Phim Lẻ with Tilted Style - Ở giữa các section */}
         {topRated?.results && (
           <TopMoviesTiltedSection 
-            title="Top 10 phim lẻ đáng xem nhất" 
+            title={t('home.topMovies')} 
             movies={topRated.results}
           />
         )}

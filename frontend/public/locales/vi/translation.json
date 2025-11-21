@@ -29,7 +29,9 @@
     "actionMovies": "Phim hành động",
     "comedyMovies": "Phim hài",
     "horrorMovies": "Phim kinh dị",
-    "romanceMovies": "Phim lãng mạn"
+    "romanceMovies": "Phim lãng mạn",
+    "topMovies": "Top 10 Phim Lẻ",
+    "topTVSeries": "Top 10 Phim Bộ"
   },
   "auth": {
     "welcomeBack": "Chào mừng trở lại",
@@ -87,6 +89,10 @@
   },
   "movie": {
     "watchNow": "Xem ngay",
+    "play": "Phát",
+    "myList": "Danh sách của tôi",
+    "inList": "Trong danh sách",
+    "moreInfo": "Thêm thông tin",
     "addToList": "Thêm vào danh sách",
     "removeFromList": "Xóa khỏi danh sách",
     "rating": "Đánh giá",
