@@ -46,31 +46,59 @@ const Home = () => {
       {/* Movie Rows */}
       <div className="relative -mt-48 z-10 space-y-8 pb-16">
         {trending?.results && (
-          <MovieRow title={t('home.trendingNow')} movies={trending.results} />
+          <MovieRow 
+            title={t('home.trendingNow')} 
+            movies={trending.results}
+            link="/browse?sort_by=popularity.desc"
+          />
         )}
         
         {popular?.results && (
-          <MovieRow title={t('home.popularMovies')} movies={popular.results} />
+          <MovieRow 
+            title={t('home.popularMovies')} 
+            movies={popular.results}
+            link="/browse?sort_by=popularity.desc"
+          />
         )}
         
         {topRated?.results && (
-          <MovieRow title={t('home.topRated')} movies={topRated.results} />
+          <MovieRow 
+            title={t('home.topRated')} 
+            movies={topRated.results}
+            link="/browse?sort_by=vote_average.desc"
+          />
         )}
         
         {action?.results && (
-          <MovieRow title={t('home.actionMovies')} movies={action.results} />
+          <MovieRow 
+            title={t('home.actionMovies')} 
+            movies={action.results}
+            link="/browse?genre=28"
+          />
         )}
         
         {comedy?.results && (
-          <MovieRow title={t('home.comedyMovies')} movies={comedy.results} />
+          <MovieRow 
+            title={t('home.comedyMovies')} 
+            movies={comedy.results}
+            link="/browse?genre=35"
+          />
         )}
         
         {horror?.results && (
-          <MovieRow title={t('home.horrorMovies')} movies={horror.results} />
+          <MovieRow 
+            title={t('home.horrorMovies')} 
+            movies={horror.results}
+            link="/browse?genre=27"
+          />
         )}
         
         {romance?.results && (
-          <MovieRow title={t('home.romanceMovies')} movies={romance.results} />
+          <MovieRow 
+            title={t('home.romanceMovies')} 
+            movies={romance.results}
+            link="/browse?genre=10749"
+          />
         )}
       </div>
     </div>

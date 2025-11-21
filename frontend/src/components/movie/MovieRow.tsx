@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { Movie } from '@/types';
 import MovieCard from './MovieCard';
@@ -6,9 +7,10 @@ import MovieCard from './MovieCard';
 interface MovieRowProps {
   title: string;
   movies: Movie[];
+  link?: string;
 }
 
-const MovieRow = ({ title, movies }: MovieRowProps) => {
+const MovieRow = ({ title, movies, link }: MovieRowProps) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
@@ -51,10 +53,24 @@ const MovieRow = ({ title, movies }: MovieRowProps) => {
 
   return (
     <div className="mb-8 md:mb-12 group/row">
-      {/* Title */}
-      <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 px-4 md:px-8">
-        {title}
-      </h2>
+      {/* Title with See More Button */}
+      <div className="flex items-center gap-3 mb-4 px-4 md:px-8">
+        <h2 className="text-2xl md:text-3xl font-bold text-white">
+          {title}
+        </h2>
+        
+        {link && (
+          <Link
+            to={link}
+            className="group/more flex items-center justify-center gap-2 px-1.5 pl-4 py-1 rounded-full group-hover/more:rounded-lg border-2 border-white/30 group-hover/more:border-red-500/50 hover:bg-red-500/10 text-white transition-all duration-300"
+          >
+            <span className="text-sm font-medium text-red-500 max-w-0 group-hover/more:max-w-[80px] opacity-0 group-hover/more:opacity-100 transition-all duration-300 ease-out whitespace-nowrap overflow-hidden">
+              Xem thêm
+            </span>
+            <FiChevronRight size={16} className="flex-shrink-0" />
+          </Link>
+        )}
+      </div>
 
       {/* Scrollable Container */}
       <div className="relative">

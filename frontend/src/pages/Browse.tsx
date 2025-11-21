@@ -16,16 +16,27 @@ const Browse = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   
-  // Filters
-  const [selectedGenre, setSelectedGenre] = useState<string>('');
-  const [selectedYear, setSelectedYear] = useState<string>('');
-  const [sortBy, setSortBy] = useState('popularity.desc');
-  
+  // Read initial values from URL params
   const searchQuery = searchParams.get('q') || '';
+  const genreParam = searchParams.get('genre') || '';
+  const sortParam = searchParams.get('sort_by') || 'popularity.desc';
+  
+  // Filters
+  const [selectedGenre, setSelectedGenre] = useState<string>(genreParam);
+  const [selectedYear, setSelectedYear] = useState<string>('');
+  const [sortBy, setSortBy] = useState(sortParam);
   const { useGenres, useSearchMovies } = useMovies();
   const { data: genresData } = useGenres();
   
   const genres: Genre[] = genresData?.genres || [];
+  
+  // Sync state with URL params when they change
+  useEffect(() => {
+    const genreParam = searchParams.get('genre') || '';
+    const sortParam = searchParams.get('sort_by') || 'popularity.desc';
+    setSelectedGenre(genreParam);
+    setSortBy(sortParam);
+  }, [searchParams]);
   
   // Fetch movies based on filters or search
   useEffect(() => {
