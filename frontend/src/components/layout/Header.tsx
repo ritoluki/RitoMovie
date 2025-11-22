@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiSearch, FiUser, FiMenu, FiX, FiLogOut, FiList, FiSettings } from 'react-icons/fi';
+import { FiSearch, FiUser, FiMenu, FiX, FiLogOut, FiList, FiSettings, FiChevronDown } from 'react-icons/fi';
 import { useAuth } from '@/hooks/useAuth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import { LogoLink } from '@/components/common/Logo';
+import { movieService } from '@/services/movieService';
+import { Genre } from '@/types';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -13,11 +15,28 @@ const Header = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [genres, setGenres] = useState<Genre[]>([]);
 
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const genreMenuRef = useRef<HTMLDivElement>(null);
+  const countryMenuRef = useRef<HTMLDivElement>(null);
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
+
+  // Fetch genres from API
+  useEffect(() => {
+    const fetchGenres = async () => {
+      try {
+        const data = await movieService.getGenres();
+        setGenres(data.genres);
+      } catch (error) {
+        console.error('Failed to fetch genres:', error);
+      }
+    };
+    fetchGenres();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,16 +56,20 @@ const Header = () => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setIsUserMenuOpen(false);
       }
+      if (genreMenuRef.current && !genreMenuRef.current.contains(event.target as Node) &&
+        countryMenuRef.current && !countryMenuRef.current.contains(event.target as Node)) {
+        setActiveDropdown(null);
+      }
     };
 
-    if (isUserMenuOpen) {
+    if (isUserMenuOpen || activeDropdown) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isUserMenuOpen]);
+  }, [isUserMenuOpen, activeDropdown]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +89,39 @@ const Header = () => {
   const navLinks = [
     { name: t('header.home'), path: '/' },
     { name: t('header.movies'), path: '/browse' },
-    { name: t('header.myList'), path: '/my-list' },
+  ];
+
+  // Popular countries based on TMDB production_countries
+  const countries = [
+    { code: 'US', name: 'United States' },
+    { code: 'GB', name: 'United Kingdom' },
+    { code: 'KR', name: 'South Korea' },
+    { code: 'JP', name: 'Japan' },
+    { code: 'CN', name: 'China' },
+    { code: 'HK', name: 'Hong Kong' },
+    { code: 'TW', name: 'Taiwan' },
+    { code: 'TH', name: 'Thailand' },
+    { code: 'IN', name: 'India' },
+    { code: 'FR', name: 'France' },
+    { code: 'DE', name: 'Germany' },
+    { code: 'ES', name: 'Spain' },
+    { code: 'IT', name: 'Italy' },
+    { code: 'CA', name: 'Canada' },
+    { code: 'AU', name: 'Australia' },
+    { code: 'MX', name: 'Mexico' },
+    { code: 'BR', name: 'Brazil' },
+    { code: 'AR', name: 'Argentina' },
+    { code: 'RU', name: 'Russia' },
+    { code: 'TR', name: 'Turkey' },
+    { code: 'SE', name: 'Sweden' },
+    { code: 'NO', name: 'Norway' },
+    { code: 'DK', name: 'Denmark' },
+    { code: 'NL', name: 'Netherlands' },
+    { code: 'PL', name: 'Poland' },
+    { code: 'IE', name: 'Ireland' },
+    { code: 'PH', name: 'Philippines' },
+    { code: 'ID', name: 'Indonesia' },
+    { code: 'VN', name: 'Vietnam' },
   ];
 
   return (
@@ -91,31 +146,125 @@ const Header = () => {
           : 'bg-gradient-to-b from-gray-900/80 to-transparent'
           }`}
       >
-        <div className="container mx-auto px-2 md:px-1">
-          <div className="flex items-center justify-between h-16 md:h-20">
-            {/* Logo */}
-            <LogoLink to="/" size="md" animated={true} />
+        <div className="px-4 md:px-6">
+          <div className="flex items-center justify-between gap-3 h-16 md:h-20">
+            {/* Left Side: Logo + Search */}
+            <div className="flex items-center gap-5">
+              {/* Logo */}
+              <LogoLink to="/" size="md" animated={true} />
+
+              {/* Desktop Search - Always visible next to logo */}
+              <form
+                onSubmit={handleSearch}
+                className="hidden md:flex items-center relative"
+              >
+                <div className="relative">
+                  <FiSearch size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={t('header.searchPlaceholder')}
+                    className="w-72 pl-10 pr-4 py-2 bg-gray-700/50 text-white rounded-md border border-gray-600/50 focus:outline-none focus:border-gray-500 focus:bg-gray-700 placeholder:text-gray-400 transition-all text-sm"
+                  />
+                </div>
+              </form>
+            </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-6">
+            <nav className="hidden md:flex items-center gap-6">
               {navLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
-                  className="text-gray-300 hover:text-white transition-colors duration-200 font-medium"
+                  className="text-white hover:text-gray-200 transition-colors duration-200 font-medium text-sm"
                 >
                   {link.name}
                 </Link>
               ))}
+
+              {/* Thể loại Dropdown */}
+              <div className="relative" ref={genreMenuRef}>
+                <button
+                  onClick={() => setActiveDropdown(activeDropdown === 'genre' ? null : 'genre')}
+                  className="flex items-center gap-1 text-white hover:text-gray-200 transition-colors duration-200 font-medium text-sm"
+                >
+                  {t('header.genres')}
+                  <FiChevronDown className={`transition-transform duration-200 ${activeDropdown === 'genre' ? 'rotate-180' : ''}`} size={14} />
+                </button>
+
+                <AnimatePresence>
+                  {activeDropdown === 'genre' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute left-0 mt-2 w-[600px] bg-gray-900/95 backdrop-blur-md rounded-lg shadow-2xl py-4 px-6 z-50 border border-gray-800"
+                    >
+                      <div className="grid grid-cols-4 gap-x-6 gap-y-2">
+                        {genres.map((genre) => (
+                          <Link
+                            key={genre.id}
+                            to={`/browse?genre=${genre.id}`}
+                            onClick={() => setActiveDropdown(null)}
+                            className="text-gray-300 hover:text-white transition-colors duration-200 text-sm py-1"
+                          >
+                            {genre.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Quốc gia Dropdown */}
+              <div className="relative" ref={countryMenuRef}>
+                <button
+                  onClick={() => setActiveDropdown(activeDropdown === 'country' ? null : 'country')}
+                  className="flex items-center gap-1 text-white hover:text-gray-200 transition-colors duration-200 font-medium text-sm"
+                >
+                  {t('header.countries')}
+                  <FiChevronDown className={`transition-transform duration-200 ${activeDropdown === 'country' ? 'rotate-180' : ''}`} size={14} />
+                </button>
+
+                <AnimatePresence>
+                  {activeDropdown === 'country' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute left-0 mt-2 w-[600px] bg-gray-900/95 backdrop-blur-md rounded-lg shadow-2xl py-4 px-6 z-50 border border-gray-800"
+                    >
+                      <div className="grid grid-cols-4 gap-x-6 gap-y-2">
+                        {countries.map((country) => (
+                          <Link
+                            key={country.code}
+                            to={`/browse?country=${country.code}`}
+                            onClick={() => setActiveDropdown(null)}
+                            className="text-gray-300 hover:text-white transition-colors duration-200 text-sm py-1"
+                          >
+                            {country.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Xem Chung Link temporarily hidden */}
             </nav>
 
             {/* Right Side Actions */}
-            <div className="flex items-center space-x-2 md:space-x-4">
+            <div className="flex items-center gap-2">
               {/* Language Switcher */}
               <LanguageSwitcher />
 
-              {/* Search */}
-              <div className="relative w-10 h-10">
+              {/* Mobile Search - Icon button */}
+              <div className="md:hidden relative w-10 h-10">
                 <AnimatePresence mode="wait">
                   {isSearchOpen ? (
                     <motion.form
@@ -132,7 +281,7 @@ const Header = () => {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder={t('header.searchPlaceholder')}
-                        className="w-48 md:w-64 px-4 py-2 pr-12 bg-gray-800 text-white rounded-full border border-gray-600 focus:outline-none focus:border-gray-500 placeholder:text-gray-400"
+                        className="w-48 px-4 py-2 pr-12 bg-gray-800 text-white rounded-full border border-gray-600 focus:outline-none focus:border-gray-500 placeholder:text-gray-400"
                         autoFocus
                       />
                       <button

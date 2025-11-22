@@ -1,5 +1,5 @@
 import axios from '@/lib/axios';
-import { Movie, MovieDetails, Video, Credits, PaginatedResponse, Genre, ReleaseDatesResponse, MovieImages } from '@/types';
+import { Movie, MovieDetails, Video, Credits, PaginatedResponse, Genre, Country, ReleaseDatesResponse, MovieImages } from '@/types';
 
 export const movieService = {
   // Get trending movies
@@ -100,14 +100,24 @@ export const movieService = {
     return response.data;
   },
 
+  // Get all countries
+  getCountries: async (): Promise<Country[]> => {
+    const response = await axios.get<Country[]>('/movies/countries/list');
+    return response.data;
+  },
+
   // Discover movies with filters
   discover: async (filters: {
     page?: number;
     sort_by?: string;
     year?: number;
     with_genres?: string;
+    with_origin_country?: string;
     rating_gte?: number;
     rating_lte?: number;
+    certification_country?: string;
+    certification?: string;
+    certification_lte?: string;
   }): Promise<PaginatedResponse<Movie>> => {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {

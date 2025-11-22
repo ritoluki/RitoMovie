@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FiDownload, FiHeart, FiShare2, FiMessageCircle, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { AiFillHeart } from 'react-icons/ai';
@@ -8,7 +8,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useMovieStore } from '@/store/movieStore';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Button from '@/components/common/Button';
-import { getImageUrl } from '@/utils/helpers';
+import { getImageUrl, getCertificationFromReleaseDates } from '@/utils/helpers';
 import { motion } from 'framer-motion';
 import EpisodesTab from '@/components/movie/tabs/EpisodesTab';
 import CastTab from '@/components/movie/tabs/CastTab';
@@ -25,12 +25,19 @@ const MovieDetails = () => {
   const [activeTab, setActiveTab] = useState<TabType>('episodes');
   const [showMovieInfo, setShowMovieInfo] = useState(false);
 
-  const { useMovieDetails, useMovieCredits, useSimilarMovies, useMovieImages } = useMovies();
+  const {
+    useMovieDetails,
+    useMovieCredits,
+    useSimilarMovies,
+    useMovieImages,
+    useReleaseDates,
+  } = useMovies();
 
   const { data: movie, isLoading: movieLoading } = useMovieDetails(movieId);
   const { data: credits } = useMovieCredits(movieId);
   const { data: similar } = useSimilarMovies(movieId);
   const { data: images } = useMovieImages(movieId);
+  const { data: releaseDates } = useReleaseDates(movieId);
 
   const { isAuthenticated } = useAuthStore();
   const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useMovieStore();
@@ -80,6 +87,18 @@ const MovieDetails = () => {
     // Placeholder for download functionality
     alert(t('movie.downloadComingSoon'));
   };
+
+  const certification = useMemo(() => {
+    if (!movie) return 'P';
+
+    const releaseCert = getCertificationFromReleaseDates(releaseDates?.results);
+    if (releaseCert) return releaseCert;
+
+    if (movie.adult) return 'T18';
+    if (movie.vote_average >= 7.5) return 'T16';
+    if (movie.vote_average >= 6) return 'T13';
+    return 'P';
+  }, [releaseDates, movie]);
 
   if (movieLoading) {
     return <LoadingSpinner fullScreen />;
@@ -175,7 +194,7 @@ const MovieDetails = () => {
 
                 {/* Age Rating */}
                 <div className="bg-white/15 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded-lg">
-                  <span className="text-white font-bold text-sm">T13</span>
+                  <span className="text-white font-bold text-sm">{certification}</span>
                 </div>
 
                 {/* Year */}
@@ -247,7 +266,7 @@ const MovieDetails = () => {
 
                 {/* Age Rating */}
                 <div className="bg-white/15 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded-lg">
-                  <span className="text-white font-bold text-sm">T13</span>
+                  <span className="text-white font-bold text-sm">{certification}</span>
                 </div>
 
                 {/* Year */}

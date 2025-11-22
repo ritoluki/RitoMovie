@@ -13,13 +13,13 @@ const tmdbAxios = axios.create({
 // Helper to format language for TMDB API
 const formatLanguage = (lang?: string): string => {
   if (!lang) return 'en-US';
-  
+
   // Convert i18n language codes to TMDB format
   const languageMap: Record<string, string> = {
     'en': 'en-US',
     'vi': 'vi-VN',
   };
-  
+
   return languageMap[lang] || languageMap[lang.split('-')[0]] || 'en-US';
 };
 
@@ -148,9 +148,13 @@ export const discoverMovies = async (filters: {
   sort_by?: string;
   year?: number;
   with_genres?: string;
+  with_origin_country?: string;
   vote_average_gte?: number;
   vote_average_lte?: number;
   language?: string;
+  certification_country?: string;
+  certification?: string;
+  certification_lte?: string;
 }) => {
   const response = await tmdbAxios.get('/discover/movie', {
     params: {
@@ -159,11 +163,21 @@ export const discoverMovies = async (filters: {
       language: formatLanguage(filters.language),
       ...(filters.year && { primary_release_year: filters.year }),
       ...(filters.with_genres && { with_genres: filters.with_genres }),
+      ...(filters.with_origin_country && {
+        with_origin_country: filters.with_origin_country,
+      }),
       ...(filters.vote_average_gte && {
         'vote_average.gte': filters.vote_average_gte,
       }),
       ...(filters.vote_average_lte && {
         'vote_average.lte': filters.vote_average_lte,
+      }),
+      ...(filters.certification_country && {
+        certification_country: filters.certification_country,
+      }),
+      ...(filters.certification && { certification: filters.certification }),
+      ...(filters.certification_lte && {
+        'certification.lte': filters.certification_lte,
       }),
     },
   });
@@ -182,3 +196,8 @@ export const getMovieImages = async (movieId: number) => {
   return response.data;
 };
 
+// Get all countries
+export const getCountries = async () => {
+  const response = await tmdbAxios.get('/configuration/countries');
+  return response.data;
+};

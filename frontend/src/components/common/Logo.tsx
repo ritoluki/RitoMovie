@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
@@ -8,6 +9,7 @@ interface LogoProps {
 }
 
 const Logo = ({ size = 'md', showIcon = true, animated = true }: LogoProps) => {
+  const { t } = useTranslation();
   const sizeClasses = {
     sm: 'text-xl md:text-2xl',
     md: 'text-2xl md:text-3xl',
@@ -15,7 +17,7 @@ const Logo = ({ size = 'md', showIcon = true, animated = true }: LogoProps) => {
   };
 
   const LogoContent = (
-    <div className="flex items-center group">
+    <div className="flex flex-col group">
       <div className="relative">
         <motion.div
           className={`${sizeClasses[size]} font-bold font-display relative`}
@@ -44,6 +46,10 @@ const Logo = ({ size = 'md', showIcon = true, animated = true }: LogoProps) => {
           transition={{ duration: 0.3 }}
         />
       </div>
+
+      <span className="mt-0 text-[10px] uppercase tracking-[0.2em] text-gray-300">
+        {t('header.tagline')}
+      </span>
     </div>
   );
 

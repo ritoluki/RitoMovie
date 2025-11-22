@@ -274,6 +274,20 @@ export const getGenres = asyncHandler(
   }
 );
 
+// @desc    Get all countries
+// @route   GET /api/movies/countries/list
+// @access  Public
+export const getCountries = asyncHandler(
+  async (req: Request, res: Response, __next: NextFunction) => {
+    const data = await tmdbService.getCountries();
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+  }
+);
+
 // @desc    Discover movies with filters
 // @route   GET /api/movies/discover
 // @access  Public
@@ -285,11 +299,19 @@ export const discoverMovies = asyncHandler(
       sort_by: req.query.sort_by as string,
       year: req.query.year ? parseInt(req.query.year as string) : undefined,
       with_genres: req.query.with_genres as string,
+      with_origin_country: req.query.with_origin_country as string,
       vote_average_gte: req.query.rating_gte
         ? parseFloat(req.query.rating_gte as string)
         : undefined,
       vote_average_lte: req.query.rating_lte
         ? parseFloat(req.query.rating_lte as string)
+        : undefined,
+      certification_country: req.query.certification_country
+        ? (req.query.certification_country as string)
+        : undefined,
+      certification: req.query.certification ? (req.query.certification as string) : undefined,
+      certification_lte: req.query.certification_lte
+        ? (req.query.certification_lte as string)
         : undefined,
       language,
     };

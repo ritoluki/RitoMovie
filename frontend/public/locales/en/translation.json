@@ -23,7 +23,10 @@
     "searchPlaceholder": "Search movies...",
     "profile": "Profile",
     "logout": "Logout",
-    "signIn": "Sign In"
+    "signIn": "Sign In",
+    "genres": "Genres",
+    "countries": "Countries",
+    "tagline": "Great movies, watch now!"
   },
   "home": {
     "trendingNow": "Trending Now",
@@ -53,7 +56,7 @@
     "createAccount": "Create Account",
     "joinUs": "Join us and start watching",
     "fullName": "Full Name",
-    "fullNamePlaceholder": "John Doe",
+    "fullNamePlaceholder": "Rito Phan",
     "confirmPassword": "Confirm Password",
     "agreeToTerms": "I agree to the",
     "termsOfService": "Terms of Service",

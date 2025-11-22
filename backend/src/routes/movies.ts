@@ -14,6 +14,7 @@ import {
   getMovieRecommendations,
   getMovieReviews,
   getGenres,
+  getCountries,
   discoverMovies,
   getMovieReleaseDates,
   getMovieImages,
@@ -30,6 +31,7 @@ router.get('/now-playing', getNowPlayingMovies);
 router.get('/discover', discoverMovies);
 router.get('/search', searchMovies);
 router.get('/genres/list', getGenres);
+router.get('/countries/list', getCountries);
 router.get('/genre/:genreId', getMoviesByGenre);
 router.get('/:id', getMovieDetails);
 router.get('/:id/videos', getMovieVideos);

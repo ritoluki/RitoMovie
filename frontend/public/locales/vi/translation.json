@@ -23,7 +23,10 @@
     "searchPlaceholder": "Tìm kiếm phim...",
     "profile": "Hồ sơ",
     "logout": "Đăng xuất",
-    "signIn": "Đăng nhập"
+    "signIn": "Đăng nhập",
+    "genres": "Thể loại",
+    "countries": "Quốc gia",
+    "tagline": "Phim hay, xem ngay!"
   },
   "home": {
     "trendingNow": "Xu hướng hiện nay",
@@ -40,7 +43,7 @@
     "welcomeBack": "Chào mừng trở lại",
     "signInToContinue": "Đăng nhập để tiếp tục xem",
     "email": "Email",
-    "emailPlaceholder": "email@cua-ban.com",
+    "emailPlaceholder": "email@domain.com",
     "password": "Mật khẩu",
     "passwordPlaceholder": "••••••••",
     "rememberMe": "Ghi nhớ đăng nhập",
@@ -91,7 +94,7 @@
     "name": "Tên",
     "namePlaceholder": "Tên của bạn",
     "email": "Email",
-    "emailPlaceholder": "email@cua-ban.com",
+    "emailPlaceholder": "email@domain.com",
     "changeAvatar": "Đổi avatar",
     "selectAvatar": "Chọn Avatar",
     "selectAvatarDesc": "Chọn ảnh từ diễn viên yêu thích của bạn",

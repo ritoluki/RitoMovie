@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { Movie } from '@/types';
-import { getImageUrl, formatRating } from '@/utils/helpers';
+import { getImageUrl, formatRating, getCertificationFromReleaseDates } from '@/utils/helpers';
 import { useMovies } from '@/hooks/useMovies';
 import MoviePopup from './MoviePopup';
 
@@ -143,21 +143,19 @@ const TopMovieCard = ({ movie, rank }: TopMovieCardProps) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Get age rating based on vote average (simplified example)
-  const getAgeRating = () => {
+  // Get certification (age restriction) from movie details or fallback
+  const getCertification = () => {
+    // Try to get from movieDetails first
+    if (shouldFetchDetails && movieDetails?.release_dates?.results) {
+      const cert = getCertificationFromReleaseDates(movieDetails.release_dates.results);
+      if (cert) return cert;
+    }
+    
+    // Fallback to simplified logic
     if (movie.adult) return 'T18';
     if (movie.vote_average < 6) return 'T13';
     if (movie.vote_average < 7.5) return 'T16';
     return 'T13';
-  };
-
-  // Get quality badge color based on rating
-  const getRatingColor = () => {
-    const rating = movie.vote_average;
-    if (rating >= 8) return 'bg-green-500/90';
-    if (rating >= 7) return 'bg-blue-500/90';
-    if (rating >= 6) return 'bg-yellow-500/90';
-    return 'bg-gray-500/90';
   };
 
   const handleMouseEnter = () => {
@@ -234,14 +232,14 @@ const TopMovieCard = ({ movie, rank }: TopMovieCardProps) => {
 
             {/* Badges - Always Visible */}
             <div className="absolute top-3 left-3 flex flex-wrap gap-2 z-10">
-              {/* Age Rating */}
-              <span className="px-2 py-1 bg-black/80 backdrop-blur-sm text-white text-xs font-bold rounded border border-white/30">
-                {getAgeRating()}
+              {/* Age Certification */}
+              <span className="px-2 py-1 bg-gray-900/90 backdrop-blur-sm text-white text-xs font-bold rounded border border-gray-700">
+                {getCertification()}
               </span>
               
-              {/* Quality/Rating Badge */}
-              <span className={`px-2 py-1 ${getRatingColor()} backdrop-blur-sm text-white text-xs font-bold rounded`}>
-                TM {formatRating(movie.vote_average)}
+              {/* Rating Badge - styled to mimic IMDb tag */}
+              <span className="px-2 py-1 bg-[#F5C518] text-black text-xs font-bold rounded shadow-sm">
+                IMDb {formatRating(movie.vote_average)}
               </span>
             </div>
 

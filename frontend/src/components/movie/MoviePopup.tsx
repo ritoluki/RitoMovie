@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiPlus, FiCheck, FiInfo } from 'react-icons/fi';
 import { IoPlay } from 'react-icons/io5';
 import { Movie, MovieDetails, Genre } from '@/types';
-import { getImageUrl, formatRating, formatRuntime } from '@/utils/helpers';
+import { getImageUrl, formatRating, formatRuntime, getCertificationFromReleaseDates } from '@/utils/helpers';
 import { useMovieStore } from '@/store/movieStore';
 import { useAuthStore } from '@/store/authStore';
 import { useState, useEffect } from 'react';
@@ -24,8 +24,15 @@ const MoviePopup = ({ movie, movieDetails, isLoading, isVisible, onClose, cardRe
   const inWatchlist = isInWatchlist(movie.id);
   const { t } = useTranslation();
 
-  // Get age rating based on vote average (simplified)
-  const getAgeRating = () => {
+  // Get certification (age restriction) from movie details or fallback to simplified logic
+  const getCertification = () => {
+    // Try to get from movieDetails first
+    if (movieDetails?.release_dates?.results) {
+      const cert = getCertificationFromReleaseDates(movieDetails.release_dates.results);
+      if (cert) return cert;
+    }
+    
+    // Fallback to simplified logic
     if (movie.adult) return 'T18';
     if (movie.vote_average < 6) return 'T13';
     if (movie.vote_average < 7.5) return 'T16';
@@ -128,7 +135,7 @@ const MoviePopup = ({ movie, movieDetails, isLoading, isVisible, onClose, cardRe
             {/* Top Badges */}
             <div className="absolute top-3 left-3 flex items-center gap-2">
               <span className="px-2.5 py-1 bg-black/80 backdrop-blur-sm text-white text-xs font-bold rounded border border-white/30">
-                {getAgeRating()}
+                {getCertification()}
               </span>
               <span className="px-2.5 py-1 bg-yellow-500/90 backdrop-blur-sm text-gray-900 text-xs font-bold rounded">
                 IMDb {formatRating(movie.vote_average)}
