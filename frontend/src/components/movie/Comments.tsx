@@ -102,7 +102,7 @@ const ReplyItem = ({
           )}&background=dc2626&color=fff`
         }
         alt={reply.user.name}
-        className="w-10 h-10 rounded-full flex-shrink-0"
+        className="w-10 h-10 rounded-full flex-shrink-0 object-cover"
       />
 
       {/* Reply Content */}
@@ -259,7 +259,7 @@ const CommentItem = ({
           )}&background=dc2626&color=fff`
         }
         alt={comment.user.name}
-        className="w-12 h-12 rounded-full flex-shrink-0"
+        className="w-12 h-12 rounded-full flex-shrink-0 object-cover"
       />
 
       {/* Content */}
@@ -493,7 +493,6 @@ const Comments = ({ movieId }: CommentsProps) => {
             <div className="flex-1">
               <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
                 <p className="text-gray-400 text-sm">
-                  {t('common.signIn')}{' '}
                   <a href="/login" className="text-yellow-500 font-semibold hover:text-yellow-400">
                     {t('header.signIn')}
                   </a>{' '}
@@ -513,7 +512,7 @@ const Comments = ({ movieId }: CommentsProps) => {
                 )}&background=dc2626&color=fff`
               }
               alt={user.name}
-              className="w-12 h-12 rounded-full flex-shrink-0"
+              className="w-12 h-12 rounded-full flex-shrink-0 object-cover"
             />
 
             {/* Form */}

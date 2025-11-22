@@ -5,7 +5,8 @@ import { useMovieStore } from '@/store/movieStore';
 import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
-import { FiUser, FiMail, FiLock, FiList, FiClock, FiStar } from 'react-icons/fi';
+import AvatarSelector from '@/components/profile/AvatarSelector';
+import { FiUser, FiMail, FiLock, FiList, FiClock, FiStar, FiCamera } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
@@ -13,11 +14,13 @@ const Profile = () => {
   const { user, updateProfile } = useAuth();
   const { watchlist, history, fetchWatchlist, fetchHistory } = useMovieStore();
   const { t } = useTranslation();
-  
+
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
+  const [avatar, setAvatar] = useState(user?.avatar || '');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showAvatarSelector, setShowAvatarSelector] = useState(false);
 
   useEffect(() => {
     fetchWatchlist();
@@ -26,7 +29,7 @@ const Profile = () => {
 
   const handleUpdateProfile = async (e: FormEvent) => {
     e.preventDefault();
-    
+
     if (!name || !email) {
       toast.error(t('auth.validation.fillAllFields'));
       return;
@@ -34,13 +37,17 @@ const Profile = () => {
 
     setIsLoading(true);
     try {
-      await updateProfile({ name, email });
+      await updateProfile({ name, email, avatar });
       setIsEditingProfile(false);
     } catch (error) {
       console.error('Error updating profile:', error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleAvatarSelect = (avatarUrl: string) => {
+    setAvatar(avatarUrl);
   };
 
   const stats = [
@@ -79,15 +86,27 @@ const Profile = () => {
             <Card className="p-6 md:p-8">
               <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center space-x-4">
-                  <div className="w-20 h-20 bg-primary-600 rounded-full flex items-center justify-center">
-                    {user?.avatar ? (
-                      <img
-                        src={user.avatar}
-                        alt={user.name}
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    ) : (
-                      <FiUser size={40} className="text-white" />
+                  <div className="relative">
+                    <div className="w-20 h-20 bg-primary-600 rounded-full flex items-center justify-center overflow-hidden">
+                      {(avatar || user?.avatar) ? (
+                        <img
+                          src={avatar || user.avatar}
+                          alt={user?.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <FiUser size={40} className="text-white" />
+                      )}
+                    </div>
+                    {isEditingProfile && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAvatarSelector(true)}
+                        className="absolute bottom-0 right-0 w-8 h-8 bg-yellow-500 hover:bg-yellow-600 rounded-full flex items-center justify-center transition-colors shadow-lg"
+                        title={t('profile.changeAvatar', 'Đổi avatar')}
+                      >
+                        <FiCamera size={16} className="text-gray-900" />
+                      </button>
                     )}
                   </div>
                   <div>
@@ -95,7 +114,7 @@ const Profile = () => {
                     <p className="text-gray-400">{user?.email}</p>
                   </div>
                 </div>
-                
+
                 {!isEditingProfile && (
                   <Button
                     variant="secondary"
@@ -216,6 +235,15 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      {/* Avatar Selector Modal */}
+      {showAvatarSelector && (
+        <AvatarSelector
+          currentAvatar={avatar || user?.avatar}
+          onSelect={handleAvatarSelect}
+          onClose={() => setShowAvatarSelector(false)}
+        />
+      )}
     </div>
   );
 };
