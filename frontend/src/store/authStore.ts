@@ -11,6 +11,7 @@ interface AuthState {
   isLoading: boolean;
   rememberMe: boolean;
   login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
+  loginWithGoogle: (credential: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
@@ -76,6 +77,28 @@ export const useAuthStore = create<AuthState>()(
         } catch (error: any) {
           set({ isLoading: false });
           toast.error(error || 'Registration failed');
+          throw error;
+        }
+      },
+
+      loginWithGoogle: async (credential: string) => {
+        try {
+          set({ isLoading: true });
+          const { user, token } = await authService.googleLogin(credential);
+
+          // Google login always uses localStorage (remember me = true)
+          set({
+            user,
+            token,
+            isAuthenticated: true,
+            isLoading: false,
+            rememberMe: true,
+          });
+
+          toast.success('Google login successful!');
+        } catch (error: any) {
+          set({ isLoading: false });
+          toast.error(error || 'Google login failed');
           throw error;
         }
       },

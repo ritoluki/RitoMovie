@@ -62,5 +62,15 @@ export const authService = {
     // Response already unwrapped by axios interceptor: { success, data }
     return (response as any).data;
   },
+
+  // Google login
+  googleLogin: async (credential: string): Promise<AuthResponse> => {
+    const response = await axios.post<ApiResponse<AuthResponse>>(
+      '/auth/google',
+      { credential }
+    );
+    // Response already unwrapped by axios interceptor: { success, data }
+    return (response as any).data;
+  },
 };
 

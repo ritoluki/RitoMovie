@@ -26,6 +26,8 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://152.42.172.52',
   'http://152.42.172.52:5173',
+  'https://ritomovie.live',
+  'https://www.ritomovie.live',
 ].filter(Boolean); // Remove any undefined/null values
 
 app.use(cors({
