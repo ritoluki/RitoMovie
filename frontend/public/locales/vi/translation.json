@@ -87,7 +87,13 @@
     "name": "Tên",
     "namePlaceholder": "Tên của bạn",
     "email": "Email",
-    "emailPlaceholder": "email@cua-ban.com"
+    "emailPlaceholder": "email@cua-ban.com",
+    "changeAvatar": "Đổi avatar",
+    "selectAvatar": "Chọn Avatar",
+    "selectAvatarDesc": "Chọn ảnh từ diễn viên yêu thích của bạn",
+    "chooseMovie": "Chọn phim",
+    "searchActors": "Tìm kiếm diễn viên...",
+    "noActorsFound": "Không tìm thấy diễn viên nào"
   },
   "movie": {
     "watchNow": "Xem ngay",

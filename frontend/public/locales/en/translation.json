@@ -87,7 +87,13 @@
     "name": "Name",
     "namePlaceholder": "Your name",
     "email": "Email",
-    "emailPlaceholder": "your@email.com"
+    "emailPlaceholder": "your@email.com",
+    "changeAvatar": "Change Avatar",
+    "selectAvatar": "Select Avatar",
+    "selectAvatarDesc": "Choose a photo from your favorite actors",
+    "chooseMovie": "Choose a movie",
+    "searchActors": "Search actors...",
+    "noActorsFound": "No actors found"
   },
   "movie": {
     "watchNow": "Watch Now",
