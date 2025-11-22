@@ -12,7 +12,7 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
   matchPassword(enteredPassword: string): Promise<boolean>;
-  getSignedJwtToken(): string;
+  getSignedJwtToken(rememberMe?: boolean): string;
 }
 
 const UserSchema: Schema = new Schema(
@@ -79,9 +79,12 @@ UserSchema.methods.matchPassword = async function (
 };
 
 // Sign JWT and return
-UserSchema.methods.getSignedJwtToken = function (): string {
+UserSchema.methods.getSignedJwtToken = function (rememberMe: boolean = true): string {
   const secret = process.env.JWT_SECRET || 'fallback-secret';
-  const expiresIn = process.env.JWT_EXPIRE || '7d';
+  // If rememberMe is true, use long expiry (30 days), otherwise short expiry (1 day)
+  const expiresIn = rememberMe
+    ? (process.env.JWT_EXPIRE || '30d')
+    : '1d';
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return jwt.sign({ id: this._id }, secret, { expiresIn } as any) as string;
 };

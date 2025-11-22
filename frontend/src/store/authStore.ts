@@ -9,7 +9,8 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  rememberMe: boolean;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
@@ -24,17 +25,27 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       isAuthenticated: false,
       isLoading: false,
+      rememberMe: true,
 
-      login: async (email: string, password: string) => {
+      login: async (email: string, password: string, rememberMe: boolean = true) => {
         try {
           set({ isLoading: true });
-          const { user, token } = await authService.login({ email, password });
-          
+          const { user, token } = await authService.login({ email, password, rememberMe });
+
+          // Store based on rememberMe preference
+          if (!rememberMe) {
+            // Clear localStorage and use sessionStorage instead
+            localStorage.removeItem('auth-storage');
+            sessionStorage.setItem('auth-token', token);
+            sessionStorage.setItem('auth-user', JSON.stringify(user));
+          }
+
           set({
             user,
             token,
             isAuthenticated: true,
             isLoading: false,
+            rememberMe,
           });
 
           toast.success('Login successful!');
@@ -70,10 +81,15 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        // Clear both localStorage and sessionStorage
+        sessionStorage.removeItem('auth-token');
+        sessionStorage.removeItem('auth-user');
+
         set({
           user: null,
           token: null,
           isAuthenticated: false,
+          rememberMe: true,
         });
         toast.success('Logged out successfully');
       },
@@ -94,6 +110,25 @@ export const useAuthStore = create<AuthState>()(
       },
 
       initialize: async () => {
+        // Check sessionStorage first (for non-remember-me sessions)
+        const sessionToken = sessionStorage.getItem('auth-token');
+        const sessionUser = sessionStorage.getItem('auth-user');
+
+        if (sessionToken && sessionUser) {
+          try {
+            const user = JSON.parse(sessionUser);
+            set({ user, token: sessionToken, isAuthenticated: true, rememberMe: false });
+            // Verify token is still valid
+            await authService.getMe();
+          } catch (error) {
+            sessionStorage.removeItem('auth-token');
+            sessionStorage.removeItem('auth-user');
+            set({ user: null, token: null, isAuthenticated: false });
+          }
+          return;
+        }
+
+        // Otherwise check localStorage (for remember-me sessions)
         const token = get().token;
         if (token) {
           try {

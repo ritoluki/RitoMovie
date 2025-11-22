@@ -4,6 +4,7 @@ import { User, ApiResponse } from '@/types';
 interface LoginCredentials {
   email: string;
   password: string;
+  rememberMe?: boolean;
 }
 
 interface RegisterCredentials {

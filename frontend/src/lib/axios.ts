@@ -12,24 +12,30 @@ const axiosInstance = axios.create({
 // Request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Get token from Zustand persist storage
-    const authStorage = localStorage.getItem('auth-storage');
-    if (authStorage) {
-      try {
-        const { state } = JSON.parse(authStorage);
-        const token = state?.token;
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+    // First check sessionStorage (for non-remember-me sessions)
+    const sessionToken = sessionStorage.getItem('auth-token');
+    if (sessionToken) {
+      config.headers.Authorization = `Bearer ${sessionToken}`;
+    } else {
+      // Then check localStorage (for remember-me sessions)
+      const authStorage = localStorage.getItem('auth-storage');
+      if (authStorage) {
+        try {
+          const { state } = JSON.parse(authStorage);
+          const token = state?.token;
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+          }
+        } catch (error) {
+          console.error('Error parsing auth storage:', error);
         }
-      } catch (error) {
-        console.error('Error parsing auth storage:', error);
       }
     }
-    
+
     // Add Accept-Language header for i18n
     const language = localStorage.getItem('i18nextLng') || 'en';
     config.headers['Accept-Language'] = language;
-    
+
     return config;
   },
   (error) => {
@@ -48,7 +54,7 @@ axiosInstance.interceptors.response.use(
     if (error.response) {
       // Server responded with error
       const { status, data } = error.response;
-      
+
       if (status === 401) {
         // Unauthorized - only redirect if not already on login/register page
         // This prevents redirect loops during login attempts
@@ -58,7 +64,7 @@ axiosInstance.interceptors.response.use(
           window.location.href = '/login';
         }
       }
-      
+
       // Extract error message from response
       // API error response structure: { success: false, message: '...', data: null }
       const errorMessage = data?.message || error.message || 'An error occurred';
