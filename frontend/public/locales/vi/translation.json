@@ -11,7 +11,9 @@
     "no": "Không",
     "confirm": "Xác nhận",
     "saveChanges": "Lưu thay đổi",
-    "backToHome": "← Quay lại Trang chủ"
+    "backToHome": "← Quay lại Trang chủ",
+    "scrollDown": "Kéo xuống",
+    "swipeUp": "Khám phá"
   },
   "header": {
     "home": "Trang chủ",

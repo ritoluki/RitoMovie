@@ -78,10 +78,12 @@ const HeroBanner = ({ movies }: HeroBannerProps) => {
             {/* Gradient Overlays */}
             <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/70 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent" />
+            {/* Bottom fade to suggest more content below */}
+            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-gray-900/90 via-gray-900/40 to-transparent pointer-events-none" />
           </div>
 
           {/* Content */}
-          <div className="relative h-full flex items-end pt-24 sm:pt-32 md:pt-28 lg:pt-32 pl-6 md:pl-16 lg:pl-24 xl:pl-32 pr-4 pb-20 md:pb-24 lg:pb-28">
+          <div className="relative h-full flex items-end pt-24 sm:pt-32 md:pt-28 lg:pt-32 pl-6 md:pl-16 lg:pl-24 xl:pl-32 pr-4 pb-40 md:pb-40 lg:pb-44">
             <div className="max-w-3xl space-y-3 md:space-y-5">
               {/* Tagline/Original Title */}
               {currentMovie.original_title && currentMovie.original_title !== currentMovie.title && (
@@ -198,8 +200,8 @@ const HeroBanner = ({ movies }: HeroBannerProps) => {
                 <button
                   onClick={handleToggleWatchlist}
                   className={`inline-flex items-center justify-center space-x-2 font-semibold px-4 md:px-8 py-3 rounded-full backdrop-blur-sm transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 ${isInWatchlist
-                      ? 'bg-red-500/80 hover:bg-red-500 text-white border-2 border-red-400'
-                      : 'bg-gray-800/80 hover:bg-gray-700/80 text-white border-2 border-gray-600'
+                    ? 'bg-red-500/80 hover:bg-red-500 text-white border-2 border-red-400'
+                    : 'bg-gray-800/80 hover:bg-gray-700/80 text-white border-2 border-gray-600'
                     }`}
                 >
                   <FiHeart size={20} className={isInWatchlist ? 'fill-current' : ''} />
@@ -224,8 +226,8 @@ const HeroBanner = ({ movies }: HeroBannerProps) => {
                 key={movie.id}
                 onClick={() => setCurrentIndex(index)}
                 className={`relative overflow-hidden rounded transition-all duration-300 ${index === currentIndex
-                    ? 'ring-4 ring-red-500 scale-110'
-                    : 'opacity-70 hover:opacity-100 hover:scale-105'
+                  ? 'ring-4 ring-red-500 scale-110'
+                  : 'opacity-70 hover:opacity-100 hover:scale-105'
                   }`}
               >
                 <img
