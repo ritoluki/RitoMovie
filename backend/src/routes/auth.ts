@@ -3,6 +3,7 @@ import { body } from 'express-validator';
 import {
   register,
   login,
+  googleLogin,
   getMe,
   updateProfile,
   updatePassword,
@@ -72,6 +73,7 @@ const updatePasswordValidation = [
 // Routes
 router.post('/register', validate(registerValidation), register);
 router.post('/login', validate(loginValidation), login);
+router.post('/google', googleLogin);
 router.get('/me', protect, getMe);
 router.put('/profile', protect, validate(updateProfileValidation), updateProfile);
 router.put('/password', protect, validate(updatePasswordValidation), updatePassword);

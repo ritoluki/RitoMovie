@@ -98,6 +98,82 @@ export const login = asyncHandler(
   }
 );
 
+// @desc    Google Login
+// @route   POST /api/auth/google
+// @access  Public
+export const googleLogin = asyncHandler(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const { credential } = req.body;
+    const t: TFunction = (req as unknown as { t: TFunction }).t || ((key: string) => key);
+
+    if (!credential) {
+      throw new ApiError(400, t('validation.required', { field: 'Google credential' }));
+    }
+
+    try {
+      // Get user info from Google using access token
+      const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: {
+          Authorization: `Bearer ${credential}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new ApiError(401, 'Invalid Google token');
+      }
+
+      const googleUser = await response.json();
+
+      if (!googleUser || !(googleUser as any).email) {
+        throw new ApiError(401, 'Invalid Google token');
+      }
+
+      const { email, name, picture } = googleUser as { email: string; name: string; picture: string };
+
+      // Check if user exists
+      let user = await User.findOne({ email });
+
+      if (!user) {
+        // Create new user with Google info
+        user = await User.create({
+          name: name || email.split('@')[0],
+          email,
+          avatar: picture || '',
+          password: Math.random().toString(36).slice(-8) + 'Aa1!', // Random secure password
+          role: 'user',
+        });
+      } else if (picture && !user.avatar) {
+        // Update avatar if user doesn't have one
+        user.avatar = picture;
+        await user.save();
+      }
+
+      // Generate token (Google login always uses remember me = true)
+      const token = user.getSignedJwtToken(true);
+
+      res.status(200).json({
+        success: true,
+        message: t('auth.loginSuccess'),
+        data: {
+          user: {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            avatar: user.avatar,
+            watchlist: user.watchlist,
+            createdAt: user.createdAt,
+          },
+          token,
+        },
+      });
+    } catch (error) {
+      console.error('Google login error:', error);
+      throw new ApiError(401, 'Google authentication failed');
+    }
+  }
+);
+
 // @desc    Get current logged in user
 // @route   GET /api/auth/me
 // @access  Private
