@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { FiDownload, FiHeart, FiShare2, FiMessageCircle } from 'react-icons/fi';
+import { FiDownload, FiHeart, FiShare2, FiMessageCircle, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { AiFillHeart } from 'react-icons/ai';
 import { IoPlay } from 'react-icons/io5';
 import { useMovies } from '@/hooks/useMovies';
@@ -23,6 +23,7 @@ const MovieDetails = () => {
   const { id } = useParams<{ id: string }>();
   const movieId = parseInt(id || '0');
   const [activeTab, setActiveTab] = useState<TabType>('episodes');
+  const [showMovieInfo, setShowMovieInfo] = useState(false);
 
   const { useMovieDetails, useMovieCredits, useSimilarMovies, useMovieImages } = useMovies();
 
@@ -122,14 +123,14 @@ const MovieDetails = () => {
       </div>
 
       {/* Content Below Banner */}
-      <div className="container mx-auto px-4 md:px-8 -mt-32 md:-mt-40 relative z-10">
-        <div className="flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-8">
-          {/* Poster with decorative frame */}
+      <div className="container mx-auto px-4 md:px-8 -mt-40 md:-mt-48 relative z-10">
+        <div className="flex flex-col md:flex-row items-start md:items-start gap-6 md:gap-8">
+          {/* Poster with decorative frame and Watch Button */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
-            className="flex-shrink-0 w-full md:w-auto flex justify-center md:justify-start"
+            className="flex-shrink-0 w-full md:w-auto flex flex-col items-center md:items-start gap-6"
           >
             <div className="relative bg-gradient-to-br from-gray-800/40 to-gray-900/40 backdrop-blur-md border border-gray-700/50 rounded-2xl p-4 shadow-2xl">
               {/* Decorative corner accents */}
@@ -151,37 +152,17 @@ const MovieDetails = () => {
                     className="w-full h-full object-cover"
                   />
                 </div>
-
-                {/* Movie Title & Year Below Poster */}
-                <div className="mt-4 text-center space-y-2">
-                  <h2 className="text-white font-bold text-base md:text-lg line-clamp-2">
-                    {movie.title}
-                  </h2>
-                  {movie.original_title && movie.original_title !== movie.title && (
-                    <p className="text-gray-400 text-xs italic">
-                      {movie.original_title}
-                    </p>
-                  )}
-                </div>
               </div>
             </div>
-          </motion.div>
 
-          {/* Movie Info - Right Side */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex-1 max-w-3xl space-y-5 w-full text-center md:text-left"
-          >
-            {/* Title & Meta */}
-            <div className="space-y-3">
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white text-shadow-lg">
+            {/* Movie Info on Mobile - Below Poster */}
+            <div className="md:hidden w-full space-y-4">
+              <h1 className="text-3xl font-bold text-white text-shadow-lg text-center">
                 {movie.title}
               </h1>
 
               {/* Badges Row */}
-              <div className="flex items-center flex-wrap gap-3 justify-center md:justify-start">
+              <div className="flex items-center justify-center flex-wrap gap-3">
                 {/* Rating Badge */}
                 <div className="flex items-center gap-1.5 bg-yellow-500/20 backdrop-blur-sm border border-yellow-500/40 px-3 py-1.5 rounded-lg">
                   <span className="text-yellow-400 font-bold text-sm">★</span>
@@ -216,7 +197,7 @@ const MovieDetails = () => {
 
               {/* Genres */}
               {movie.genres && movie.genres.length > 0 && (
-                <div className="flex items-center flex-wrap gap-2 justify-center md:justify-start">
+                <div className="flex items-center justify-center flex-wrap gap-2">
                   {movie.genres.map((genre) => (
                     <span
                       key={genre.id}
@@ -229,27 +210,148 @@ const MovieDetails = () => {
               )}
             </div>
 
-            {/* Watch Button */}
-            <div className="flex justify-center md:justify-start">
-              <Link
-                to={`/watch/${movie.id}`}
-                className="inline-flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 text-white font-bold px-10 py-3.5 rounded-full transition-all shadow-xl hover:shadow-2xl hover:scale-105 text-base"
-              >
-                <IoPlay size={22} />
-                <span>{t('movie.watchNow')}</span>
-              </Link>
+            {/* Watch Button below movie info */}
+            <Link
+              to={`/watch/${movie.id}`}
+              className="w-full md:w-[292px] inline-flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold px-4 md:px-6 py-3 md:py-3 rounded-full transition-all shadow-xl hover:shadow-2xl hover:scale-105 text-base"
+            >
+              <IoPlay size={20} />
+              <span>{t('movie.watchNow')}</span>
+            </Link>
+          </motion.div>
+
+          {/* Movie Info - Right Side (Desktop Only) */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="flex-1 max-w-3xl w-full space-y-5"
+          >
+            {/* Title Section - Desktop Only */}
+            <div className="hidden md:block space-y-3">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white text-shadow-lg">
+                {movie.title}
+              </h1>
+
+              {/* Badges Row */}
+              <div className="flex items-center flex-wrap gap-3">
+                {/* Rating Badge */}
+                <div className="flex items-center gap-1.5 bg-yellow-500/20 backdrop-blur-sm border border-yellow-500/40 px-3 py-1.5 rounded-lg">
+                  <span className="text-yellow-400 font-bold text-sm">★</span>
+                  <span className="text-white font-semibold text-sm">
+                    {movie.vote_average.toFixed(1)}
+                  </span>
+                </div>
+
+                {/* Age Rating */}
+                <div className="bg-white/15 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded-lg">
+                  <span className="text-white font-bold text-sm">T13</span>
+                </div>
+
+                {/* Year */}
+                {movie.release_date && (
+                  <div className="bg-white/15 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded-lg">
+                    <span className="text-white font-semibold text-sm">
+                      {new Date(movie.release_date).getFullYear()}
+                    </span>
+                  </div>
+                )}
+
+                {/* Runtime */}
+                {movie.runtime && (
+                  <div className="bg-white/15 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded-lg">
+                    <span className="text-white font-semibold text-sm">
+                      {Math.floor(movie.runtime / 60)}h {movie.runtime % 60}m
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Genres */}
+              {movie.genres && movie.genres.length > 0 && (
+                <div className="flex items-center flex-wrap gap-2">
+                  {movie.genres.map((genre) => (
+                    <span
+                      key={genre.id}
+                      className="text-white text-xs font-medium px-3 py-1.5 bg-gray-800/60 backdrop-blur-sm rounded-full border border-gray-600/50"
+                    >
+                      {genre.name}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Overview */}
-            <div className="bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-xl p-5 space-y-3">
+            {/* Movie Info Dropdown for Mobile */}
+            <div className="md:hidden">
+              <button
+                onClick={() => setShowMovieInfo(!showMovieInfo)}
+                className="w-full bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-xl p-4 flex items-center justify-between"
+              >
+                <h3 className="text-white font-bold text-base">{t('movie.movieInfo')}</h3>
+                {showMovieInfo ? (
+                  <FiChevronUp className="text-white text-xl" />
+                ) : (
+                  <FiChevronDown className="text-white text-xl" />
+                )}
+              </button>
+
+              {showMovieInfo && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-3 space-y-3"
+                >
+                  {/* Overview */}
+                  <div className="bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-xl p-5 space-y-3">
+                    <h3 className="text-white font-bold text-base">{t('movie.introduction')}</h3>
+                    <p className="text-gray-300 text-sm leading-relaxed">
+                      {movie.overview || t('movie.noOverview')}
+                    </p>
+                  </div>
+
+                  {/* Additional Info Grid */}
+                  <div className="bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-xl p-5">
+                    <div className="grid grid-cols-1 gap-4 text-sm">
+                      {movie.production_countries && movie.production_countries.length > 0 && (
+                        <div>
+                          <span className="text-gray-400 block mb-1">{t('movie.country')}</span>
+                          <span className="text-white font-medium">{movie.production_countries[0].name}</span>
+                        </div>
+                      )}
+
+                      {movie.production_companies && movie.production_companies.length > 0 && (
+                        <div>
+                          <span className="text-gray-400 block mb-1">{t('movie.networks')}</span>
+                          <span className="text-white font-medium">{movie.production_companies[0].name}</span>
+                        </div>
+                      )}
+
+                      {movie.production_companies && movie.production_companies.length > 0 && (
+                        <div>
+                          <span className="text-gray-400 block mb-1">{t('movie.production')}</span>
+                          <span className="text-white font-medium">
+                            {movie.production_companies.slice(0, 3).map(c => c.name).join(', ')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+
+            {/* Overview - Desktop only */}
+            <div className="hidden md:block bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-xl p-5 space-y-3">
               <h3 className="text-white font-bold text-base">{t('movie.introduction')}</h3>
               <p className="text-gray-300 text-sm leading-relaxed">
                 {movie.overview || t('movie.noOverview')}
               </p>
             </div>
 
-            {/* Additional Info Grid */}
-            <div className="bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-xl p-5">
+            {/* Additional Info Grid - Desktop only */}
+            <div className="hidden md:block bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-xl p-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 {movie.production_countries && movie.production_countries.length > 0 && (
                   <div>

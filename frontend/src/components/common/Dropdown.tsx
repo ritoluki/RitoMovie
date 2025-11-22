@@ -62,7 +62,11 @@ const Dropdown = ({
             <div className="relative">
                 <button
                     type="button"
-                    onClick={() => !disabled && setIsOpen(!isOpen)}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        !disabled && setIsOpen(!isOpen);
+                    }}
                     disabled={disabled}
                     className="relative w-full cursor-pointer rounded-lg bg-gray-800 py-2 pl-3 pr-8 text-center border border-gray-700 hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
@@ -98,7 +102,11 @@ const Dropdown = ({
                                     <button
                                         key={option.value}
                                         type="button"
-                                        onClick={() => handleSelect(option.value)}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleSelect(option.value);
+                                        }}
                                         className={`relative w-full cursor-pointer select-none py-2 pl-8 pr-3 text-left transition-colors duration-150 ${isSelected ? 'bg-primary-600/20 text-white font-medium' : 'text-gray-300 hover:bg-primary-600/10 hover:text-white'
                                             }`}
                                     >

@@ -82,7 +82,8 @@ const EpisodesTab = ({ movieId, movieTitle }: EpisodesTabProps) => {
         {episodes.map((episode) => (
           <button
             key={episode.number}
-            className="group relative bg-gray-800 hover:bg-red-600 rounded-lg px-4 py-3 transition-all duration-200 border border-gray-700 hover:border-red-500"
+            type="button"
+            className="group relative bg-gray-800 hover:bg-red-600 rounded-lg px-4 py-3 transition-all duration-200 border border-gray-700 hover:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-600"
           >
             <span className="text-white text-sm font-medium">
               {episode.title}
