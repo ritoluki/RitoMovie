@@ -109,16 +109,18 @@ const MovieDetails = () => {
   return (
     <div className="min-h-screen bg-gray-900 -mt-16 md:-mt-20">
       {/* Hero Banner - Backdrop image only */}
-      <div className="relative h-[calc(60vh+4rem)] md:h-[calc(70vh+5rem)]">
+      <div className="relative h-[calc(60vh+4rem)] md:h-[calc(70vh+5rem)] overflow-hidden">
         <div className="absolute inset-0">
           <img
             src={getImageUrl(movie.backdrop_path, 'backdrop', 'original')}
             alt={movie.title}
-            className="w-full h-full object-cover object-center"
+            className="w-full h-full object-cover object-top"
           />
-          {/* Enhanced gradient overlays */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-gray-900" />
+          {/* Enhanced gradient overlays - fade to bottom */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-900/30 to-gray-900" />
           <div className="absolute inset-0 bg-gradient-to-r from-gray-900/50 via-transparent to-transparent" />
+          {/* Extra blur effect at bottom */}
+          <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-gray-900 via-gray-900/80 to-transparent backdrop-blur-[2px]" />
         </div>
       </div>
 

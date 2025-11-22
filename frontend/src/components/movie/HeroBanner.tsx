@@ -73,13 +73,13 @@ const HeroBanner = ({ movies }: HeroBannerProps) => {
             <img
               src={getImageUrl(currentMovie.backdrop_path, 'backdrop', 'original')}
               alt={currentMovie.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-top"
             />
             {/* Gradient Overlays */}
             <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/70 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent" />
-            {/* Bottom fade to suggest more content below */}
-            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-gray-900/90 via-gray-900/40 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/30 to-transparent" />
+            {/* Bottom fade with blur to suggest more content below */}
+            <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-gray-900 via-gray-900/80 to-transparent backdrop-blur-[2px] pointer-events-none" />
           </div>
 
           {/* Content */}
