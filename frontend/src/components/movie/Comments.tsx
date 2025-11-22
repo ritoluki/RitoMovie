@@ -267,11 +267,6 @@ const CommentItem = ({
         {/* Header: Name + Badge + Time */}
         <div className="flex items-center gap-2 mb-1">
           <h4 className="text-white font-semibold text-base">{comment.user.name}</h4>
-          {comment.rating && (
-            <span className="inline-flex items-center justify-center w-5 h-5 bg-yellow-500 rounded-full text-gray-900 text-xs font-bold">
-              ∞
-            </span>
-          )}
           <span className="text-gray-500 text-sm">{timeAgoText}</span>
         </div>
 

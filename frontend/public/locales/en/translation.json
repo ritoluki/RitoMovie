@@ -12,8 +12,9 @@
     "confirm": "Confirm",
     "saveChanges": "Save Changes",
     "backToHome": "← Back to Home",
-    "scrollDown": "Scroll Down",
-    "swipeUp": "Explore"
+    "backToTop": "Back to top",
+    "scrollDown": "Scroll down",
+    "swipeUp": "Swipe up"
   },
   "header": {
     "home": "Home",
