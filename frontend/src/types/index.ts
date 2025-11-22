@@ -28,6 +28,7 @@ export interface MovieDetails extends Movie {
   production_companies: ProductionCompany[];
   production_countries: ProductionCountry[];
   spoken_languages: SpokenLanguage[];
+  release_dates?: ReleaseDatesResponse;
 }
 
 export interface Genre {
