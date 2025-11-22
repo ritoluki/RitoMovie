@@ -137,7 +137,9 @@ const Login = () => {
           </div>
 
           {/* Google Login Button */}
-          <GoogleLoginButton />
+          <GoogleLoginButton 
+            onSuccess={() => navigate(from, { replace: true })}
+          />
 
           <div className="mt-6 text-center">
             <p className="text-gray-400">

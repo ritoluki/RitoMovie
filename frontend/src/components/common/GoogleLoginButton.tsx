@@ -1,5 +1,4 @@
 import { useGoogleLogin } from '@react-oauth/google';
-import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -11,7 +10,6 @@ interface GoogleLoginButtonProps {
 }
 
 const GoogleLoginButton = ({ onSuccess, onError }: GoogleLoginButtonProps) => {
-    const navigate = useNavigate();
     const { loginWithGoogle } = useAuthStore();
     const { t } = useTranslation();
 
@@ -22,8 +20,8 @@ const GoogleLoginButton = ({ onSuccess, onError }: GoogleLoginButtonProps) => {
                 const credential = tokenResponse.access_token;
 
                 await loginWithGoogle(credential);
+                toast.success(t('auth.loginSuccess') || 'Login successful!');
                 onSuccess?.();
-                navigate('/');
             } catch (error) {
                 console.error('Google login error:', error);
                 toast.error(t('auth.googleLoginFailed') || 'Failed to login with Google');
