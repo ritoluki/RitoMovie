@@ -147,7 +147,7 @@ const Header = () => {
           }`}
       >
         <div className="px-4 md:px-6">
-          <div className="flex items-center justify-between gap-3 h-16 md:h-20">
+          <div className="flex items-center justify-between gap-3 h-16 md:h-20 relative">
             {/* Left Side: Logo + Search */}
             <div className="flex items-center gap-5">
               {/* Logo */}
@@ -172,7 +172,10 @@ const Header = () => {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-6">
+            <nav
+              className="hidden md:flex items-center gap-6 absolute"
+              style={{ left: '50%', transform: 'translateX(-50%)' }}
+            >
               {navLinks.map((link) => (
                 <Link
                   key={link.path}
