@@ -54,7 +54,7 @@ export const register = asyncHandler(
 // @access  Public
 export const login = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
-    const { email, password } = req.body;
+    const { email, password, rememberMe = true } = req.body;
     const t: TFunction = (req as unknown as { t: TFunction }).t || ((key: string) => key);
 
     // Validate email & password
@@ -76,8 +76,8 @@ export const login = asyncHandler(
       throw new ApiError(401, t('auth.invalidCredentials'));
     }
 
-    // Generate token
-    const token = user.getSignedJwtToken();
+    // Generate token with appropriate expiry based on rememberMe
+    const token = user.getSignedJwtToken(rememberMe);
 
     res.status(200).json({
       success: true,
@@ -118,7 +118,7 @@ export const getMe = asyncHandler(
 export const updateProfile = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
     const t: TFunction = (req as unknown as { t: TFunction }).t || ((key: string) => key);
-    
+
     const fieldsToUpdate = {
       name: req.body.name,
       email: req.body.email,
