@@ -24,8 +24,10 @@ app.use(helmet()); // Security headers
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:5173',
   'http://localhost:5173',
+  'http://localhost:5174',
   'http://152.42.172.52',
   'http://152.42.172.52:5173',
+  'http://152.42.172.52:5174',
   'https://ritomovie.live',
   'https://www.ritomovie.live',
 ].filter(Boolean); // Remove any undefined/null values
@@ -76,12 +78,14 @@ import movieRoutes from './routes/movies';
 import videoRoutes from './routes/videos';
 import userRoutes from './routes/users';
 import commentRoutes from './routes/comments';
+import phimRoutes from './routes/phim';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/movies', movieRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/comments', commentRoutes);
+app.use('/api/phim', phimRoutes);
 
 // Health check with database status
 app.get('/health', (_req: Request, res: Response) => {

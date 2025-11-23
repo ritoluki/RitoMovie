@@ -1,6 +1,7 @@
 import { useMovies } from '@/hooks/useMovies';
 import HeroBanner from '@/components/movie/HeroBanner';
 import MovieRow from '@/components/movie/MovieRow';
+import PhimRow from '@/components/movie/PhimRow';
 import TopMoviesSection from '@/components/movie/TopMoviesSection';
 import TopMoviesTiltedSection from '@/components/movie/TopMoviesTiltedSection';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
@@ -9,9 +10,11 @@ import { useEffect } from 'react';
 import { useMovieStore } from '@/store/movieStore';
 import { useAuthStore } from '@/store/authStore';
 import { useTranslation } from 'react-i18next';
+import { usePhim } from '@/hooks/usePhim';
 
 const Home = () => {
   const { useTrending, usePopular, useTopRated, useMoviesByGenre } = useMovies();
+  const { useCatalogList } = usePhim();
   const { t } = useTranslation();
 
   const { data: trending, isLoading: trendingLoading } = useTrending('week');
@@ -21,6 +24,7 @@ const Home = () => {
   const { data: comedy } = useMoviesByGenre(35); // Comedy
   const { data: horror } = useMoviesByGenre(27); // Horror
   const { data: romance } = useMoviesByGenre(10749); // Romance
+  const { data: featuredSeries } = useCatalogList('phim-bo', { limit: 12, page: 1 });
 
   const { isAuthenticated } = useAuthStore();
   const { fetchWatchlist, fetchHistory } = useMovieStore();
@@ -127,6 +131,13 @@ const Home = () => {
             title={t('home.romanceMovies')}
             movies={romance.results}
             link="/browse?genre=10749"
+          />
+        )}
+
+        {featuredSeries?.data?.items && (
+          <PhimRow
+            title={t('home.seriesFromPhim')}
+            items={featuredSeries.data.items}
           />
         )}
       </div>

@@ -8,6 +8,33 @@ const getLanguage = (req: Request): string => {
   return (req as { language?: string }).language || 'en';
 };
 
+const getMediaType = (req: Request): 'movie' | 'tv' => {
+  return req.query.type === 'tv' ? 'tv' : 'movie';
+};
+
+const buildReleaseDatesFromTvRatings = (tvRatings: any, tvId: number) => {
+  const results = (tvRatings?.results || []).map((entry: any) => ({
+    iso_3166_1: entry.iso_3166_1,
+    release_dates: entry.rating
+      ? [
+        {
+          certification: entry.rating,
+          descriptors: [],
+          iso_639_1: '',
+          note: 'TV content rating',
+          release_date: '',
+          type: 0,
+        },
+      ]
+      : [],
+  }));
+
+  return {
+    id: tvId,
+    results,
+  };
+};
+
 // @desc    Get trending movies
 // @route   GET /api/movies/trending
 // @access  Public
@@ -139,12 +166,15 @@ export const getMovieDetails = asyncHandler(
   async (req: Request, res: Response, __next: NextFunction) => {
     const movieId = parseInt(req.params.id);
     const language = getLanguage(req);
+    const mediaType = getMediaType(req);
 
     if (isNaN(movieId)) {
       throw new ApiError(400, 'Invalid movie ID');
     }
 
-    const data = await tmdbService.getMovieDetails(movieId, language);
+    const data = mediaType === 'tv'
+      ? await tmdbService.getTvDetails(movieId, language)
+      : await tmdbService.getMovieDetails(movieId, language);
 
     res.status(200).json({
       success: true,
@@ -160,12 +190,15 @@ export const getMovieVideos = asyncHandler(
   async (req: Request, res: Response, __next: NextFunction) => {
     const movieId = parseInt(req.params.id);
     const language = getLanguage(req);
+    const mediaType = getMediaType(req);
 
     if (isNaN(movieId)) {
       throw new ApiError(400, 'Invalid movie ID');
     }
 
-    const data = await tmdbService.getMovieVideos(movieId, language);
+    const data = mediaType === 'tv'
+      ? await tmdbService.getTvVideos(movieId, language)
+      : await tmdbService.getMovieVideos(movieId, language);
 
     res.status(200).json({
       success: true,
@@ -180,12 +213,15 @@ export const getMovieVideos = asyncHandler(
 export const getMovieCredits = asyncHandler(
   async (req: Request, res: Response, __next: NextFunction) => {
     const movieId = parseInt(req.params.id);
+    const mediaType = getMediaType(req);
 
     if (isNaN(movieId)) {
       throw new ApiError(400, 'Invalid movie ID');
     }
 
-    const data = await tmdbService.getMovieCredits(movieId);
+    const data = mediaType === 'tv'
+      ? await tmdbService.getTvCredits(movieId)
+      : await tmdbService.getMovieCredits(movieId);
 
     res.status(200).json({
       success: true,
@@ -202,12 +238,15 @@ export const getSimilarMovies = asyncHandler(
     const movieId = parseInt(req.params.id);
     const page = parseInt(req.query.page as string) || 1;
     const language = getLanguage(req);
+    const mediaType = getMediaType(req);
 
     if (isNaN(movieId)) {
       throw new ApiError(400, 'Invalid movie ID');
     }
 
-    const data = await tmdbService.getSimilarMovies(movieId, page, language);
+    const data = mediaType === 'tv'
+      ? await tmdbService.getSimilarTvShows(movieId, page, language)
+      : await tmdbService.getSimilarMovies(movieId, page, language);
 
     res.status(200).json({
       success: true,
@@ -224,12 +263,15 @@ export const getMovieRecommendations = asyncHandler(
     const movieId = parseInt(req.params.id);
     const page = parseInt(req.query.page as string) || 1;
     const language = getLanguage(req);
+    const mediaType = getMediaType(req);
 
     if (isNaN(movieId)) {
       throw new ApiError(400, 'Invalid movie ID');
     }
 
-    const data = await tmdbService.getMovieRecommendations(movieId, page, language);
+    const data = mediaType === 'tv'
+      ? await tmdbService.getTvRecommendations(movieId, page, language)
+      : await tmdbService.getMovieRecommendations(movieId, page, language);
 
     res.status(200).json({
       success: true,
@@ -245,12 +287,15 @@ export const getMovieReviews = asyncHandler(
   async (req: Request, res: Response, __next: NextFunction) => {
     const movieId = parseInt(req.params.id);
     const page = parseInt(req.query.page as string) || 1;
+    const mediaType = getMediaType(req);
 
     if (isNaN(movieId)) {
       throw new ApiError(400, 'Invalid movie ID');
     }
 
-    const data = await tmdbService.getMovieReviews(movieId, page);
+    const data = mediaType === 'tv'
+      ? await tmdbService.getTvReviews(movieId, page)
+      : await tmdbService.getMovieReviews(movieId, page);
 
     res.status(200).json({
       success: true,
@@ -331,12 +376,15 @@ export const discoverMovies = asyncHandler(
 export const getMovieReleaseDates = asyncHandler(
   async (req: Request, res: Response, __next: NextFunction) => {
     const movieId = parseInt(req.params.id);
+    const mediaType = getMediaType(req);
 
     if (isNaN(movieId)) {
       throw new ApiError(400, 'Invalid movie ID');
     }
 
-    const data = await tmdbService.getMovieReleaseDates(movieId);
+    const data = mediaType === 'tv'
+      ? buildReleaseDatesFromTvRatings(await tmdbService.getTvContentRatings(movieId), movieId)
+      : await tmdbService.getMovieReleaseDates(movieId);
 
     res.status(200).json({
       success: true,
@@ -351,12 +399,15 @@ export const getMovieReleaseDates = asyncHandler(
 export const getMovieImages = asyncHandler(
   async (req: Request, res: Response, __next: NextFunction) => {
     const movieId = parseInt(req.params.id);
+    const mediaType = getMediaType(req);
 
     if (isNaN(movieId)) {
       throw new ApiError(400, 'Invalid movie ID');
     }
 
-    const data = await tmdbService.getMovieImages(movieId);
+    const data = mediaType === 'tv'
+      ? await tmdbService.getTvImages(movieId)
+      : await tmdbService.getMovieImages(movieId);
 
     res.status(200).json({
       success: true,

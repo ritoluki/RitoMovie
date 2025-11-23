@@ -27,34 +27,44 @@ export const useMovies = () => {
     });
   };
 
-  const useMovieDetails = (movieId: number) => {
+  type MediaType = 'movie' | 'tv';
+
+  const useMovieDetails = (
+    movieId: number,
+    options?: { enabled?: boolean; mediaType?: MediaType }
+  ) => {
+    const mediaType = options?.mediaType ?? 'movie';
     return useQuery({
-      queryKey: ['movie', movieId, language],
-      queryFn: () => movieService.getDetails(movieId),
+      queryKey: ['movie', mediaType, movieId, language],
+      queryFn: () => movieService.getDetails(movieId, mediaType),
+      enabled: Boolean(movieId) && (options?.enabled ?? true),
+    });
+  };
+
+  const useMovieVideos = (movieId: number, mediaType: MediaType = 'movie') => {
+    return useQuery({
+      queryKey: ['movie', mediaType, movieId, 'videos', language],
+      queryFn: () => movieService.getVideos(movieId, mediaType),
       enabled: !!movieId,
     });
   };
 
-  const useMovieVideos = (movieId: number) => {
+  const useMovieCredits = (movieId: number, mediaType: MediaType = 'movie') => {
     return useQuery({
-      queryKey: ['movie', movieId, 'videos', language],
-      queryFn: () => movieService.getVideos(movieId),
+      queryKey: ['movie', mediaType, movieId, 'credits', language],
+      queryFn: () => movieService.getCredits(movieId, mediaType),
       enabled: !!movieId,
     });
   };
 
-  const useMovieCredits = (movieId: number) => {
+  const useSimilarMovies = (
+    movieId: number,
+    page: number = 1,
+    mediaType: MediaType = 'movie'
+  ) => {
     return useQuery({
-      queryKey: ['movie', movieId, 'credits', language],
-      queryFn: () => movieService.getCredits(movieId),
-      enabled: !!movieId,
-    });
-  };
-
-  const useSimilarMovies = (movieId: number, page: number = 1) => {
-    return useQuery({
-      queryKey: ['movie', movieId, 'similar', page, language],
-      queryFn: () => movieService.getSimilar(movieId, page),
+      queryKey: ['movie', mediaType, movieId, 'similar', page, language],
+      queryFn: () => movieService.getSimilar(movieId, page, mediaType),
       enabled: !!movieId,
     });
   };
@@ -83,19 +93,19 @@ export const useMovies = () => {
     });
   };
 
-  const useReleaseDates = (movieId: number) => {
+  const useReleaseDates = (movieId: number, mediaType: MediaType = 'movie') => {
     return useQuery({
-      queryKey: ['movie', movieId, 'release-dates'],
-      queryFn: () => movieService.getReleaseDates(movieId),
+      queryKey: ['movie', mediaType, movieId, 'release-dates'],
+      queryFn: () => movieService.getReleaseDates(movieId, mediaType),
       enabled: !!movieId,
       staleTime: 10 * 60 * 1000, // 10 minutes - certifications don't change often
     });
   };
 
-  const useMovieImages = (movieId: number) => {
+  const useMovieImages = (movieId: number, mediaType: MediaType = 'movie') => {
     return useQuery({
-      queryKey: ['movie', movieId, 'images'],
-      queryFn: () => movieService.getImages(movieId),
+      queryKey: ['movie', mediaType, movieId, 'images'],
+      queryFn: () => movieService.getImages(movieId, mediaType),
       enabled: !!movieId,
       staleTime: 10 * 60 * 1000, // 10 minutes - images don't change often
     });

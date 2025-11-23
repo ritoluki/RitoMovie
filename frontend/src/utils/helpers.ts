@@ -19,7 +19,7 @@ export function getImageUrl(
 
   const sizeMap = IMAGE_SIZES[type];
   const imageSize = sizeMap[size as keyof typeof sizeMap];
-  
+
   return `${TMDB_IMAGE_BASE_URL}/${imageSize}${path}`;
 }
 
@@ -82,7 +82,7 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
   wait: number
 ): (...args: Parameters<T>) => void {
   let timeout: ReturnType<typeof setTimeout> | null = null;
-  
+
   return (...args: Parameters<T>) => {
     if (timeout) clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
@@ -94,7 +94,7 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
   limit: number
 ): (...args: Parameters<T>) => void {
   let inThrottle: boolean;
-  
+
   return (...args: Parameters<T>) => {
     if (!inThrottle) {
       func(...args);
@@ -127,7 +127,7 @@ export function formatCertification(certification: string): string {
     'NC-17': 'T18',
     'NR': 'NR',
   };
-  
+
   return certMap[certification] || certification;
 }
 
@@ -135,20 +135,20 @@ export function getCertificationFromReleaseDates(
   releaseDates: { iso_3166_1: string; release_dates: { certification: string }[] }[] | undefined
 ): string | null {
   if (!releaseDates || releaseDates.length === 0) return null;
-  
+
   // Try to get US certification first
   const usRelease = releaseDates.find((r) => r.iso_3166_1 === 'US');
   if (usRelease && usRelease.release_dates.length > 0) {
     const cert = usRelease.release_dates.find((rd) => rd.certification);
     if (cert?.certification) return formatCertification(cert.certification);
   }
-  
+
   // Fallback to any certification
   for (const release of releaseDates) {
     const cert = release.release_dates.find((rd) => rd.certification);
     if (cert?.certification) return cert.certification;
   }
-  
+
   return null;
 }
 
@@ -157,5 +157,18 @@ export function getGenreNames(genreIds: number[], allGenres: { id: number; name:
   return genreIds
     .map((id) => allGenres.find((g) => g.id === id)?.name)
     .filter((name): name is string => !!name);
+}
+
+export function getPhimImageUrl(path?: string | null): string {
+  if (!path) {
+    return 'https://via.placeholder.com/500x750?text=No+Image';
+  }
+
+  if (path.startsWith('http')) {
+    return path;
+  }
+
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `https://phimimg.com${normalizedPath}`;
 }
 

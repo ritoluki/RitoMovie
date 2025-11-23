@@ -2,11 +2,14 @@
 export interface Movie {
   id: number;
   title: string;
+  name?: string;
   original_title?: string;
+  original_name?: string;
   overview: string;
   poster_path: string | null;
   backdrop_path: string | null;
   release_date: string;
+  first_air_date?: string;
   vote_average: number;
   vote_count: number;
   popularity: number;
@@ -14,6 +17,7 @@ export interface Movie {
   genre_ids: number[];
   original_language: string;
   video: boolean;
+  episode_run_time?: number[];
 }
 
 export interface MovieDetails extends Movie {
@@ -208,5 +212,142 @@ export interface SearchParams {
   genre?: number;
   year?: number;
   sort_by?: string;
+}
+
+// PhimAPI types
+export interface PhimMovieTmdbInfo {
+  type: string | null;
+  id: string | null;
+  season?: number | null;
+  vote_average?: number;
+  vote_count?: number;
+}
+
+export interface PhimMovieImdbInfo {
+  id: string | null;
+}
+
+export interface PhimMovieSummary {
+  _id: string;
+  name: string;
+  slug: string;
+  origin_name: string;
+  poster_url: string;
+  thumb_url: string;
+  year: number;
+  type?: string;
+  time?: string;
+  episode_current?: string;
+  episode_total?: string;
+  quality?: string;
+  lang?: string;
+  lang_name?: string;
+  chieurap?: boolean;
+  sub_docquyen?: boolean;
+  category?: PhimMovieCategory[];
+  country?: PhimMovieCategory[];
+  tmdb?: PhimMovieTmdbInfo;
+  imdb?: PhimMovieImdbInfo;
+}
+
+export interface PhimPagination {
+  totalItems: number;
+  totalItemsPerPage: number;
+  currentPage: number;
+  totalPages: number;
+}
+
+export interface PhimLatestResponse {
+  status: boolean;
+  msg: string;
+  items: PhimMovieSummary[];
+  pagination: PhimPagination;
+}
+
+export interface PhimMovieCategory {
+  id?: string;
+  _id?: string;
+  name: string;
+  slug: string;
+}
+
+export type PhimCategoryListResponse = PhimMovieCategory[];
+
+export type PhimCountryListResponse = PhimMovieCategory[];
+
+export interface PhimEpisodeSource {
+  name: string;
+  slug: string;
+  filename: string;
+  link_embed: string;
+  link_m3u8: string;
+}
+
+export interface PhimEpisodeServer {
+  server_name: string;
+  server_data: PhimEpisodeSource[];
+}
+
+export interface PhimMovieMeta {
+  _id: string;
+  name: string;
+  slug: string;
+  origin_name: string;
+  content: string;
+  type: string;
+  status: string;
+  poster_url: string;
+  thumb_url: string;
+  time: string;
+  episode_current: string;
+  episode_total: string;
+  quality: string;
+  lang: string;
+  notify: string;
+  showtimes: string;
+  year: number;
+  actor: string[];
+  director: string[];
+  category: PhimMovieCategory[];
+  country: PhimMovieCategory[];
+  trailer_url?: string;
+  lang_name?: string;
+  chieurap?: boolean;
+  tmdb?: PhimMovieTmdbInfo;
+}
+
+export interface PhimMovieDetailResponse {
+  status: boolean;
+  msg: string;
+  movie: PhimMovieMeta;
+  episodes: PhimEpisodeServer[];
+}
+
+export interface PhimCatalogParams {
+  type_slug?: string;
+  filterCategory?: string[];
+  filterCountry?: string[];
+  filterYear?: string[];
+  filterType?: string[];
+  sortField?: string;
+  sortType?: string;
+  pagination?: PhimPagination;
+}
+
+export interface PhimCatalogData {
+  seoOnPage?: Record<string, unknown>;
+  breadCrumb?: Array<Record<string, unknown>>;
+  titlePage?: string;
+  items: PhimMovieSummary[];
+  params?: PhimCatalogParams;
+  type_list?: string;
+  APP_DOMAIN_FRONTEND?: string;
+  APP_DOMAIN_CDN_IMAGE?: string;
+}
+
+export interface PhimCatalogResponse {
+  status: boolean;
+  msg: string;
+  data: PhimCatalogData;
 }
 

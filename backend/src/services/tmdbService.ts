@@ -201,3 +201,55 @@ export const getCountries = async () => {
   const response = await tmdbAxios.get('/configuration/countries');
   return response.data;
 };
+
+// ===== TV show helpers =====
+
+export const getTvDetails = async (tvId: number, language?: string) => {
+  const response = await tmdbAxios.get(`/tv/${tvId}`, {
+    params: { language: formatLanguage(language) },
+  });
+  return response.data;
+};
+
+export const getTvVideos = async (tvId: number, language?: string) => {
+  const response = await tmdbAxios.get(`/tv/${tvId}/videos`, {
+    params: { language: formatLanguage(language) },
+  });
+  return response.data;
+};
+
+export const getTvCredits = async (tvId: number) => {
+  const response = await tmdbAxios.get(`/tv/${tvId}/credits`);
+  return response.data;
+};
+
+export const getSimilarTvShows = async (tvId: number, page: number = 1, language?: string) => {
+  const response = await tmdbAxios.get(`/tv/${tvId}/similar`, {
+    params: { page, language: formatLanguage(language) },
+  });
+  return response.data;
+};
+
+export const getTvRecommendations = async (tvId: number, page: number = 1, language?: string) => {
+  const response = await tmdbAxios.get(`/tv/${tvId}/recommendations`, {
+    params: { page, language: formatLanguage(language) },
+  });
+  return response.data;
+};
+
+export const getTvReviews = async (tvId: number, page: number = 1) => {
+  const response = await tmdbAxios.get(`/tv/${tvId}/reviews`, {
+    params: { page },
+  });
+  return response.data;
+};
+
+export const getTvContentRatings = async (tvId: number) => {
+  const response = await tmdbAxios.get(`/tv/${tvId}/content_ratings`);
+  return response.data;
+};
+
+export const getTvImages = async (tvId: number) => {
+  const response = await tmdbAxios.get(`/tv/${tvId}/images`);
+  return response.data;
+};
