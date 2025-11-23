@@ -25,8 +25,8 @@ const Header = () => {
   const { useGenres: usePhimGenres, useCountries: usePhimCountries } = usePhim();
   const { data: phimGenresData, isLoading: isGenresLoading } = usePhimGenres();
   const { data: phimCountriesData, isLoading: isCountriesLoading } = usePhimCountries();
-  const genres = Array.isArray(phimGenresData) ? phimGenresData : (phimGenresData?.data ?? []);
-  const countries = Array.isArray(phimCountriesData) ? phimCountriesData : (phimCountriesData?.data ?? []);
+  const genres = phimGenresData ?? [];
+  const countries = phimCountriesData ?? [];
 
   useEffect(() => {
     const handleScroll = () => {
