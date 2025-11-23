@@ -3,9 +3,9 @@ import { lazy, Suspense } from 'react';
 import Layout from '@/components/layout/Layout';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ProtectedRoute from '@/components/common/ProtectedRoute';
+import Home from '@/pages/Home';
 
-// Lazy load pages
-const Home = lazy(() => import('@/pages/Home'));
+// Lazy load secondary pages
 const Browse = lazy(() => import('@/pages/Browse'));
 const MovieDetails = lazy(() => import('@/pages/MovieDetails'));
 const Watch = lazy(() => import('@/pages/Watch'));
@@ -21,7 +21,7 @@ const AppRoutes = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        
+
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="browse" element={<Browse />} />

@@ -19,7 +19,7 @@ const LoadingSpinner = ({ fullScreen = false, size = 'md' }: LoadingSpinnerProps
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#05060b] text-center px-6 animate-fade-in">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#05060b] text-center px-6">
         <div className="flex flex-col items-center space-y-8 animate-slide-up">
           <div className="flex flex-col items-center space-y-6">
             <div className="relative flex flex-col items-center space-y-3">
