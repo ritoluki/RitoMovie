@@ -33,11 +33,12 @@ export type CatalogQuery = {
 };
 
 type DetailQuery = Omit<CatalogQuery, 'category' | 'country'> & {
+    category?: string;
     country?: string;
 };
 
 export const phimService = {
-    getLatest: async (options?: { page?: number; version?: Version }): Promise<PhimLatestResponse> => {
+    getLatest: async (options?: { page?: number; version?: Version }): Promise<ApiResponse<PhimLatestResponse>> => {
         const response = await axios.get<ApiResponse<PhimLatestResponse>>('/phim/latest', {
             params: {
                 page: options?.page,
@@ -48,17 +49,17 @@ export const phimService = {
         return response.data;
     },
 
-    getMovieBySlug: async (slug: string): Promise<PhimMovieDetailResponse> => {
+    getMovieBySlug: async (slug: string): Promise<ApiResponse<PhimMovieDetailResponse>> => {
         const response = await axios.get<ApiResponse<PhimMovieDetailResponse>>(`/phim/movie/${slug}`);
         return response.data;
     },
 
-    getMovieByTmdb: async (tmdbId: number, type: PhimType = 'auto'): Promise<PhimMovieDetailResponse> => {
+    getMovieByTmdb: async (tmdbId: number, type: PhimType = 'auto'): Promise<ApiResponse<PhimMovieDetailResponse>> => {
         const response = await axios.get<ApiResponse<PhimMovieDetailResponse>>(`/phim/tmdb/${type}/${tmdbId}`);
         return response.data;
     },
 
-    getCatalogList: async (type: CatalogType, params?: CatalogQuery): Promise<PhimCatalogResponse> => {
+    getCatalogList: async (type: CatalogType, params?: CatalogQuery): Promise<ApiResponse<PhimCatalogResponse>> => {
         const response = await axios.get<ApiResponse<PhimCatalogResponse>>(`/phim/list/${type}`, {
             params,
         });

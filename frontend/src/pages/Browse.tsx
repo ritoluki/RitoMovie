@@ -143,8 +143,8 @@ const Browse = () => {
   const { data: phimCountriesData } = usePhimCountries();
 
   const genres: Genre[] = genresData?.genres || [];
-  const phimGenres = phimGenresData ?? [];
-  const phimCountries = phimCountriesData ?? [];
+  const phimGenres = Array.isArray(phimGenresData) ? phimGenresData : (phimGenresData?.data ?? []);
+  const phimCountries = Array.isArray(phimCountriesData) ? phimCountriesData : (phimCountriesData?.data ?? []);
 
   // Countries list (same as Header)
   const countries = [
