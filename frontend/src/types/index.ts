@@ -18,6 +18,7 @@ export interface Movie {
   original_language: string;
   video: boolean;
   episode_run_time?: number[];
+  media_type?: 'movie' | 'tv';
 }
 
 export interface MovieDetails extends Movie {

@@ -9,9 +9,9 @@ const SkeletonTest = () => {
             <h1 className="text-4xl font-bold text-white">Skeleton Loading Test</h1>
 
             <div className="space-y-8">
-                <SkeletonMovieRow title="Phim Hành Động" />
-                <SkeletonMovieRow title="Phim Kinh Dị" />
-                <SkeletonMovieRow title="Phim Hài" />
+                <SkeletonMovieRow />
+                <SkeletonMovieRow />
+                <SkeletonMovieRow />
             </div>
 
             <div className="mt-8 p-4 bg-gray-800 rounded-lg">
