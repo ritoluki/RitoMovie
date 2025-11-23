@@ -4,6 +4,7 @@ import {
     PhimLatestResponse,
     PhimMovieDetailResponse,
     PhimCatalogResponse,
+    PhimCatalogData,
     PhimCategoryListResponse,
     PhimCountryListResponse,
 } from '@/types';
@@ -49,11 +50,19 @@ export const usePhim = () => {
 
     const useCatalogList = (type: CatalogType, params?: CatalogQuery) => {
         const keySuffix = params ? JSON.stringify(params) : 'default';
-        return useQuery<PhimCatalogResponse>({
+        return useQuery<PhimCatalogData>({
             queryKey: ['phim', 'catalog', type, keySuffix],
             queryFn: async () => {
                 const response = await phimService.getCatalogList(type, params);
-                return (response.data ?? response) as PhimCatalogResponse;
+                // Backend structure: { success: true, data: { status, msg, data: { items: [...] } } }
+                // We need to return the innermost data object (PhimCatalogData)
+                if ('data' in response && response.data && 'data' in response.data) {
+                    return response.data.data as PhimCatalogData;
+                }
+                if ('data' in response && response.data) {
+                    return response.data as unknown as PhimCatalogData;
+                }
+                return response as unknown as PhimCatalogData;
             },
             staleTime: 2 * 60 * 1000,
         });
@@ -61,11 +70,19 @@ export const usePhim = () => {
 
     const useGenreDetail = (slug?: string, params?: CatalogQuery) => {
         const keySuffix = params ? JSON.stringify(params) : 'default';
-        return useQuery<PhimCatalogResponse>({
+        return useQuery<PhimCatalogData>({
             queryKey: ['phim', 'genre', slug, keySuffix],
             queryFn: async () => {
                 const response = await phimService.getGenreDetail(slug || '', params);
-                return (response.data ?? response) as PhimCatalogResponse;
+                // Backend structure: { success: true, data: { status, msg, data: { items: [...] } } }
+                // We need to return the innermost data object (PhimCatalogData)
+                if ('data' in response && response.data && 'data' in response.data) {
+                    return response.data.data as PhimCatalogData;
+                }
+                if ('data' in response && response.data) {
+                    return response.data as unknown as PhimCatalogData;
+                }
+                return response as unknown as PhimCatalogData;
             },
             enabled: Boolean(slug),
             staleTime: 2 * 60 * 1000,

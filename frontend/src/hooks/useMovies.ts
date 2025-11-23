@@ -111,6 +111,44 @@ export const useMovies = () => {
     });
   };
 
+  // ===== TV Series hooks =====
+
+  const usePopularTvShows = (page: number = 1) => {
+    return useQuery({
+      queryKey: ['tv', 'popular', page, language],
+      queryFn: () => movieService.getPopularTvShows(page),
+    });
+  };
+
+  const useTopRatedTvShows = (page: number = 1) => {
+    return useQuery({
+      queryKey: ['tv', 'top-rated', page, language],
+      queryFn: () => movieService.getTopRatedTvShows(page),
+    });
+  };
+
+  const useOnTheAirTvShows = (page: number = 1) => {
+    return useQuery({
+      queryKey: ['tv', 'on-the-air', page, language],
+      queryFn: () => movieService.getOnTheAirTvShows(page),
+    });
+  };
+
+  const useAiringTodayTvShows = (page: number = 1) => {
+    return useQuery({
+      queryKey: ['tv', 'airing-today', page, language],
+      queryFn: () => movieService.getAiringTodayTvShows(page),
+    });
+  };
+
+  const useTvShowsByGenre = (genreId: number, page: number = 1) => {
+    return useQuery({
+      queryKey: ['tv', 'genre', genreId, page, language],
+      queryFn: () => movieService.getTvShowsByGenre(genreId, page),
+      enabled: !!genreId,
+    });
+  };
+
   return {
     useTrending,
     usePopular,
@@ -124,6 +162,11 @@ export const useMovies = () => {
     useSearchMovies,
     useReleaseDates,
     useMovieImages,
+    usePopularTvShows,
+    useTopRatedTvShows,
+    useOnTheAirTvShows,
+    useAiringTodayTvShows,
+    useTvShowsByGenre,
   };
 };
 

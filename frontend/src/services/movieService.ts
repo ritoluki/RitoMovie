@@ -156,5 +156,47 @@ export const movieService = {
     );
     return response.data;
   },
+
+  // ===== TV Series endpoints =====
+
+  // Get popular TV series
+  getPopularTvShows: async (page: number = 1): Promise<PaginatedResponse<Movie>> => {
+    const response = await axios.get<PaginatedResponse<Movie>>(
+      `/movies/tv/popular?page=${page}`
+    );
+    return response.data;
+  },
+
+  // Get top rated TV series
+  getTopRatedTvShows: async (page: number = 1): Promise<PaginatedResponse<Movie>> => {
+    const response = await axios.get<PaginatedResponse<Movie>>(
+      `/movies/tv/top-rated?page=${page}`
+    );
+    return response.data;
+  },
+
+  // Get on the air TV series
+  getOnTheAirTvShows: async (page: number = 1): Promise<PaginatedResponse<Movie>> => {
+    const response = await axios.get<PaginatedResponse<Movie>>(
+      `/movies/tv/on-the-air?page=${page}`
+    );
+    return response.data;
+  },
+
+  // Get airing today TV series
+  getAiringTodayTvShows: async (page: number = 1): Promise<PaginatedResponse<Movie>> => {
+    const response = await axios.get<PaginatedResponse<Movie>>(
+      `/movies/tv/airing-today?page=${page}`
+    );
+    return response.data;
+  },
+
+  // Get TV series by genre
+  getTvShowsByGenre: async (genreId: number, page: number = 1): Promise<PaginatedResponse<Movie>> => {
+    const response = await axios.get<PaginatedResponse<Movie>>(
+      `/movies/tv/genre/${genreId}?page=${page}`
+    );
+    return response.data;
+  },
 };
 

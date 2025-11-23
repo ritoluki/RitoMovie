@@ -416,3 +416,91 @@ export const getMovieImages = asyncHandler(
   }
 );
 
+
+// ===== TV Series endpoints =====
+
+// @desc    Get popular TV series
+// @route   GET /api/movies/tv/popular
+// @access  Public
+export const getPopularTvShows = asyncHandler(
+  async (req: Request, res: Response, __next: NextFunction) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const language = getLanguage(req);
+    const data = await tmdbService.getPopularTvShows(page, language);
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+  }
+);
+
+// @desc    Get top rated TV series
+// @route   GET /api/movies/tv/top-rated
+// @access  Public
+export const getTopRatedTvShows = asyncHandler(
+  async (req: Request, res: Response, __next: NextFunction) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const language = getLanguage(req);
+    const data = await tmdbService.getTopRatedTvShows(page, language);
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+  }
+);
+
+// @desc    Get on the air TV series
+// @route   GET /api/movies/tv/on-the-air
+// @access  Public
+export const getOnTheAirTvShows = asyncHandler(
+  async (req: Request, res: Response, __next: NextFunction) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const language = getLanguage(req);
+    const data = await tmdbService.getOnTheAirTvShows(page, language);
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+  }
+);
+
+// @desc    Get airing today TV series
+// @route   GET /api/movies/tv/airing-today
+// @access  Public
+export const getAiringTodayTvShows = asyncHandler(
+  async (req: Request, res: Response, __next: NextFunction) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const language = getLanguage(req);
+    const data = await tmdbService.getAiringTodayTvShows(page, language);
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+  }
+);
+
+// @desc    Get TV series by genre
+// @route   GET /api/movies/tv/genre/:genreId
+// @access  Public
+export const getTvShowsByGenre = asyncHandler(
+  async (req: Request, res: Response, __next: NextFunction) => {
+    const genreId = parseInt(req.params.genreId);
+    const page = parseInt(req.query.page as string) || 1;
+    const language = getLanguage(req);
+
+    if (isNaN(genreId)) {
+      throw new ApiError(400, 'Invalid genre ID');
+    }
+
+    const data = await tmdbService.getTvShowsByGenre(genreId, page, language);
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+  }
+);

@@ -105,30 +105,34 @@ const PhimCard = ({ item }: PhimCardProps) => {
 
             <Link to={detailHref} className="block group">
                 <motion.div
-                    className="relative aspect-[2/3] overflow-hidden rounded-xl bg-gray-800"
+                    className="relative aspect-[2/3] overflow-hidden rounded-lg bg-gray-800"
                     whileHover={{ scale: 1.04 }}
                     transition={{ duration: 0.25 }}
                 >
                     <img src={poster} alt={item.name} className="h-full w-full object-cover" loading="lazy" />
+
+                    {/* Dark gradient overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-80" />
 
-                    {qualityLabel && (
-                        <span className="absolute left-3 top-3 rounded-full bg-black/70 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-white">
-                            {qualityLabel}
-                        </span>
-                    )}
+                    {/* Movie Info Overlay - Bottom */}
+                    <div className="absolute inset-x-2 bottom-2 space-y-1">
+                        {/* Episode/Status - Only show for series (phim bộ) */}
+                        {item.episode_current && item.type === 'series' && (
+                            <p className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-yellow-400 drop-shadow-md">
+                                {item.episode_current}
+                            </p>
+                        )}
 
-                    {item.lang && (
-                        <span className="absolute right-3 top-3 rounded-full border border-white/30 bg-black/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
-                            {item.lang}
-                        </span>
-                    )}
+                        {/* Movie Title */}
+                        <h3 className="text-sm md:text-base font-bold text-white line-clamp-2 drop-shadow-lg">
+                            {item.name}
+                        </h3>
 
-                    <div className="absolute inset-x-3 bottom-3 space-y-2">
-                        {episodeLabel && <p className="text-xs font-semibold uppercase tracking-wide text-red-200">{episodeLabel}</p>}
-                        <h3 className="text-base font-bold text-white line-clamp-2">{truncateText(item.name, 40)}</h3>
+                        {/* Original Name */}
                         {item.origin_name && (
-                            <p className="text-xs text-gray-300 line-clamp-1">{item.origin_name}</p>
+                            <p className="text-[10px] md:text-xs text-gray-300 line-clamp-1 drop-shadow-md">
+                                {item.origin_name}
+                            </p>
                         )}
                     </div>
                 </motion.div>

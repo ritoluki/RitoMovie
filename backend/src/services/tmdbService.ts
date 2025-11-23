@@ -202,6 +202,53 @@ export const getCountries = async () => {
   return response.data;
 };
 
+// ===== TV Series endpoints =====
+
+// Get popular TV series
+export const getPopularTvShows = async (page: number = 1, language?: string) => {
+  const response = await tmdbAxios.get('/tv/popular', {
+    params: { page, language: formatLanguage(language) },
+  });
+  return response.data;
+};
+
+// Get top rated TV series
+export const getTopRatedTvShows = async (page: number = 1, language?: string) => {
+  const response = await tmdbAxios.get('/tv/top_rated', {
+    params: { page, language: formatLanguage(language) },
+  });
+  return response.data;
+};
+
+// Get on the air TV series (currently airing)
+export const getOnTheAirTvShows = async (page: number = 1, language?: string) => {
+  const response = await tmdbAxios.get('/tv/on_the_air', {
+    params: { page, language: formatLanguage(language) },
+  });
+  return response.data;
+};
+
+// Get airing today TV series
+export const getAiringTodayTvShows = async (page: number = 1, language?: string) => {
+  const response = await tmdbAxios.get('/tv/airing_today', {
+    params: { page, language: formatLanguage(language) },
+  });
+  return response.data;
+};
+
+// Get TV series by genre
+export const getTvShowsByGenre = async (genreId: number, page: number = 1, language?: string) => {
+  const response = await tmdbAxios.get('/discover/tv', {
+    params: {
+      with_genres: genreId,
+      page,
+      sort_by: 'popularity.desc',
+      language: formatLanguage(language),
+    },
+  });
+  return response.data;
+};
+
 // ===== TV show helpers =====
 
 export const getTvDetails = async (tvId: number, language?: string) => {

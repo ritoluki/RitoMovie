@@ -213,8 +213,26 @@ const PhimPopup = ({ item, tmdbMovie, isLoading, isVisible, onClose, cardRef }: 
                 </>
               )}
 
+              {item.quality && (
+                <>
+                  <span className="px-2 py-0.5 bg-red-600/90 text-white text-xs font-bold rounded">
+                    {item.quality}
+                  </span>
+                  <span className="text-gray-500">•</span>
+                </>
+              )}
+
+              {item.lang && (
+                <>
+                  <span className="px-2 py-0.5 bg-gray-700/50 text-white text-xs font-medium rounded border border-gray-600/50">
+                    {item.lang}
+                  </span>
+                  {episodeLabel && <span className="text-gray-500">•</span>}
+                </>
+              )}
+
               {episodeLabel && (
-                <span className="px-2 py-0.5 bg-gray-700/50 text-white text-xs font-medium rounded border border-gray-600/50">
+                <span className="text-gray-400 text-xs">
                   {episodeLabel}
                 </span>
               )}
@@ -236,10 +254,6 @@ const PhimPopup = ({ item, tmdbMovie, isLoading, isVisible, onClose, cardRef }: 
                   </span>
                 )}
               </div>
-            )}
-
-            {langLabel && (
-              <p className="text-[11px] uppercase tracking-wide text-gray-400">{langLabel}</p>
             )}
 
             {isLoading ? (

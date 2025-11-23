@@ -18,6 +18,11 @@ import {
   discoverMovies,
   getMovieReleaseDates,
   getMovieImages,
+  getPopularTvShows,
+  getTopRatedTvShows,
+  getOnTheAirTvShows,
+  getAiringTodayTvShows,
+  getTvShowsByGenre,
 } from '../controllers/movieController';
 
 const router = express.Router();
@@ -33,6 +38,14 @@ router.get('/search', searchMovies);
 router.get('/genres/list', getGenres);
 router.get('/countries/list', getCountries);
 router.get('/genre/:genreId', getMoviesByGenre);
+
+// TV Series routes
+router.get('/tv/popular', getPopularTvShows);
+router.get('/tv/top-rated', getTopRatedTvShows);
+router.get('/tv/on-the-air', getOnTheAirTvShows);
+router.get('/tv/airing-today', getAiringTodayTvShows);
+router.get('/tv/genre/:genreId', getTvShowsByGenre);
+
 router.get('/:id', getMovieDetails);
 router.get('/:id/videos', getMovieVideos);
 router.get('/:id/credits', getMovieCredits);

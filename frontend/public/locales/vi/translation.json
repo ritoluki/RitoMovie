@@ -32,7 +32,6 @@
     "tagline": "Phim hay, xem ngay!"
   },
   "home": {
-    "trendingNow": "Xu hướng hiện nay",
     "popularMovies": "Phim phổ biến",
     "topRated": "Đánh giá cao",
     "actionMovies": "Phim hành động",
@@ -40,7 +39,13 @@
     "horrorMovies": "Phim kinh dị",
     "romanceMovies": "Phim lãng mạn",
     "topMovies": "Top 10 Phim Lẻ",
-    "topTVSeries": "Top 10 Phim Bộ",
+    "topTVSeries": "Đang Thịnh Hành",
+    "popularTvShows": "Phim Bộ Mới Cập Nhật",
+    "tvShowsCategory": "TV Shows",
+    "animeTvShows": "Hoạt Hình",
+    "actionTvShows": "Phim Bộ Hành Động",
+    "dramaTvShows": "Phim Bộ Tâm Lý",
+    "comedyTvShows": "Phim Bộ Hài Hước",
     "seriesFromPhim": "Phim bộ nổi bật từ PhimAPI"
   },
   "auth": {

@@ -8,19 +8,13 @@ interface PhimRowProps {
     items?: PhimMovieSummary[];
 }
 
-const hasTmdbId = (item: PhimMovieSummary) => {
-    if (!item.tmdb?.id) return false;
-    const parsed = Number(item.tmdb.id);
-    return Number.isFinite(parsed);
-};
-
 const PhimRow = ({ title, items }: PhimRowProps) => {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [showLeft, setShowLeft] = useState(false);
     const [showRight, setShowRight] = useState(true);
 
     const filteredItems = useMemo(() => {
-        return (items || []).filter(hasTmdbId);
+        return items || [];
     }, [items]);
 
     useEffect(() => {

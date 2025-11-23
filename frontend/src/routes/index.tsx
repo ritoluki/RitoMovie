@@ -14,6 +14,7 @@ const Profile = lazy(() => import('@/pages/Profile'));
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
+const SkeletonTest = lazy(() => import('@/pages/SkeletonTest'));
 
 const AppRoutes = () => {
   return (
@@ -27,6 +28,7 @@ const AppRoutes = () => {
           <Route path="browse" element={<Browse />} />
           <Route path="movie/:id" element={<MovieDetails />} />
           <Route path="watch/:id" element={<Watch />} />
+          <Route path="skeleton-test" element={<SkeletonTest />} />
           <Route
             path="my-list"
             element={

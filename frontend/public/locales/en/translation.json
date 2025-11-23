@@ -32,7 +32,6 @@
     "tagline": "Great movies, watch now!"
   },
   "home": {
-    "trendingNow": "Trending Now",
     "popularMovies": "Popular Movies",
     "topRated": "Top Rated",
     "actionMovies": "Action Movies",
@@ -40,8 +39,14 @@
     "horrorMovies": "Horror Movies",
     "romanceMovies": "Romance Movies",
     "topMovies": "Top 10 Movies",
-    "topTVSeries": "Top 10 TV Series",
-    "seriesFromPhim": "Trending Series from PhimAPI"
+    "topTVSeries": "Trending Now",
+    "popularTvShows": "Recently Updated TV Series",
+    "tvShowsCategory": "TV Shows",
+    "animeTvShows": "Anime Series",
+    "actionTvShows": "Action TV Series",
+    "dramaTvShows": "Drama TV Series",
+    "comedyTvShows": "Comedy TV Series",
+    "seriesFromPhim": "Featured Series from PhimAPI"
   },
   "auth": {
     "welcomeBack": "Welcome Back",

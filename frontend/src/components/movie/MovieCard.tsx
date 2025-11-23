@@ -6,6 +6,7 @@ import { useMovieStore } from '@/store/movieStore';
 import { useAuthStore } from '@/store/authStore';
 import { useState, useRef, useEffect } from 'react';
 import { useMovies } from '@/hooks/useMovies';
+import { usePhim } from '@/hooks/usePhim';
 import MoviePopup from './MoviePopup';
 
 interface MovieCardProps {
@@ -21,9 +22,14 @@ const MovieCard = ({ movie }: MovieCardProps) => {
   const [isMobile, setIsMobile] = useState(false);
 
   const { useMovieDetails } = useMovies();
+  const { useMovieByTmdb } = usePhim();
 
   // Fetch details - React Query will cache the results
   const { data: movieDetails, isLoading: detailsLoading } = useMovieDetails(movie.id);
+
+  // Fetch PhimAPI data to get quality and lang info
+  const mediaType = movie.media_type === 'tv' ? 'tv' : 'movie';
+  const { data: phimData } = useMovieByTmdb(movie.id, mediaType);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -93,7 +99,7 @@ const MovieCard = ({ movie }: MovieCardProps) => {
           whileHover={isMobile ? {} : { scale: 1.05 }}
           transition={{ duration: 0.3 }}
         >
-          {/* Poster */}
+          {/* Poster with Overlay Info */}
           <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gray-800">
             <img
               src={getImageUrl(movie.poster_path, 'poster', 'medium')}
@@ -101,18 +107,21 @@ const MovieCard = ({ movie }: MovieCardProps) => {
               className="w-full h-full object-cover"
               loading="lazy"
             />
-          </div>
 
-          {/* Movie Title - Always Visible */}
-          <div className="mt-3 px-1">
-            <h3 className="text-white font-semibold text-sm md:text-base line-clamp-2 md:group-hover:text-red-500 transition-colors duration-200">
-              {movie.title}
-            </h3>
-            {movie.release_date && (
-              <p className="text-gray-400 text-xs mt-1">
-                {new Date(movie.release_date).getFullYear()}
-              </p>
-            )}
+            {/* Dark gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-80" />
+
+            {/* Movie Info Overlay - Bottom */}
+            <div className="absolute inset-x-2 bottom-2 space-y-1">
+              <h3 className="text-sm md:text-base font-bold text-white line-clamp-2 drop-shadow-lg">
+                {movie.title}
+              </h3>
+              {movie.release_date && (
+                <p className="text-xs text-gray-300 font-medium">
+                  {new Date(movie.release_date).getFullYear()}
+                </p>
+              )}
+            </div>
           </div>
         </motion.div>
       </Link>

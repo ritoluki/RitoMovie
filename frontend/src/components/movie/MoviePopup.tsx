@@ -8,6 +8,7 @@ import { useMovieStore } from '@/store/movieStore';
 import { useAuthStore } from '@/store/authStore';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePhim } from '@/hooks/usePhim';
 
 interface MoviePopupProps {
   movie: Movie;
@@ -23,6 +24,11 @@ const MoviePopup = ({ movie, movieDetails, isLoading, isVisible, onClose, cardRe
   const { isAuthenticated } = useAuthStore();
   const inWatchlist = isInWatchlist(movie.id);
   const { t } = useTranslation();
+  const { useMovieByTmdb } = usePhim();
+
+  // Fetch PhimAPI data to get quality and lang info
+  const mediaType = movie.media_type === 'tv' ? 'tv' : 'movie';
+  const { data: phimData } = useMovieByTmdb(movie.id, mediaType);
 
   // Get certification (age restriction) from movie details or fallback to simplified logic
   const getCertification = () => {
@@ -31,7 +37,7 @@ const MoviePopup = ({ movie, movieDetails, isLoading, isVisible, onClose, cardRe
       const cert = getCertificationFromReleaseDates(movieDetails.release_dates.results);
       if (cert) return cert;
     }
-    
+
     // Fallback to simplified logic
     if (movie.adult) return 'T18';
     if (movie.vote_average < 6) return 'T13';
@@ -206,9 +212,20 @@ const MoviePopup = ({ movie, movieDetails, isLoading, isVisible, onClose, cardRe
                 </>
               )}
 
-              <span className="px-2 py-0.5 bg-gray-700/50 text-white text-xs font-medium rounded border border-gray-600/50">
-                CAM
-              </span>
+              {phimData?.movie?.quality && (
+                <>
+                  <span className="px-2 py-0.5 bg-red-600/90 text-white text-xs font-bold rounded">
+                    {phimData.movie.quality}
+                  </span>
+                  <span className="text-gray-500">•</span>
+                </>
+              )}
+
+              {phimData?.movie?.lang && (
+                <span className="px-2 py-0.5 bg-gray-700/50 text-white text-xs font-medium rounded border border-gray-600/50">
+                  {phimData.movie.lang}
+                </span>
+              )}
             </div>
 
             {/* Genres */}
