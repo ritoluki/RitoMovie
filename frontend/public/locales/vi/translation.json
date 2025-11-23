@@ -1,6 +1,7 @@
 {
   "common": {
     "loading": "Đang tải...",
+    "noData": "Không có dữ liệu",
     "save": "Lưu",
     "cancel": "Hủy",
     "edit": "Chỉnh sửa",
@@ -19,6 +20,8 @@
   "header": {
     "home": "Trang chủ",
     "movies": "Phim",
+    "singleMovies": "Phim lẻ",
+    "seriesMovies": "Phim bộ",
     "myList": "Danh sách của tôi",
     "searchPlaceholder": "Tìm kiếm phim...",
     "profile": "Hồ sơ",
@@ -37,7 +40,8 @@
     "horrorMovies": "Phim kinh dị",
     "romanceMovies": "Phim lãng mạn",
     "topMovies": "Top 10 Phim Lẻ",
-    "topTVSeries": "Top 10 Phim Bộ"
+    "topTVSeries": "Top 10 Phim Bộ",
+    "seriesFromPhim": "Phim bộ nổi bật từ PhimAPI"
   },
   "auth": {
     "welcomeBack": "Chào mừng trở lại",
@@ -146,7 +150,10 @@
     "compact": "Rút gọn",
     "episode": "Tập",
     "part": "PĐ.",
-    "movieInfo": "Thông tin phim"
+    "movieInfo": "Thông tin phim",
+    "selectServer": "Chọn server",
+    "chooseEpisode": "Chọn tập",
+    "noStreamingData": "Chưa có nguồn phát cho bộ phim này."
   },
   "comments": {
     "title": "Bình luận",
@@ -218,7 +225,22 @@
   "watch": {
     "backToMovie": "Quay lại phim",
     "episodes": "Tập",
-    "season": "Mùa"
+    "season": "Mùa",
+    "play": "Phát",
+    "pause": "Tạm dừng",
+    "rewind10": "Tua lại 10s",
+    "forward10": "Tua tới 10s",
+    "mute": "Tắt tiếng",
+    "unmute": "Bật tiếng",
+    "volume": "Âm lượng",
+    "nextEpisode": "Chuyển tập",
+    "pictureInPicture": "Hình trong hình",
+    "quality": "Chất lượng",
+    "autoQuality": "Tự động",
+    "fullscreen": "Toàn màn hình",
+    "exitFullscreen": "Thoát toàn màn hình",
+    "previewLoading": "Đang tải khung hình...",
+    "toggleEpisodes": "Danh sách tập"
   },
   "errors": {
     "somethingWentWrong": "Đã xảy ra lỗi",

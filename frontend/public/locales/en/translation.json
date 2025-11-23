@@ -1,6 +1,7 @@
 {
   "common": {
     "loading": "Loading...",
+    "noData": "No data available",
     "save": "Save",
     "cancel": "Cancel",
     "edit": "Edit",
@@ -19,6 +20,8 @@
   "header": {
     "home": "Home",
     "movies": "Movies",
+    "singleMovies": "Movies",
+    "seriesMovies": "TV Series",
     "myList": "My List",
     "searchPlaceholder": "Search movies...",
     "profile": "Profile",
@@ -37,7 +40,8 @@
     "horrorMovies": "Horror Movies",
     "romanceMovies": "Romance Movies",
     "topMovies": "Top 10 Movies",
-    "topTVSeries": "Top 10 TV Series"
+    "topTVSeries": "Top 10 TV Series",
+    "seriesFromPhim": "Trending Series from PhimAPI"
   },
   "auth": {
     "welcomeBack": "Welcome Back",
@@ -146,7 +150,10 @@
     "compact": "Compact",
     "episode": "Episode",
     "part": "Part",
-    "movieInfo": "Movie Info"
+    "movieInfo": "Movie Info",
+    "selectServer": "Select server",
+    "chooseEpisode": "Choose episode",
+    "noStreamingData": "Streaming sources are currently unavailable for this title."
   },
   "comments": {
     "title": "Comments",
@@ -218,7 +225,22 @@
   "watch": {
     "backToMovie": "Back to Movie",
     "episodes": "Episodes",
-    "season": "Season"
+    "season": "Season",
+    "play": "Play",
+    "pause": "Pause",
+    "rewind10": "Rewind 10s",
+    "forward10": "Forward 10s",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "volume": "Volume",
+    "nextEpisode": "Next episode",
+    "pictureInPicture": "Picture in Picture",
+    "quality": "Quality",
+    "autoQuality": "Auto",
+    "fullscreen": "Fullscreen",
+    "exitFullscreen": "Exit fullscreen",
+    "previewLoading": "Loading preview...",
+    "toggleEpisodes": "Episode list"
   },
   "errors": {
     "somethingWentWrong": "Something went wrong",

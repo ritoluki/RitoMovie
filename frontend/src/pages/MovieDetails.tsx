@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { FiDownload, FiHeart, FiShare2, FiMessageCircle, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { AiFillHeart } from 'react-icons/ai';
 import { IoPlay } from 'react-icons/io5';
 import { useMovies } from '@/hooks/useMovies';
+import { usePhim } from '@/hooks/usePhim';
 import { useAuthStore } from '@/store/authStore';
 import { useMovieStore } from '@/store/movieStore';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
@@ -21,6 +22,9 @@ type TabType = 'episodes' | 'gallery' | 'cast' | 'recommendations';
 const MovieDetails = () => {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const mediaTypeParam = searchParams.get('type');
+  const mediaType: 'movie' | 'tv' = mediaTypeParam === 'tv' ? 'tv' : 'movie';
   const movieId = parseInt(id || '0');
   const [activeTab, setActiveTab] = useState<TabType>('episodes');
   const [showMovieInfo, setShowMovieInfo] = useState(false);
@@ -32,12 +36,17 @@ const MovieDetails = () => {
     useMovieImages,
     useReleaseDates,
   } = useMovies();
+  const { useMovieByTmdb } = usePhim();
 
-  const { data: movie, isLoading: movieLoading } = useMovieDetails(movieId);
-  const { data: credits } = useMovieCredits(movieId);
-  const { data: similar } = useSimilarMovies(movieId);
-  const { data: images } = useMovieImages(movieId);
-  const { data: releaseDates } = useReleaseDates(movieId);
+  const { data: movie, isLoading: movieLoading } = useMovieDetails(movieId, { mediaType });
+  const { data: credits } = useMovieCredits(movieId, mediaType);
+  const { data: similar } = useSimilarMovies(movieId, 1, mediaType);
+  const { data: images } = useMovieImages(movieId, mediaType);
+  const { data: releaseDates } = useReleaseDates(movieId, mediaType);
+  const { data: streamingData, isLoading: streamingLoading } = useMovieByTmdb(
+    movieId,
+    mediaType === 'tv' ? 'tv' : 'movie'
+  );
 
   const { isAuthenticated } = useAuthStore();
   const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useMovieStore();
@@ -61,7 +70,7 @@ const MovieDetails = () => {
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: movie?.title,
+        title: movie?.title || movie?.name || movie?.original_name,
         text: movie?.overview,
         url: window.location.href,
       });
@@ -112,6 +121,15 @@ const MovieDetails = () => {
     );
   }
 
+  const displayTitle = movie.title || movie.name || movie.original_name || t('movie.movieInfo');
+  const originalTitle = movie.original_title || movie.original_name || movie.title;
+  const releaseDate = movie.release_date || movie.first_air_date;
+  const releaseYear = releaseDate ? new Date(releaseDate).getFullYear() : undefined;
+  const runtimeMinutes = movie.runtime ?? movie.episode_run_time?.[0];
+  const runtimeLabel = typeof runtimeMinutes === 'number'
+    ? `${Math.floor(runtimeMinutes / 60)}h ${runtimeMinutes % 60}m`
+    : undefined;
+
   const cast = credits?.cast || [];
   const recommendedMovies = similar?.results || [];
 
@@ -125,6 +143,13 @@ const MovieDetails = () => {
     { id: 'recommendations' as TabType, label: t('movie.recommendations') },
   ];
 
+  const watchLinkParams = new URLSearchParams();
+  watchLinkParams.set('type', mediaType);
+  if (streamingData?.movie?.slug) {
+    watchLinkParams.set('slug', streamingData.movie.slug);
+  }
+  const watchLink = `/watch/${movie.id}?${watchLinkParams.toString()}`;
+
   return (
     <div className="min-h-screen bg-gray-900 -mt-16 md:-mt-20">
       {/* Hero Banner - Backdrop image only */}
@@ -132,7 +157,7 @@ const MovieDetails = () => {
         <div className="absolute inset-0">
           <img
             src={getImageUrl(movie.backdrop_path, 'backdrop', 'original')}
-            alt={movie.title}
+            alt={displayTitle}
             className="w-full h-full object-cover object-top"
           />
           {/* Enhanced gradient overlays - fade to bottom */}
@@ -169,7 +194,7 @@ const MovieDetails = () => {
                 >
                   <img
                     src={getImageUrl(movie.poster_path, 'poster', 'large')}
-                    alt={movie.title}
+                    alt={displayTitle}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -179,7 +204,7 @@ const MovieDetails = () => {
             {/* Movie Info on Mobile - Below Poster */}
             <div className="md:hidden w-full space-y-4">
               <h1 className="text-3xl font-bold text-white text-shadow-lg text-center">
-                {movie.title}
+                {displayTitle}
               </h1>
 
               {/* Badges Row */}
@@ -198,19 +223,19 @@ const MovieDetails = () => {
                 </div>
 
                 {/* Year */}
-                {movie.release_date && (
+                {releaseYear && (
                   <div className="bg-white/15 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded-lg">
                     <span className="text-white font-semibold text-sm">
-                      {new Date(movie.release_date).getFullYear()}
+                      {releaseYear}
                     </span>
                   </div>
                 )}
 
                 {/* Runtime */}
-                {movie.runtime && (
+                {runtimeLabel && (
                   <div className="bg-white/15 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded-lg">
                     <span className="text-white font-semibold text-sm">
-                      {Math.floor(movie.runtime / 60)}h {movie.runtime % 60}m
+                      {runtimeLabel}
                     </span>
                   </div>
                 )}
@@ -233,7 +258,7 @@ const MovieDetails = () => {
 
             {/* Watch Button below movie info */}
             <Link
-              to={`/watch/${movie.id}`}
+              to={watchLink}
               className="w-full md:w-[292px] inline-flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold px-4 md:px-6 py-3 md:py-3 rounded-full transition-all shadow-xl hover:shadow-2xl hover:scale-105 text-base"
             >
               <IoPlay size={20} />
@@ -251,7 +276,7 @@ const MovieDetails = () => {
             {/* Title Section - Desktop Only */}
             <div className="hidden md:block space-y-3">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white text-shadow-lg">
-                {movie.title}
+                {displayTitle}
               </h1>
 
               {/* Badges Row */}
@@ -270,19 +295,19 @@ const MovieDetails = () => {
                 </div>
 
                 {/* Year */}
-                {movie.release_date && (
+                {releaseYear && (
                   <div className="bg-white/15 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded-lg">
                     <span className="text-white font-semibold text-sm">
-                      {new Date(movie.release_date).getFullYear()}
+                      {releaseYear}
                     </span>
                   </div>
                 )}
 
                 {/* Runtime */}
-                {movie.runtime && (
+                {runtimeLabel && (
                   <div className="bg-white/15 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded-lg">
                     <span className="text-white font-semibold text-sm">
-                      {Math.floor(movie.runtime / 60)}h {movie.runtime % 60}m
+                      {runtimeLabel}
                     </span>
                   </div>
                 )}
@@ -473,7 +498,14 @@ const MovieDetails = () => {
       {/* Tab Content */}
       <div className="container mx-auto px-4 md:px-8 py-8 md:py-12">
         {activeTab === 'episodes' && (
-          <EpisodesTab movieId={movieId} movieTitle={movie?.title || ''} />
+          <EpisodesTab
+            movieId={movieId}
+            movieTitle={displayTitle}
+            mediaType={mediaType}
+            streamingServers={streamingData?.episodes}
+            isStreamingLoading={streamingLoading}
+            slug={streamingData?.movie?.slug}
+          />
         )}
         {activeTab === 'gallery' && (
           <GalleryTab movieId={movieId} images={images} isLoading={!images} />
@@ -483,7 +515,7 @@ const MovieDetails = () => {
         )}
         {activeTab === 'recommendations' && (
           <RecommendationsTab
-            movieId={movieId}
+            mediaType={mediaType}
             movies={recommendedMovies}
             isLoading={!similar}
           />

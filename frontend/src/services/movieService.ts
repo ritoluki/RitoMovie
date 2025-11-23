@@ -1,6 +1,8 @@
 import axios from '@/lib/axios';
 import { Movie, MovieDetails, Video, Credits, PaginatedResponse, Genre, Country, ReleaseDatesResponse, MovieImages } from '@/types';
 
+type MediaType = 'movie' | 'tv';
+
 export const movieService = {
   // Get trending movies
   getTrending: async (timeWindow: 'day' | 'week' = 'week'): Promise<PaginatedResponse<Movie>> => {
@@ -59,37 +61,42 @@ export const movieService = {
   },
 
   // Get movie details
-  getDetails: async (movieId: number): Promise<MovieDetails> => {
-    const response = await axios.get<MovieDetails>(`/movies/${movieId}`);
+  getDetails: async (movieId: number, mediaType: MediaType = 'movie'): Promise<MovieDetails> => {
+    const response = await axios.get<MovieDetails>(`/movies/${movieId}`, {
+      params: { type: mediaType },
+    });
     return response.data;
   },
 
   // Get movie videos (trailers, etc.)
-  getVideos: async (movieId: number): Promise<{ results: Video[] }> => {
+  getVideos: async (movieId: number, mediaType: MediaType = 'movie'): Promise<{ results: Video[] }> => {
     const response = await axios.get<{ results: Video[] }>(
-      `/movies/${movieId}/videos`
+      `/movies/${movieId}/videos`,
+      { params: { type: mediaType } }
     );
     return response.data;
   },
 
   // Get movie credits (cast and crew)
-  getCredits: async (movieId: number): Promise<Credits> => {
-    const response = await axios.get<Credits>(`/movies/${movieId}/credits`);
+  getCredits: async (movieId: number, mediaType: MediaType = 'movie'): Promise<Credits> => {
+    const response = await axios.get<Credits>(`/movies/${movieId}/credits`, {
+      params: { type: mediaType },
+    });
     return response.data;
   },
 
   // Get similar movies
-  getSimilar: async (movieId: number, page: number = 1): Promise<PaginatedResponse<Movie>> => {
+  getSimilar: async (movieId: number, page: number = 1, mediaType: MediaType = 'movie'): Promise<PaginatedResponse<Movie>> => {
     const response = await axios.get<PaginatedResponse<Movie>>(
-      `/movies/${movieId}/similar?page=${page}`
+      `/movies/${movieId}/similar?page=${page}&type=${mediaType}`
     );
     return response.data;
   },
 
   // Get movie recommendations
-  getRecommendations: async (movieId: number, page: number = 1): Promise<PaginatedResponse<Movie>> => {
+  getRecommendations: async (movieId: number, page: number = 1, mediaType: MediaType = 'movie'): Promise<PaginatedResponse<Movie>> => {
     const response = await axios.get<PaginatedResponse<Movie>>(
-      `/movies/${movieId}/recommendations?page=${page}`
+      `/movies/${movieId}/recommendations?page=${page}&type=${mediaType}`
     );
     return response.data;
   },
@@ -133,17 +140,19 @@ export const movieService = {
   },
 
   // Get movie release dates (for age rating/certification)
-  getReleaseDates: async (movieId: number): Promise<ReleaseDatesResponse> => {
+  getReleaseDates: async (movieId: number, mediaType: MediaType = 'movie'): Promise<ReleaseDatesResponse> => {
     const response = await axios.get<ReleaseDatesResponse>(
-      `/movies/${movieId}/release-dates`
+      `/movies/${movieId}/release-dates`,
+      { params: { type: mediaType } }
     );
     return response.data;
   },
 
   // Get movie images (backdrops, posters, logos)
-  getImages: async (movieId: number): Promise<MovieImages> => {
+  getImages: async (movieId: number, mediaType: MediaType = 'movie'): Promise<MovieImages> => {
     const response = await axios.get<MovieImages>(
-      `/movies/${movieId}/images`
+      `/movies/${movieId}/images`,
+      { params: { type: mediaType } }
     );
     return response.data;
   },

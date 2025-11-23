@@ -97,6 +97,81 @@
   .gradient-overlay-top {
     @apply absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-gray-900 to-transparent;
   }
+
+  .control-button {
+    @apply h-10 w-10 flex items-center justify-center rounded-full bg-white/10 text-white transition focus:outline-none focus:ring-2 focus:ring-white/40;
+  }
+
+  .control-button:hover {
+    @apply bg-white/20;
+  }
+
+  .control-button:disabled {
+    @apply opacity-40 cursor-not-allowed;
+  }
+
+  .video-progress,
+  .video-volume {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    @apply outline-none;
+  }
+
+  .video-progress {
+    @apply h-1.5 cursor-pointer;
+  }
+
+  .video-progress::-webkit-slider-runnable-track {
+    @apply h-1.5 rounded-full bg-white/25;
+  }
+
+  .video-progress::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    margin-top: -6px;
+    @apply h-4 w-4 rounded-full bg-white shadow-lg;
+  }
+
+  .video-progress::-moz-range-track {
+    @apply h-1.5 rounded-full bg-white/25;
+  }
+
+  .video-progress::-moz-range-thumb {
+    @apply h-4 w-4 rounded-full bg-white shadow-lg border-none;
+  }
+
+  .video-volume {
+    @apply w-28 cursor-pointer;
+  }
+
+  .video-volume::-webkit-slider-runnable-track {
+    @apply h-1 bg-white/20 rounded-full;
+  }
+
+  .video-volume::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    margin-top: -6px;
+    @apply h-4 w-4 rounded-full bg-white shadow;
+  }
+
+  .video-volume::-moz-range-track {
+    @apply h-1 bg-white/20 rounded-full;
+  }
+
+  .video-volume::-moz-range-thumb {
+    @apply h-4 w-4 rounded-full bg-white shadow border-none;
+  }
+
+  /* Ẩn overlay info khi ở fullscreen */
+  :fullscreen .video-overlay-info,
+  :-webkit-full-screen .video-overlay-info,
+  :-moz-full-screen .video-overlay-info,
+  :-ms-fullscreen .video-overlay-info {
+    opacity: 0;
+    pointer-events: none;
+  }
 }
 
 @layer utilities {

@@ -1,101 +1,104 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Comments from '../Comments';
-import Dropdown from '@/components/common/Dropdown';
-import Button from '@/components/common/Button';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
+import { PhimEpisodeServer } from '@/types';
 
 interface EpisodesTabProps {
   movieId: number;
   movieTitle: string;
+  streamingServers?: PhimEpisodeServer[];
+  isStreamingLoading?: boolean;
+  mediaType?: 'movie' | 'tv';
+  slug?: string;
 }
 
-const EpisodesTab = ({ movieId, movieTitle }: EpisodesTabProps) => {
+const EpisodesTab = ({ movieId, movieTitle, streamingServers, isStreamingLoading, mediaType = 'movie', slug }: EpisodesTabProps) => {
   const { t } = useTranslation();
-  const [selectedSeason, setSelectedSeason] = useState('1');
-  const [selectedFilter, setSelectedFilter] = useState<'subtitle' | 'dub'>('subtitle');
-  const [isCompact, setIsCompact] = useState(false);
+  const [activeServerIndex, setActiveServerIndex] = useState(0);
 
-  // Generate mock episodes (can be customized based on movie data)
-  const totalEpisodes = 8;
-  const episodes = Array.from({ length: totalEpisodes }, (_, i) => ({
-    number: i + 1,
-    title: `${t('movie.episode')} ${i + 1}`,
-    isWatched: false,
-  }));
+  useEffect(() => {
+    setActiveServerIndex(0);
+  }, [streamingServers]);
 
-  // Prepare season options
-  const seasonOptions = [
-    { value: '1', label: `${t('movie.season')} 1` },
-    { value: '2', label: `${t('movie.season')} 2` },
-    { value: '3', label: `${t('movie.season')} 3` },
-  ];
+  const currentServer = useMemo(() => {
+    if (!streamingServers || streamingServers.length === 0) return undefined;
+    return streamingServers[activeServerIndex] || streamingServers[0];
+  }, [streamingServers, activeServerIndex]);
+
+  if (isStreamingLoading) {
+    return <LoadingSpinner />;
+  }
+
+  const isSingleEpisodeMovie = mediaType === 'movie' && (currentServer?.server_data.length === 1);
 
   return (
     <div className="space-y-6">
-      {/* Controls */}
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Season Dropdown */}
-        <div className="w-36">
-          <Dropdown
-            value={selectedSeason}
-            onChange={setSelectedSeason}
-            options={seasonOptions}
-          />
-        </div>
-
-        {/* Filter Buttons */}
-        <Button
-          onClick={() => setSelectedFilter('subtitle')}
-          variant={selectedFilter === 'subtitle' ? 'danger' : 'outline'}
-          size="sm"
-        >
-          {t('movie.subtitle')}
-        </Button>
-
-        <Button
-          onClick={() => setSelectedFilter('dub')}
-          variant={selectedFilter === 'dub' ? 'primary' : 'outline'}
-          size="sm"
-          className={selectedFilter === 'dub' ? 'bg-purple-600 hover:bg-purple-700' : ''}
-        >
-          {t('movie.dubbed')}
-        </Button>
-
-        {/* Compact Toggle */}
-        <div className="ml-auto flex items-center gap-2">
-          <span className="text-gray-400 text-sm">{t('movie.compact')}</span>
-          <button
-            onClick={() => setIsCompact(!isCompact)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isCompact ? 'bg-red-600' : 'bg-gray-700'
-              }`}
-          >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isCompact ? 'translate-x-6' : 'translate-x-1'
+      <div className="rounded-2xl border border-gray-800 bg-gray-900/60 backdrop-blur-md p-4">
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <span className="text-sm uppercase tracking-wide text-gray-400">{t('movie.selectServer')}</span>
+          {streamingServers?.map((server, index) => (
+            <button
+              key={server.server_name}
+              type="button"
+              onClick={() => setActiveServerIndex(index)}
+              className={`rounded-full border px-3 py-1 text-sm transition-colors ${index === activeServerIndex
+                ? 'border-red-500 bg-red-600/20 text-red-200'
+                : 'border-gray-700 bg-gray-800 text-gray-300 hover:border-red-500/60'
                 }`}
-            />
-          </button>
+            >
+              {server.server_name}
+            </button>
+          ))}
         </div>
-      </div>
 
-      {/* Episodes Grid */}
-      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3">
-        {episodes.map((episode) => (
-          <button
-            key={episode.number}
-            type="button"
-            className="group relative bg-gray-800 hover:bg-red-600 rounded-lg px-4 py-3 transition-all duration-200 border border-gray-700 hover:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-600"
-          >
-            <span className="text-white text-sm font-medium">
-              {episode.title}
-            </span>
-            {episode.isWatched && (
-              <div className="absolute top-1 right-1 w-2 h-2 bg-yellow-400 rounded-full" />
+        {currentServer ? (
+          <div>
+            {!isSingleEpisodeMovie && (
+              <div className="mb-3 flex items-center justify-between">
+                <h4 className="text-white font-semibold">
+                  {t('movie.chooseEpisode')} • {movieTitle}
+                </h4>
+                <span className="text-xs text-gray-400">
+                  {currentServer.server_data.length} {t('movie.episodes').toLowerCase()}
+                </span>
+              </div>
             )}
-          </button>
-        ))}
+
+            <div
+              className={isSingleEpisodeMovie
+                ? 'flex flex-wrap items-center gap-3'
+                : 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3'}
+            >
+              {currentServer.server_data.map((episode) => {
+                const params = new URLSearchParams();
+                params.set('type', mediaType);
+                if (slug) {
+                  params.set('slug', slug);
+                }
+                params.set('server', activeServerIndex.toString());
+                params.set('episode', episode.slug);
+                const href = `/watch/${movieId}?${params.toString()}`;
+                return (
+                  <Link
+                    key={`${currentServer.server_name}-${episode.slug}`}
+                    to={href}
+                    className={`group rounded-xl border border-gray-800 bg-gray-800/60 px-6 py-3 text-center text-sm font-semibold text-gray-200 transition hover:border-red-500 hover:bg-red-600/30 ${isSingleEpisodeMovie ? 'min-w-[120px]' : ''}`}
+                  >
+                    <span>{episode.name}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-gray-700 bg-gray-800/40 p-6 text-center">
+            <p className="text-gray-400 text-sm">{t('movie.noStreamingData')}</p>
+          </div>
+        )}
       </div>
 
-      {/* Comments Section */}
       <div className="pt-8 border-t border-gray-800" data-comments-section>
         <Comments movieId={movieId} />
       </div>

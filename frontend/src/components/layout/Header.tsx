@@ -6,8 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import { LogoLink } from '@/components/common/Logo';
-import { movieService } from '@/services/movieService';
-import { Genre } from '@/types';
+import { usePhim } from '@/hooks/usePhim';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -16,7 +15,6 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [genres, setGenres] = useState<Genre[]>([]);
 
   const userMenuRef = useRef<HTMLDivElement>(null);
   const genreMenuRef = useRef<HTMLDivElement>(null);
@@ -24,19 +22,11 @@ const Header = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
-
-  // Fetch genres from API
-  useEffect(() => {
-    const fetchGenres = async () => {
-      try {
-        const data = await movieService.getGenres();
-        setGenres(data.genres);
-      } catch (error) {
-        console.error('Failed to fetch genres:', error);
-      }
-    };
-    fetchGenres();
-  }, []);
+  const { useGenres: usePhimGenres, useCountries: usePhimCountries } = usePhim();
+  const { data: phimGenresData, isLoading: isGenresLoading } = usePhimGenres();
+  const { data: phimCountriesData, isLoading: isCountriesLoading } = usePhimCountries();
+  const genres = phimGenresData ?? [];
+  const countries = phimCountriesData ?? [];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -88,41 +78,12 @@ const Header = () => {
 
   const navLinks = [
     { name: t('header.home'), path: '/' },
-    { name: t('header.movies'), path: '/browse' },
+    { name: t('header.singleMovies'), path: '/browse?catalog=phim-le' },
+    { name: t('header.seriesMovies'), path: '/browse?catalog=phim-bo' },
   ];
 
-  // Popular countries based on TMDB production_countries
-  const countries = [
-    { code: 'US', name: 'United States' },
-    { code: 'GB', name: 'United Kingdom' },
-    { code: 'KR', name: 'South Korea' },
-    { code: 'JP', name: 'Japan' },
-    { code: 'CN', name: 'China' },
-    { code: 'HK', name: 'Hong Kong' },
-    { code: 'TW', name: 'Taiwan' },
-    { code: 'TH', name: 'Thailand' },
-    { code: 'IN', name: 'India' },
-    { code: 'FR', name: 'France' },
-    { code: 'DE', name: 'Germany' },
-    { code: 'ES', name: 'Spain' },
-    { code: 'IT', name: 'Italy' },
-    { code: 'CA', name: 'Canada' },
-    { code: 'AU', name: 'Australia' },
-    { code: 'MX', name: 'Mexico' },
-    { code: 'BR', name: 'Brazil' },
-    { code: 'AR', name: 'Argentina' },
-    { code: 'RU', name: 'Russia' },
-    { code: 'TR', name: 'Turkey' },
-    { code: 'SE', name: 'Sweden' },
-    { code: 'NO', name: 'Norway' },
-    { code: 'DK', name: 'Denmark' },
-    { code: 'NL', name: 'Netherlands' },
-    { code: 'PL', name: 'Poland' },
-    { code: 'IE', name: 'Ireland' },
-    { code: 'PH', name: 'Philippines' },
-    { code: 'ID', name: 'Indonesia' },
-    { code: 'VN', name: 'Vietnam' },
-  ];
+  const isLoadingGenres = isGenresLoading && genres.length === 0;
+  const isLoadingCountries = isCountriesLoading && countries.length === 0;
 
   return (
     <>
@@ -206,16 +167,22 @@ const Header = () => {
                       className="absolute left-0 mt-2 w-[600px] bg-gray-900/95 backdrop-blur-md rounded-lg shadow-2xl py-4 px-6 z-50 border border-gray-800"
                     >
                       <div className="grid grid-cols-4 gap-x-6 gap-y-2">
-                        {genres.map((genre) => (
-                          <Link
-                            key={genre.id}
-                            to={`/browse?genre=${genre.id}`}
-                            onClick={() => setActiveDropdown(null)}
-                            className="text-gray-300 hover:text-white transition-colors duration-200 text-sm py-1"
-                          >
-                            {genre.name}
-                          </Link>
-                        ))}
+                        {genres.length > 0 ? (
+                          genres.map((genre) => (
+                            <Link
+                              key={genre.slug}
+                              to={`/browse?phimGenre=${genre.slug}`}
+                              onClick={() => setActiveDropdown(null)}
+                              className="text-gray-300 hover:text-white transition-colors duration-200 text-sm py-1"
+                            >
+                              {genre.name}
+                            </Link>
+                          ))
+                        ) : (
+                          <p className="col-span-4 text-gray-400 text-sm py-1">
+                            {isLoadingGenres ? t('common.loading') : t('common.noData')}
+                          </p>
+                        )}
                       </div>
                     </motion.div>
                   )}
@@ -242,16 +209,22 @@ const Header = () => {
                       className="absolute left-0 mt-2 w-[600px] bg-gray-900/95 backdrop-blur-md rounded-lg shadow-2xl py-4 px-6 z-50 border border-gray-800"
                     >
                       <div className="grid grid-cols-4 gap-x-6 gap-y-2">
-                        {countries.map((country) => (
-                          <Link
-                            key={country.code}
-                            to={`/browse?country=${country.code}`}
-                            onClick={() => setActiveDropdown(null)}
-                            className="text-gray-300 hover:text-white transition-colors duration-200 text-sm py-1"
-                          >
-                            {country.name}
-                          </Link>
-                        ))}
+                        {countries.length > 0 ? (
+                          countries.map((country) => (
+                            <Link
+                              key={country.slug}
+                              to={`/browse?phimCountry=${country.slug}`}
+                              onClick={() => setActiveDropdown(null)}
+                              className="text-gray-300 hover:text-white transition-colors duration-200 text-sm py-1"
+                            >
+                              {country.name}
+                            </Link>
+                          ))
+                        ) : (
+                          <p className="col-span-4 text-gray-400 text-sm py-1">
+                            {isLoadingCountries ? t('common.loading') : t('common.noData')}
+                          </p>
+                        )}
                       </div>
                     </motion.div>
                   )}
