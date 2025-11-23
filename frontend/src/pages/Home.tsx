@@ -1,13 +1,12 @@
 import { useMovies } from '@/hooks/useMovies';
+import { usePhim } from '@/hooks/usePhim';
 import HeroBanner from '@/components/movie/HeroBanner';
 import MovieRow from '@/components/movie/MovieRow';
-import LazyMovieRow from '@/components/movie/LazyMovieRow';
-import LazyPhimRow from '@/components/movie/LazyPhimRow';
+import PhimRow from '@/components/movie/PhimRow';
 import TopMoviesSection from '@/components/movie/TopMoviesSection';
 import TopMoviesTiltedSection from '@/components/movie/TopMoviesTiltedSection';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ScrollIndicator from '@/components/common/ScrollIndicator';
-import LazyLoadSection from '@/components/common/LazyLoadSection';
 import { useEffect } from 'react';
 import { useMovieStore } from '@/store/movieStore';
 import { useAuthStore } from '@/store/authStore';
@@ -17,15 +16,28 @@ const Home = () => {
   const {
     useTrending,
     usePopular,
+    useTopRated,
+    useMoviesByGenre,
   } = useMovies();
+
+  const { useCatalogList, useGenreDetail } = usePhim();
   const { t } = useTranslation();
 
-  // Chỉ load hero banner và 2 sections đầu tiên ngay lập tức
+  // Load tất cả data ngay lập tức
   const { data: trending, isLoading: trendingLoading } = useTrending('week');
   const { data: popular, isLoading: popularLoading } = usePopular();
+  const { data: topRated } = useTopRated();
+  const { data: actionMovies } = useMoviesByGenre(28);
+  const { data: comedyMovies } = useMoviesByGenre(35);
+  const { data: horrorMovies } = useMoviesByGenre(27);
+  const { data: romanceMovies } = useMoviesByGenre(10749);
 
-  // Các sections khác sẽ được lazy load khi user scroll đến
-  // Không gọi API ở đây nữa để giảm load ban đầu
+  // Load Phim data
+  const { data: phimBo } = useCatalogList('phim-bo', { page: 1, limit: 20 });
+  const { data: anime } = useCatalogList('hoat-hinh', { page: 1, limit: 20 });
+  const { data: actionTv } = useGenreDetail('hanh-dong', { page: 1, limit: 20 });
+  const { data: tvShows } = useCatalogList('tv-shows', { page: 1, limit: 20 });
+  const { data: comedyTv } = useGenreDetail('hai-huoc', { page: 1, limit: 20 });
 
   const { isAuthenticated } = useAuthStore();
   const { fetchWatchlist, fetchHistory } = useMovieStore();
@@ -33,14 +45,11 @@ const Home = () => {
   // Fetch user data if authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      // Add error handling to prevent crashes if fetch fails
       fetchWatchlist().catch((error) => {
         console.error('Failed to fetch watchlist:', error);
-        // Error is handled in movieStore, but we catch here to prevent unhandled promise rejection
       });
       fetchHistory().catch((error) => {
         console.error('Failed to fetch history:', error);
-        // Error is handled in movieStore, but we catch here to prevent unhandled promise rejection
       });
     }
   }, [isAuthenticated, fetchWatchlist, fetchHistory]);
@@ -63,7 +72,7 @@ const Home = () => {
 
       {/* Movie Rows */}
       <div className="relative mt-8 md:mt-12 lg:mt-16 z-10 space-y-8 pb-16">
-        {/* Top 10 Section - Load ngay lập tức */}
+        {/* Top 10 TV Series */}
         {trending?.results && (
           <TopMoviesSection
             title={t('home.topTVSeries')}
@@ -71,7 +80,7 @@ const Home = () => {
           />
         )}
 
-        {/* Popular Movies - Load ngay lập tức */}
+        {/* Popular Movies */}
         {popular?.results && (
           <MovieRow
             title={t('home.popularMovies')}
@@ -80,109 +89,94 @@ const Home = () => {
           />
         )}
 
-        {/* Top Rated - Lazy Load */}
-        <LazyMovieRow
-          title={t('home.topRated')}
-          type="topRated"
-          link="/browse?sort_by=vote_average.desc"
-          sectionId="topRated"
-        />
-
-        {/* Action Movies - Lazy Load */}
-        <LazyMovieRow
-          title={t('home.actionMovies')}
-          type="genre"
-          genreId={28}
-          link="/browse?genre=28"
-          sectionId="action"
-          previousSectionId="topRated"
-        />
-
-        {/* Top 10 Phim Lẻ với Tilted Style - Lazy Load */}
-        {popular?.results && (
-          <LazyLoadSection rootMargin="0px" threshold={0.5}>
-            <TopMoviesTiltedSection
-              title={t('home.topMovies')}
-              movies={popular.results}
-            />
-          </LazyLoadSection>
+        {/* Top Rated */}
+        {topRated?.results && (
+          <MovieRow
+            title={t('home.topRated')}
+            movies={topRated.results}
+            link="/browse?sort_by=vote_average.desc"
+          />
         )}
 
-        {/* Comedy Movies - Lazy Load */}
-        <LazyMovieRow
-          title={t('home.comedyMovies')}
-          type="genre"
-          genreId={35}
-          link="/browse?genre=35"
-          sectionId="comedy"
-          previousSectionId="action"
-        />
+        {/* Action Movies */}
+        {actionMovies?.results && (
+          <MovieRow
+            title={t('home.actionMovies')}
+            movies={actionMovies.results}
+            link="/browse?genre=28"
+          />
+        )}
 
-        {/* Horror Movies - Lazy Load */}
-        <LazyMovieRow
-          title={t('home.horrorMovies')}
-          type="genre"
-          genreId={27}
-          link="/browse?genre=27"
-          sectionId="horror"
-          previousSectionId="comedy"
-        />
+        {/* Top 10 Phim Lẻ với Tilted Style */}
+        {popular?.results && (
+          <TopMoviesTiltedSection
+            title={t('home.topMovies')}
+            movies={popular.results}
+          />
+        )}
 
-        {/* Romance Movies - Lazy Load */}
-        <LazyMovieRow
-          title={t('home.romanceMovies')}
-          type="genre"
-          genreId={10749}
-          link="/browse?genre=10749"
-          sectionId="romance"
-          previousSectionId="horror"
-        />
+        {/* Comedy Movies */}
+        {comedyMovies?.results && (
+          <MovieRow
+            title={t('home.comedyMovies')}
+            movies={comedyMovies.results}
+            link="/browse?genre=35"
+          />
+        )}
 
-        {/* TV Series Sections - Tất cả đều Lazy Load */}
-        <LazyPhimRow
-          title={t('home.popularTvShows')}
-          catalogType="phim-bo"
-          params={{
-            limit: 20,
-            page: 1,
-            sort_field: 'modified.time',
-            sort_type: 'desc'
-          }}
-          sectionId="phimBo"
-          previousSectionId="romance"
-        />
+        {/* Horror Movies */}
+        {horrorMovies?.results && (
+          <MovieRow
+            title={t('home.horrorMovies')}
+            movies={horrorMovies.results}
+            link="/browse?genre=27"
+          />
+        )}
 
-        <LazyPhimRow
-          title={t('home.animeTvShows')}
-          catalogType="hoat-hinh"
-          params={{ limit: 20, page: 1 }}
-          sectionId="anime"
-          previousSectionId="phimBo"
-        />
+        {/* Romance Movies */}
+        {romanceMovies?.results && (
+          <MovieRow
+            title={t('home.romanceMovies')}
+            movies={romanceMovies.results}
+            link="/browse?genre=10749"
+          />
+        )}
 
-        <LazyPhimRow
-          title={t('home.actionTvShows')}
-          genreSlug="hanh-dong"
-          params={{ limit: 20, page: 1 }}
-          sectionId="actionTv"
-          previousSectionId="anime"
-        />
+        {/* TV Series Sections */}
+        {phimBo?.items && (
+          <PhimRow
+            title={t('home.popularTvShows')}
+            items={phimBo.items}
+          />
+        )}
 
-        <LazyPhimRow
-          title={t('home.tvShowsCategory')}
-          catalogType="tv-shows"
-          params={{ limit: 20, page: 1 }}
-          sectionId="tvShows"
-          previousSectionId="actionTv"
-        />
+        {anime?.items && (
+          <PhimRow
+            title={t('home.animeTvShows')}
+            items={anime.items}
+          />
+        )}
 
-        <LazyPhimRow
-          title={t('home.comedyTvShows')}
-          genreSlug="hai-huoc"
-          params={{ limit: 20, page: 1 }}
-          sectionId="comedyTv"
-          previousSectionId="tvShows"
-        />
+        {actionTv?.items && (
+          <PhimRow
+            title={t('home.actionTvShows')}
+            items={actionTv.items}
+          />
+        )}
+
+        {tvShows?.items && (
+          <PhimRow
+            title={t('home.tvShowsCategory')}
+            items={tvShows.items}
+          />
+        )}
+
+        {comedyTv?.items && (
+          <PhimRow
+            title={t('home.comedyTvShows')}
+            items={comedyTv.items}
+          />
+        )}
       </div>
     </div>
   );
