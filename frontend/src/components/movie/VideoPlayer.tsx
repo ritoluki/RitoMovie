@@ -88,6 +88,9 @@ const VideoPlayer = ({
     const [isHoveringPlayer, setIsHoveringPlayer] = useState(false);
     const hideControlsTimeoutRef = useRef<number | null>(null);
 
+    // Detect mobile device
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
     const pipSupported = typeof document !== 'undefined' && (document as Document & {
         pictureInPictureEnabled?: boolean;
     }).pictureInPictureEnabled;
@@ -607,214 +610,311 @@ const VideoPlayer = ({
             <video
                 ref={videoRef}
                 className="w-full h-full object-contain bg-black"
-                autoPlay
                 playsInline
                 poster={poster}
-                title={title}
                 muted={isMuted}
-                onClick={togglePlay}
+                onClick={isMobile ? undefined : togglePlay}
+                controls={isMobile}
+                controlsList={isMobile ? "nodownload" : undefined}
             />
 
-            <div
-                className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/75 to-transparent px-4 pt-6 pb-4 space-y-3 transition-opacity duration-300"
-                style={{
-                    opacity: showControls ? 1 : 0,
-                    pointerEvents: showControls ? 'auto' : 'none'
-                }}
-            >
-                <div className="flex items-center gap-3">
-                    <span className="text-xs text-white/70 min-w-[3.5rem] text-right">{formatTime(progressValue)}</span>
-                    <div className="relative flex-1">
-                        <div
-                            className="absolute -top-40 left-0 w-56 pointer-events-none transition-all duration-150"
-                            style={{
-                                opacity: showPreview ? 1 : 0,
-                                visibility: showPreview ? 'visible' : 'hidden',
-                                left: `${(previewPercent * 100).toFixed(2)}%`,
-                                transform: 'translateX(-50%)',
-                            }}
-                        >
-                            <div className="rounded-2xl border border-white/15 bg-black/90 shadow-2xl overflow-hidden">
-                                <div className="relative w-56 h-32 bg-black">
-                                    <video
-                                        ref={previewVideoRef}
-                                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-150 ${previewStatusReady ? 'opacity-100' : 'opacity-0'
-                                            }`}
-                                        muted
-                                        playsInline
-                                        preload="metadata"
-                                        poster={poster}
-                                    />
-                                    {!previewStatusReady && (
-                                        <div className="absolute inset-0 flex items-center justify-center text-[11px] text-white/70 bg-black/70 px-3 text-center">
-                                            {t('watch.previewLoading')}
-                                        </div>
-                                    )}
-                                    <span className="absolute bottom-1 right-1 rounded-md bg-black/70 px-2 py-0.5 text-[11px] font-semibold">
-                                        {formatTime(previewTime)}
-                                    </span>
+            {/* Center Play/Pause Button Overlay */}
+            {!isMobile && (
+                <button
+                    type="button"
+                    onClick={togglePlay}
+                    className="absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity duration-300"
+                    style={{
+                        opacity: !isPlaying || (showControls && isPlaying) ? 1 : 0,
+                        pointerEvents: !isPlaying ? 'auto' : 'none'
+                    }}
+                    aria-label={isPlaying ? t('watch.pause') : t('watch.play')}
+                >
+                    <div className="rounded-full bg-black/60 backdrop-blur-sm p-6 transition-transform hover:scale-110 hover:bg-black/80">
+                        {isPlaying ? <FiPause size={48} className="text-white" /> : <FiPlay size={48} className="text-white ml-1" />}
+                    </div>
+                </button>
+            )}
+
+            {!isMobile && (
+                <div
+                    className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/75 to-transparent px-4 pt-6 pb-4 space-y-3 transition-opacity duration-300"
+                    style={{
+                        opacity: showControls ? 1 : 0,
+                        pointerEvents: showControls ? 'auto' : 'none'
+                    }}
+                >
+                    <div className="flex items-center gap-3">
+                        <span className="text-xs text-white/70 min-w-[3.5rem] text-right">{formatTime(progressValue)}</span>
+                        <div className="relative flex-1">
+                            <div
+                                className="absolute -top-40 left-0 w-56 pointer-events-none transition-all duration-150"
+                                style={{
+                                    opacity: showPreview ? 1 : 0,
+                                    visibility: showPreview ? 'visible' : 'hidden',
+                                    left: `${(previewPercent * 100).toFixed(2)}%`,
+                                    transform: 'translateX(-50%)',
+                                }}
+                            >
+                                <div className="rounded-2xl border border-white/15 bg-black/90 shadow-2xl overflow-hidden">
+                                    <div className="relative w-56 h-32 bg-black">
+                                        <video
+                                            ref={previewVideoRef}
+                                            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-150 ${previewStatusReady ? 'opacity-100' : 'opacity-0'
+                                                }`}
+                                            muted
+                                            playsInline
+                                            preload="metadata"
+                                            poster={poster}
+                                        />
+                                        {!previewStatusReady && (
+                                            <div className="absolute inset-0 flex items-center justify-center text-[11px] text-white/70 bg-black/70 px-3 text-center">
+                                                {t('watch.previewLoading')}
+                                            </div>
+                                        )}
+                                        <span className="absolute bottom-1 right-1 rounded-md bg-black/70 px-2 py-0.5 text-[11px] font-semibold">
+                                            {formatTime(previewTime)}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
+
+                            <input
+                                type="range"
+                                min={0}
+                                max={progressMax}
+                                step={0.1}
+                                value={progressValue}
+                                onChange={handleSeek}
+                                onPointerMove={updatePreviewFromPointer}
+                                onPointerEnter={updatePreviewFromPointer}
+                                onPointerLeave={handleProgressPointerLeave}
+                                className="video-progress w-full"
+                            />
+                        </div>
+                        <span className="text-xs text-white/70 min-w-[3.5rem]">{progressMax ? formatTime(progressMax) : '00:00'}</span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-4 text-white">
+                        {/* Desktop & Fullscreen controls */}
+                        <div className={`flex items-center gap-3 ${isFullscreen ? '' : 'hidden md:flex'}`}>
+                            <button
+                                type="button"
+                                onClick={togglePlay}
+                                className="control-button h-11 w-11"
+                                aria-label={isPlaying ? t('watch.pause') : t('watch.play')}
+                            >
+                                {isPlaying ? <FiPause size={20} /> : <FiPlay size={20} />}
+                            </button>
+
+                            <button type="button" onClick={() => seekBy(-10)} className="control-button" aria-label={t('watch.rewind10')}>
+                                <FiRotateCcw size={18} />
+                            </button>
+
+                            <button type="button" onClick={() => seekBy(10)} className="control-button" aria-label={t('watch.forward10')}>
+                                <FiRotateCw size={18} />
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={toggleMute}
+                                className="control-button"
+                                aria-label={isMuted ? t('watch.unmute') : t('watch.mute')}
+                            >
+                                {isMuted || volume === 0 ? <FiVolumeX size={18} /> : <FiVolume2 size={18} />}
+                            </button>
+
+                            <input
+                                type="range"
+                                min={0}
+                                max={1}
+                                step={0.05}
+                                value={isMuted ? 0 : volume}
+                                onChange={handleVolumeChange}
+                                className="video-volume"
+                                aria-label={t('watch.volume')}
+                            />
                         </div>
 
-                        <input
-                            type="range"
-                            min={0}
-                            max={progressMax}
-                            step={0.1}
-                            value={progressValue}
-                            onChange={handleSeek}
-                            onPointerMove={updatePreviewFromPointer}
-                            onPointerEnter={updatePreviewFromPointer}
-                            onPointerLeave={handleProgressPointerLeave}
-                            className="video-progress w-full"
-                        />
-                    </div>
-                    <span className="text-xs text-white/70 min-w-[3.5rem]">{progressMax ? formatTime(progressMax) : '00:00'}</span>
-                </div>
+                        {/* Mobile controls (non-fullscreen) */}
+                        {!isFullscreen && (
+                            <div className="flex md:hidden items-center gap-2 flex-1">
+                                <button
+                                    type="button"
+                                    onClick={togglePlay}
+                                    className="control-button h-9 w-9"
+                                    aria-label={isPlaying ? t('watch.pause') : t('watch.play')}
+                                >
+                                    {isPlaying ? <FiPause size={18} /> : <FiPlay size={18} />}
+                                </button>
 
-                <div className="flex flex-wrap items-center justify-between gap-4 text-white">
-                    <div className={`flex items-center gap-3 ${isFullscreen ? '' : 'hidden md:flex'}`}>
-                        <button
-                            type="button"
-                            onClick={togglePlay}
-                            className="control-button h-11 w-11"
-                            aria-label={isPlaying ? t('watch.pause') : t('watch.play')}
-                        >
-                            {isPlaying ? <FiPause size={20} /> : <FiPlay size={20} />}
-                        </button>
+                                <button type="button" onClick={() => seekBy(-10)} className="control-button h-9 w-9" aria-label={t('watch.rewind10')}>
+                                    <FiRotateCcw size={16} />
+                                </button>
 
-                        <button type="button" onClick={() => seekBy(-10)} className="control-button" aria-label={t('watch.rewind10')}>
-                            <FiRotateCcw size={18} />
-                        </button>
+                                <button type="button" onClick={() => seekBy(10)} className="control-button h-9 w-9" aria-label={t('watch.forward10')}>
+                                    <FiRotateCw size={16} />
+                                </button>
 
-                        <button type="button" onClick={() => seekBy(10)} className="control-button" aria-label={t('watch.forward10')}>
-                            <FiRotateCw size={18} />
-                        </button>
+                                <button
+                                    type="button"
+                                    onClick={toggleMute}
+                                    className="control-button h-9 w-9"
+                                    aria-label={isMuted ? t('watch.unmute') : t('watch.mute')}
+                                >
+                                    {isMuted || volume === 0 ? <FiVolumeX size={16} /> : <FiVolume2 size={16} />}
+                                </button>
 
-                        <button
-                            type="button"
-                            onClick={toggleMute}
-                            className="control-button"
-                            aria-label={isMuted ? t('watch.unmute') : t('watch.mute')}
-                        >
-                            {isMuted || volume === 0 ? <FiVolumeX size={18} /> : <FiVolume2 size={18} />}
-                        </button>
-
-                        <input
-                            type="range"
-                            min={0}
-                            max={1}
-                            step={0.05}
-                            value={isMuted ? 0 : volume}
-                            onChange={handleVolumeChange}
-                            className="video-volume"
-                            aria-label={t('watch.volume')}
-                        />
-                    </div>
-
-                    <div className={`flex items-center gap-3 ${isFullscreen ? '' : 'hidden md:flex'}`}>
-                        {showEpisodeListButton && onEpisodeListToggle && (
-                            <button
-                                type="button"
-                                onClick={onEpisodeListToggle}
-                                className="control-button"
-                                aria-label={episodeListLabel || t('watch.toggleEpisodes')}
-                                title={episodeListLabel || t('watch.toggleEpisodes')}
-                            >
-                                <FiList size={18} />
-                            </button>
-                        )}
-
-                        {showNextButton && (
-                            <button
-                                type="button"
-                                onClick={onNextEpisode}
-                                className="control-button"
-                                aria-label={nextEpisodeLabel || t('watch.nextEpisode')}
-                                title={nextEpisodeLabel || t('watch.nextEpisode')}
-                            >
-                                <FiSkipForward size={18} />
-                            </button>
-                        )}
-
-                        {pipSupported && (
-                            <button
-                                type="button"
-                                onClick={togglePictureInPicture}
-                                className={`control-button ${isPipActive ? 'bg-white/25' : ''}`}
-                                aria-label={t('watch.pictureInPicture')}
-                                title={t('watch.pictureInPicture')}
-                            >
-                                <FiAirplay size={18} />
-                            </button>
-                        )}
-
-                        <div className="relative" ref={qualityMenuRef}>
-                            <button
-                                type="button"
-                                onClick={() => setQualityMenuOpen((prev) => !prev)}
-                                className={`control-button ${qualityMenuOpen ? 'bg-white/25' : ''}`}
-                                aria-haspopup="menu"
-                                aria-expanded={qualityMenuOpen}
-                                aria-label={t('watch.quality')}
-                                title={t('watch.quality')}
-                            >
-                                <FiSettings size={18} />
-                            </button>
-
-                            {qualityMenuOpen && (
-                                <div className="absolute bottom-14 right-0 w-36 rounded-xl border border-white/15 bg-black/90 backdrop-blur-lg p-2 space-y-1 text-sm">
+                                {showEpisodeListButton && onEpisodeListToggle && (
                                     <button
                                         type="button"
-                                        className={`w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 ${selectedQuality === 'auto' ? 'bg-white/10 text-white' : 'text-white/80'
-                                            }`}
-                                        onClick={() => handleQualitySelect('auto')}
+                                        onClick={onEpisodeListToggle}
+                                        className="control-button h-9 w-9"
+                                        aria-label={episodeListLabel || t('watch.toggleEpisodes')}
+                                        title={episodeListLabel || t('watch.toggleEpisodes')}
                                     >
-                                        {t('watch.autoQuality')}
+                                        <FiList size={16} />
                                     </button>
-                                    {availableQualities.map((quality) => (
-                                        <button
-                                            key={quality.value}
-                                            type="button"
-                                            className={`w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 ${selectedQuality === quality.value ? 'bg-white/10 text-white' : 'text-white/80'
-                                                }`}
-                                            onClick={() => handleQualitySelect(quality.value)}
-                                        >
-                                            {quality.label}
-                                        </button>
-                                    ))}
+                                )}
+
+                                <div className="relative" ref={qualityMenuRef}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setQualityMenuOpen((prev) => !prev)}
+                                        className={`control-button h-9 w-9 ${qualityMenuOpen ? 'bg-white/25' : ''}`}
+                                        aria-haspopup="menu"
+                                        aria-expanded={qualityMenuOpen}
+                                        aria-label={t('watch.quality')}
+                                        title={t('watch.quality')}
+                                    >
+                                        <FiSettings size={16} />
+                                    </button>
+
+                                    {qualityMenuOpen && (
+                                        <div className="absolute bottom-12 right-0 w-36 rounded-xl border border-white/15 bg-black/90 backdrop-blur-lg p-2 space-y-1 text-sm z-50">
+                                            <button
+                                                type="button"
+                                                className={`w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 ${selectedQuality === 'auto' ? 'bg-white/10 text-white' : 'text-white/80'
+                                                    }`}
+                                                onClick={() => handleQualitySelect('auto')}
+                                            >
+                                                {t('watch.autoQuality')}
+                                            </button>
+                                            {availableQualities.map((quality) => (
+                                                <button
+                                                    key={quality.value}
+                                                    type="button"
+                                                    className={`w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 ${selectedQuality === quality.value ? 'bg-white/10 text-white' : 'text-white/80'
+                                                        }`}
+                                                    onClick={() => handleQualitySelect(quality.value)}
+                                                >
+                                                    {quality.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
+
+                                <button
+                                    type="button"
+                                    onClick={toggleFullscreen}
+                                    className="control-button h-9 w-9 ml-auto"
+                                    aria-label={t('watch.fullscreen')}
+                                    title={t('watch.fullscreen')}
+                                >
+                                    <FiMaximize size={16} />
+                                </button>
+                            </div>
+                        )}
+
+                        <div className={`flex items-center gap-3 ${isFullscreen ? '' : 'hidden md:flex'}`}>
+                            {showEpisodeListButton && onEpisodeListToggle && (
+                                <button
+                                    type="button"
+                                    onClick={onEpisodeListToggle}
+                                    className="control-button"
+                                    aria-label={episodeListLabel || t('watch.toggleEpisodes')}
+                                    title={episodeListLabel || t('watch.toggleEpisodes')}
+                                >
+                                    <FiList size={18} />
+                                </button>
                             )}
-                        </div>
 
-                        <button
-                            type="button"
-                            onClick={toggleFullscreen}
-                            className="control-button"
-                            aria-label={isFullscreen ? t('watch.exitFullscreen') : t('watch.fullscreen')}
-                            title={isFullscreen ? t('watch.exitFullscreen') : t('watch.fullscreen')}
-                        >
-                            {isFullscreen ? <FiMinimize size={18} /> : <FiMaximize size={18} />}
-                        </button>
-                    </div>
+                            {showNextButton && (
+                                <button
+                                    type="button"
+                                    onClick={onNextEpisode}
+                                    className="control-button"
+                                    aria-label={nextEpisodeLabel || t('watch.nextEpisode')}
+                                    title={nextEpisodeLabel || t('watch.nextEpisode')}
+                                >
+                                    <FiSkipForward size={18} />
+                                </button>
+                            )}
 
-                    {/* Mobile: Chỉ hiển thị nút fullscreen khi không ở chế độ fullscreen */}
-                    {!isFullscreen && (
-                        <div className="md:hidden ml-auto">
+                            {pipSupported && (
+                                <button
+                                    type="button"
+                                    onClick={togglePictureInPicture}
+                                    className={`control-button ${isPipActive ? 'bg-white/25' : ''}`}
+                                    aria-label={t('watch.pictureInPicture')}
+                                    title={t('watch.pictureInPicture')}
+                                >
+                                    <FiAirplay size={18} />
+                                </button>
+                            )}
+
+                            <div className="relative" ref={qualityMenuRef}>
+                                <button
+                                    type="button"
+                                    onClick={() => setQualityMenuOpen((prev) => !prev)}
+                                    className={`control-button ${qualityMenuOpen ? 'bg-white/25' : ''}`}
+                                    aria-haspopup="menu"
+                                    aria-expanded={qualityMenuOpen}
+                                    aria-label={t('watch.quality')}
+                                    title={t('watch.quality')}
+                                >
+                                    <FiSettings size={18} />
+                                </button>
+
+                                {qualityMenuOpen && (
+                                    <div className="absolute bottom-14 right-0 w-36 rounded-xl border border-white/15 bg-black/90 backdrop-blur-lg p-2 space-y-1 text-sm">
+                                        <button
+                                            type="button"
+                                            className={`w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 ${selectedQuality === 'auto' ? 'bg-white/10 text-white' : 'text-white/80'
+                                                }`}
+                                            onClick={() => handleQualitySelect('auto')}
+                                        >
+                                            {t('watch.autoQuality')}
+                                        </button>
+                                        {availableQualities.map((quality) => (
+                                            <button
+                                                key={quality.value}
+                                                type="button"
+                                                className={`w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 ${selectedQuality === quality.value ? 'bg-white/10 text-white' : 'text-white/80'
+                                                    }`}
+                                                onClick={() => handleQualitySelect(quality.value)}
+                                            >
+                                                {quality.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
                             <button
                                 type="button"
                                 onClick={toggleFullscreen}
                                 className="control-button"
-                                aria-label={t('watch.fullscreen')}
-                                title={t('watch.fullscreen')}
+                                aria-label={isFullscreen ? t('watch.exitFullscreen') : t('watch.fullscreen')}
+                                title={isFullscreen ? t('watch.exitFullscreen') : t('watch.fullscreen')}
                             >
-                                <FiMaximize size={18} />
+                                {isFullscreen ? <FiMinimize size={18} /> : <FiMaximize size={18} />}
                             </button>
                         </div>
-                    )}
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };
