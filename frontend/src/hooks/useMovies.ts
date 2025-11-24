@@ -11,7 +11,8 @@ export const useMovies = () => {
       queryKey: ['movies', 'trending', timeWindow, language],
       queryFn: () => movieService.getTrending(timeWindow),
       enabled: options?.enabled ?? true,
-      staleTime: 10 * 60 * 1000, // 10 minutes
+      staleTime: 30 * 60 * 1000, // 30 minutes
+      gcTime: 60 * 60 * 1000, // 1 hour
     });
   };
 
@@ -20,7 +21,8 @@ export const useMovies = () => {
       queryKey: ['movies', 'popular', page, language],
       queryFn: () => movieService.getPopular(page),
       enabled: options?.enabled ?? true,
-      staleTime: 10 * 60 * 1000, // 10 minutes
+      staleTime: 30 * 60 * 1000, // 30 minutes
+      gcTime: 60 * 60 * 1000, // 1 hour
     });
   };
 
@@ -29,7 +31,8 @@ export const useMovies = () => {
       queryKey: ['movies', 'top-rated', page, language],
       queryFn: () => movieService.getTopRated(page),
       enabled: options?.enabled ?? true,
-      staleTime: 10 * 60 * 1000, // 10 minutes
+      staleTime: 30 * 60 * 1000, // 30 minutes
+      gcTime: 60 * 60 * 1000, // 1 hour
     });
   };
 
@@ -88,7 +91,8 @@ export const useMovies = () => {
       queryKey: ['movies', 'genre', genreId, page, language],
       queryFn: () => movieService.getByGenre(genreId, page),
       enabled: !!genreId && (options?.enabled ?? true),
-      staleTime: 10 * 60 * 1000, // 10 minutes
+      staleTime: 30 * 60 * 1000, // 30 minutes
+      gcTime: 60 * 60 * 1000, // 1 hour
     });
   };
 

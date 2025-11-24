@@ -24,12 +24,19 @@ const MovieCard = ({ movie }: MovieCardProps) => {
   const { useMovieDetails } = useMovies();
   const { useMovieByTmdb } = usePhim();
 
-  // Fetch details - React Query will cache the results
-  const { data: movieDetails, isLoading: detailsLoading } = useMovieDetails(movie.id);
+  // Fetch details ONLY when hovering - React Query will cache the results
+  const { data: movieDetails, isLoading: detailsLoading } = useMovieDetails(
+    movie.id,
+    { enabled: shouldFetchDetails }
+  );
 
-  // Fetch PhimAPI data to get quality and lang info
+  // Fetch PhimAPI data ONLY when hovering to get quality and lang info
   const mediaType = movie.media_type === 'tv' ? 'tv' : 'movie';
-  const { data: phimData } = useMovieByTmdb(movie.id, mediaType);
+  const { data: phimData } = useMovieByTmdb(
+    movie.id,
+    mediaType,
+    { enabled: shouldFetchDetails }
+  );
 
   // Cleanup timeout on unmount
   useEffect(() => {

@@ -20,18 +20,19 @@ export const usePhim = () => {
                 const response = await phimService.getLatest(options);
                 return (response.data ?? response) as PhimLatestResponse;
             },
-            staleTime: 60 * 1000,
+            staleTime: 30 * 60 * 1000, // 30 minutes
+            gcTime: 60 * 60 * 1000, // 1 hour
         });
     };
 
-    const useMovieByTmdb = (tmdbId?: number, type: PhimType = 'auto') => {
+    const useMovieByTmdb = (tmdbId?: number, type: PhimType = 'auto', options?: { enabled?: boolean }) => {
         return useQuery<PhimMovieDetailResponse>({
             queryKey: ['phim', 'tmdb', type, tmdbId],
             queryFn: async () => {
                 const response = await phimService.getMovieByTmdb(tmdbId as number, type);
                 return (response.data ?? response) as PhimMovieDetailResponse;
             },
-            enabled: Boolean(tmdbId),
+            enabled: Boolean(tmdbId) && (options?.enabled ?? true),
             staleTime: 5 * 60 * 1000,
         });
     };
@@ -65,7 +66,8 @@ export const usePhim = () => {
                 return response as unknown as PhimCatalogData;
             },
             enabled: options?.enabled ?? true,
-            staleTime: 10 * 60 * 1000, // 10 minutes
+            staleTime: 30 * 60 * 1000, // 30 minutes
+            gcTime: 60 * 60 * 1000, // 1 hour
         });
     };
 
@@ -86,7 +88,8 @@ export const usePhim = () => {
                 return response as unknown as PhimCatalogData;
             },
             enabled: Boolean(slug) && (options?.enabled ?? true),
-            staleTime: 10 * 60 * 1000, // 10 minutes
+            staleTime: 30 * 60 * 1000, // 30 minutes
+            gcTime: 60 * 60 * 1000, // 1 hour
         });
     };
 

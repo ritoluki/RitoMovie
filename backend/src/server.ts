@@ -79,6 +79,7 @@ import videoRoutes from './routes/videos';
 import userRoutes from './routes/users';
 import commentRoutes from './routes/comments';
 import phimRoutes from './routes/phim';
+import homeRoutes from './routes/home';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/movies', movieRoutes);
@@ -86,6 +87,7 @@ app.use('/api/videos', videoRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/phim', phimRoutes);
+app.use('/api/home', homeRoutes);
 
 // Health check with database status
 app.get('/health', (_req: Request, res: Response) => {

@@ -1,5 +1,3 @@
-import { useMovies } from '@/hooks/useMovies';
-import { usePhim } from '@/hooks/usePhim';
 import HeroBanner from '@/components/movie/HeroBanner';
 import MovieRow from '@/components/movie/MovieRow';
 import PhimRow from '@/components/movie/PhimRow';
@@ -10,57 +8,32 @@ import ScrollIndicator from '@/components/common/ScrollIndicator';
 import SectionDivider from '@/components/common/SectionDivider';
 import SkeletonMovieRow from '@/components/common/SkeletonMovieRow';
 import { useLazyLoadSection } from '@/hooks/useLazyLoadSection';
+import { useHomeData } from '@/hooks/useHomeData';
 import { useEffect } from 'react';
 import { useMovieStore } from '@/store/movieStore';
 import { useAuthStore } from '@/store/authStore';
 import { useTranslation } from 'react-i18next';
 
 const Home = () => {
-  const {
-    useTrending,
-    usePopular,
-    useTopRated,
-    useMoviesByGenre,
-  } = useMovies();
-
-  const { useCatalogList, useGenreDetail } = usePhim();
   const { t } = useTranslation();
 
   /**
-   * LAZY LOADING STRATEGY - 3 Priority Levels:
+   * OPTIMIZED STRATEGY - Single Batch API Call
    * 
-   * PRIORITY 1 - CRITICAL (Load immediately - 2 API calls):
-   * - Trending movies (for Hero + TopMoviesSection)
-   * - Popular movies (for MovieRow)
+   * Instead of 13+ individual API calls, we now fetch all data in a single batch request.
+   * This dramatically improves performance:
+   * - Initial load: 1 request instead of 13+
+   * - Faster page load time
+   * - Reduced server load
+   * - Better caching strategy
    * 
-   * PRIORITY 2 - DELAYED (Load after 500ms - 2 API calls):
-   * - Top Rated movies
-   * - Action movies
-   * 
-   * PRIORITY 3 - LAZY (Load on scroll - 9 API calls):
-   * - Comedy, Horror, Romance movies
-   * - Phim Bộ, Anime, Action TV, TV Shows, Comedy TV
+   * Lazy loading is still used for rendering sections progressively
    */
+  const { data: homeData, isLoading, error } = useHomeData();
 
-  // PRIORITY 1: CRITICAL - Load immediately
-  const { data: trending, isLoading: trendingLoading } = useTrending('week');
-  const { data: popular, isLoading: popularLoading } = usePopular();
-
-  // PRIORITY 2: DELAYED - Load after 500ms
-  const topRatedLazy = useLazyLoadSection({ loadImmediately: true, delay: 500 });
-  const actionLazy = useLazyLoadSection({ loadImmediately: true, delay: 500 });
-
-  const { data: topRated, isLoading: topRatedLoading } = useTopRated(
-    1,
-    { enabled: topRatedLazy.shouldLoad }
-  );
-  const { data: actionMovies, isLoading: actionLoading } = useMoviesByGenre(
-    28,
-    1,
-    { enabled: actionLazy.shouldLoad }
-  );
-
-  // PRIORITY 3: LAZY - Load on scroll (300px before viewport)
+  // Lazy loading sections for progressive rendering
+  const topRatedLazy = useLazyLoadSection({ loadImmediately: true, delay: 100 });
+  const actionLazy = useLazyLoadSection({ loadImmediately: true, delay: 200 });
   const comedyLazy = useLazyLoadSection({ rootMargin: '300px' });
   const horrorLazy = useLazyLoadSection({ rootMargin: '300px' });
   const romanceLazy = useLazyLoadSection({ rootMargin: '300px' });
@@ -69,48 +42,6 @@ const Home = () => {
   const actionTvLazy = useLazyLoadSection({ rootMargin: '300px' });
   const tvShowsLazy = useLazyLoadSection({ rootMargin: '300px' });
   const comedyTvLazy = useLazyLoadSection({ rootMargin: '300px' });
-
-  const { data: comedyMovies, isLoading: comedyLoading } = useMoviesByGenre(
-    35,
-    1,
-    { enabled: comedyLazy.shouldLoad }
-  );
-  const { data: horrorMovies, isLoading: horrorLoading } = useMoviesByGenre(
-    27,
-    1,
-    { enabled: horrorLazy.shouldLoad }
-  );
-  const { data: romanceMovies, isLoading: romanceLoading } = useMoviesByGenre(
-    10749,
-    1,
-    { enabled: romanceLazy.shouldLoad }
-  );
-
-  const { data: phimBo, isLoading: phimBoLoading } = useCatalogList(
-    'phim-bo',
-    { page: 1, limit: 20 },
-    { enabled: phimBoLazy.shouldLoad }
-  );
-  const { data: anime, isLoading: animeLoading } = useCatalogList(
-    'hoat-hinh',
-    { page: 1, limit: 20 },
-    { enabled: animeLazy.shouldLoad }
-  );
-  const { data: actionTv, isLoading: actionTvLoading } = useGenreDetail(
-    'hanh-dong',
-    { page: 1, limit: 20 },
-    { enabled: actionTvLazy.shouldLoad }
-  );
-  const { data: tvShows, isLoading: tvShowsLoading } = useCatalogList(
-    'tv-shows',
-    { page: 1, limit: 20 },
-    { enabled: tvShowsLazy.shouldLoad }
-  );
-  const { data: comedyTv, isLoading: comedyTvLoading } = useGenreDetail(
-    'hai-huoc',
-    { page: 1, limit: 20 },
-    { enabled: comedyTvLazy.shouldLoad }
-  );
 
   const { isAuthenticated } = useAuthStore();
   const { fetchWatchlist, fetchHistory } = useMovieStore();
@@ -127,11 +58,32 @@ const Home = () => {
     }
   }, [isAuthenticated, fetchWatchlist, fetchHistory]);
 
-  const isLoading = trendingLoading || popularLoading;
-
   if (isLoading) {
     return <LoadingSpinner fullScreen />;
   }
+
+  if (error) {
+    console.error('Failed to load home data:', error);
+  }
+
+  // Handle case when data is not yet loaded or failed
+  if (!homeData) {
+    return <LoadingSpinner fullScreen />;
+  }
+
+  // Extract data from batch response - data is directly in homeData, not homeData.data!
+  const trending = homeData.trending;
+  const popular = homeData.popular;
+  const topRated = homeData.topRated;
+  const actionMovies = homeData.genres?.action;
+  const comedyMovies = homeData.genres?.comedy;
+  const horrorMovies = homeData.genres?.horror;
+  const romanceMovies = homeData.genres?.romance;
+  const phimBo = homeData.phim?.phimBo;
+  const anime = homeData.phim?.anime;
+  const tvShows = homeData.phim?.tvShows;
+  const actionTv = homeData.phimGenres?.action;
+  const comedyTv = homeData.phimGenres?.comedy;
 
   return (
     <div className="min-h-screen -mt-16 md:-mt-20">
@@ -160,12 +112,12 @@ const Home = () => {
           />
         )}
 
-        {/* ========== PRIORITY 2: DELAYED (500ms) ========== */}
+        {/* ========== PRIORITY 2: DELAYED (Progressive Rendering) ========== */}
         {/* Top Rated Movies */}
         <section ref={topRatedLazy.sectionRef}>
-          {!topRatedLazy.shouldLoad || topRatedLoading ? (
+          {!topRatedLazy.shouldLoad ? (
             <SkeletonMovieRow />
-          ) : topRated?.results ? (
+          ) : topRated?.results && topRated.results.length > 0 ? (
             <MovieRow
               title={t('home.topRated')}
               movies={topRated.results}
@@ -176,9 +128,9 @@ const Home = () => {
 
         {/* Action Movies */}
         <section ref={actionLazy.sectionRef}>
-          {!actionLazy.shouldLoad || actionLoading ? (
+          {!actionLazy.shouldLoad ? (
             <SkeletonMovieRow />
-          ) : actionMovies?.results ? (
+          ) : actionMovies?.results && actionMovies.results.length > 0 ? (
             <MovieRow
               title={t('home.actionMovies')}
               movies={actionMovies.results}
@@ -201,7 +153,7 @@ const Home = () => {
         {/* ========== PRIORITY 3: LAZY (Load on scroll) ========== */}
         {/* Comedy Movies */}
         <section ref={comedyLazy.sectionRef}>
-          {!comedyLazy.shouldLoad || comedyLoading ? (
+          {!comedyLazy.shouldLoad ? (
             <SkeletonMovieRow />
           ) : comedyMovies?.results ? (
             <MovieRow
@@ -214,7 +166,7 @@ const Home = () => {
 
         {/* Horror Movies */}
         <section ref={horrorLazy.sectionRef}>
-          {!horrorLazy.shouldLoad || horrorLoading ? (
+          {!horrorLazy.shouldLoad ? (
             <SkeletonMovieRow />
           ) : horrorMovies?.results ? (
             <MovieRow
@@ -227,7 +179,7 @@ const Home = () => {
 
         {/* Romance Movies */}
         <section ref={romanceLazy.sectionRef}>
-          {!romanceLazy.shouldLoad || romanceLoading ? (
+          {!romanceLazy.shouldLoad ? (
             <SkeletonMovieRow />
           ) : romanceMovies?.results ? (
             <MovieRow
@@ -240,7 +192,7 @@ const Home = () => {
 
         {/* Phim Bộ (TV Series) */}
         <section ref={phimBoLazy.sectionRef}>
-          {!phimBoLazy.shouldLoad || phimBoLoading ? (
+          {!phimBoLazy.shouldLoad ? (
             <SkeletonMovieRow />
           ) : phimBo?.items ? (
             <PhimRow title={t('home.popularTvShows')} items={phimBo.items} />
@@ -249,7 +201,7 @@ const Home = () => {
 
         {/* Anime */}
         <section ref={animeLazy.sectionRef}>
-          {!animeLazy.shouldLoad || animeLoading ? (
+          {!animeLazy.shouldLoad ? (
             <SkeletonMovieRow />
           ) : anime?.items ? (
             <PhimRow title={t('home.animeTvShows')} items={anime.items} />
@@ -258,7 +210,7 @@ const Home = () => {
 
         {/* Action TV Shows */}
         <section ref={actionTvLazy.sectionRef}>
-          {!actionTvLazy.shouldLoad || actionTvLoading ? (
+          {!actionTvLazy.shouldLoad ? (
             <SkeletonMovieRow />
           ) : actionTv?.items ? (
             <PhimRow title={t('home.actionTvShows')} items={actionTv.items} />
@@ -267,7 +219,7 @@ const Home = () => {
 
         {/* TV Shows */}
         <section ref={tvShowsLazy.sectionRef}>
-          {!tvShowsLazy.shouldLoad || tvShowsLoading ? (
+          {!tvShowsLazy.shouldLoad ? (
             <SkeletonMovieRow />
           ) : tvShows?.items ? (
             <PhimRow title={t('home.tvShowsCategory')} items={tvShows.items} />
@@ -276,7 +228,7 @@ const Home = () => {
 
         {/* Comedy TV Shows */}
         <section ref={comedyTvLazy.sectionRef}>
-          {!comedyTvLazy.shouldLoad || comedyTvLoading ? (
+          {!comedyTvLazy.shouldLoad ? (
             <SkeletonMovieRow />
           ) : comedyTv?.items ? (
             <PhimRow title={t('home.comedyTvShows')} items={comedyTv.items} />
@@ -288,4 +240,3 @@ const Home = () => {
 };
 
 export default Home;
-

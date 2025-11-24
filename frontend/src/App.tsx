@@ -8,11 +8,12 @@ import './i18n/config';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 10 * 60 * 1000, // 10 minutes - increased for better caching
-      gcTime: 15 * 60 * 1000, // 15 minutes - keep data in cache longer
+      refetchOnWindowFocus: false, // Don't refetch when user returns to tab
+      retry: 1, // Retry failed requests once
+      staleTime: 30 * 60 * 1000, // 30 minutes - data stays fresh longer
+      gcTime: 60 * 60 * 1000, // 1 hour - keep cached data in memory longer
       refetchOnReconnect: true, // Refetch on network reconnect
+      refetchOnMount: false, // Don't refetch if data is already cached
     },
   },
 });
