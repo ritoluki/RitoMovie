@@ -48,7 +48,7 @@ export const usePhim = () => {
         });
     };
 
-    const useCatalogList = (type: CatalogType, params?: CatalogQuery) => {
+    const useCatalogList = (type: CatalogType, params?: CatalogQuery, options?: { enabled?: boolean }) => {
         const keySuffix = params ? JSON.stringify(params) : 'default';
         return useQuery<PhimCatalogData>({
             queryKey: ['phim', 'catalog', type, keySuffix],
@@ -64,11 +64,12 @@ export const usePhim = () => {
                 }
                 return response as unknown as PhimCatalogData;
             },
-            staleTime: 2 * 60 * 1000,
+            enabled: options?.enabled ?? true,
+            staleTime: 10 * 60 * 1000, // 10 minutes
         });
     };
 
-    const useGenreDetail = (slug?: string, params?: CatalogQuery) => {
+    const useGenreDetail = (slug?: string, params?: CatalogQuery, options?: { enabled?: boolean }) => {
         const keySuffix = params ? JSON.stringify(params) : 'default';
         return useQuery<PhimCatalogData>({
             queryKey: ['phim', 'genre', slug, keySuffix],
@@ -84,8 +85,8 @@ export const usePhim = () => {
                 }
                 return response as unknown as PhimCatalogData;
             },
-            enabled: Boolean(slug),
-            staleTime: 2 * 60 * 1000,
+            enabled: Boolean(slug) && (options?.enabled ?? true),
+            staleTime: 10 * 60 * 1000, // 10 minutes
         });
     };
 

@@ -6,24 +6,30 @@ export const useMovies = () => {
   const { i18n } = useTranslation();
   const language = i18n.language;
 
-  const useTrending = (timeWindow: 'day' | 'week' = 'week') => {
+  const useTrending = (timeWindow: 'day' | 'week' = 'week', options?: { enabled?: boolean }) => {
     return useQuery({
       queryKey: ['movies', 'trending', timeWindow, language],
       queryFn: () => movieService.getTrending(timeWindow),
+      enabled: options?.enabled ?? true,
+      staleTime: 10 * 60 * 1000, // 10 minutes
     });
   };
 
-  const usePopular = (page: number = 1) => {
+  const usePopular = (page: number = 1, options?: { enabled?: boolean }) => {
     return useQuery({
       queryKey: ['movies', 'popular', page, language],
       queryFn: () => movieService.getPopular(page),
+      enabled: options?.enabled ?? true,
+      staleTime: 10 * 60 * 1000, // 10 minutes
     });
   };
 
-  const useTopRated = (page: number = 1) => {
+  const useTopRated = (page: number = 1, options?: { enabled?: boolean }) => {
     return useQuery({
       queryKey: ['movies', 'top-rated', page, language],
       queryFn: () => movieService.getTopRated(page),
+      enabled: options?.enabled ?? true,
+      staleTime: 10 * 60 * 1000, // 10 minutes
     });
   };
 
@@ -77,11 +83,12 @@ export const useMovies = () => {
     });
   };
 
-  const useMoviesByGenre = (genreId: number, page: number = 1) => {
+  const useMoviesByGenre = (genreId: number, page: number = 1, options?: { enabled?: boolean }) => {
     return useQuery({
       queryKey: ['movies', 'genre', genreId, page, language],
       queryFn: () => movieService.getByGenre(genreId, page),
-      enabled: !!genreId,
+      enabled: !!genreId && (options?.enabled ?? true),
+      staleTime: 10 * 60 * 1000, // 10 minutes
     });
   };
 

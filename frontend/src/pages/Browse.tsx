@@ -8,6 +8,7 @@ import { Movie, Genre, PhimMovieSummary, PhimPagination } from '@/types';
 import MovieCard from '@/components/movie/MovieCard';
 import PhimCard from '@/components/movie/PhimCard';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import Pagination from '@/components/common/Pagination';
 import { FiFilter } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -318,6 +319,12 @@ const Browse = () => {
     isPhimFilterActive,
   ]);
 
+  // Handle page change with scroll to top
+  const handlePageChange = (newPage: number) => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setPage(newPage);
+  };
+
   const applyFilters = () => {
     if (isPhimMode) {
       const params: Record<string, string> = {};
@@ -442,27 +449,12 @@ const Browse = () => {
                 </div>
 
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-center gap-2 mt-12">
-                    <button
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                      className="px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
-                    >
-                      Trước
-                    </button>
-
-                    <span className="text-white px-4">
-                      Trang {page} / {Math.min(totalPages, 500)}
-                    </span>
-
-                    <button
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                      disabled={page >= totalPages || page >= 500}
-                      className="px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
-                    >
-                      Sau
-                    </button>
-                  </div>
+                  <Pagination
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    maxPage={500}
+                  />
                 )}
               </>
             ) : (
@@ -488,27 +480,12 @@ const Browse = () => {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-12">
-                  <button
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
-                  >
-                    Trước
-                  </button>
-
-                  <span className="text-white px-4">
-                    Trang {page} / {Math.min(totalPages, 500)}
-                  </span>
-
-                  <button
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page >= totalPages || page >= 500}
-                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
-                  >
-                    Sau
-                  </button>
-                </div>
+                <Pagination
+                  currentPage={page}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                  maxPage={500}
+                />
               )}
             </>
           ) : (
