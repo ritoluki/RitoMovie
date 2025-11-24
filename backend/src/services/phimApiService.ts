@@ -14,6 +14,7 @@ export type CatalogType =
     | 'phim-le'
     | 'tv-shows'
     | 'hoat-hinh'
+    | 'phim-chieu-rap'
     | 'phim-vietsub'
     | 'phim-thuyet-minh'
     | 'phim-long-tieng';

@@ -6,9 +6,11 @@ import PhimCard from './PhimCard';
 interface PhimRowProps {
     title: string;
     items?: PhimMovieSummary[];
+    link?: string;
 }
 
-const PhimRow = ({ title, items }: PhimRowProps) => {
+import { Link } from 'react-router-dom';
+const PhimRow = ({ title, items, link }: PhimRowProps) => {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [showLeft, setShowLeft] = useState(false);
     const [showRight, setShowRight] = useState(true);
@@ -45,11 +47,22 @@ const PhimRow = ({ title, items }: PhimRowProps) => {
         return null;
     }
 
-    return (
-        <div className="mb-10 md:mb-14 group">
-            <div className="mb-4 flex items-center gap-3 px-4 md:px-8">
-                <h2 className="text-2xl font-bold text-white md:text-3xl">{title}</h2>
-            </div>
+        return (
+                <div className="mb-10 md:mb-14 group">
+                        <div className="mb-4 flex items-center gap-3 px-4 md:px-8">
+                                <h2 className="text-2xl font-bold text-white md:text-3xl">{title}</h2>
+                                {link && (
+                                    <Link
+                                        to={link}
+                                        className="group/more flex items-center justify-center gap-0 px-2 py-1 rounded-full group-hover/more:rounded-lg border-2 border-white/30 group-hover/more:border-red-500/50 hover:bg-red-500/10 text-white transition-all duration-300"
+                                    >
+                                        <span className="text-sm font-medium text-red-500 max-w-0 group-hover/more:max-w-[80px] group-hover/more:pl-2 group-hover/more:pr-1 opacity-0 group-hover/more:opacity-100 transition-all duration-300 ease-out whitespace-nowrap overflow-hidden">
+                                            Xem thêm
+                                        </span>
+                                        <FiChevronRight size={16} className="flex-shrink-0" />
+                                    </Link>
+                                )}
+                        </div>
 
             <div className="relative">
                 {showLeft && (
