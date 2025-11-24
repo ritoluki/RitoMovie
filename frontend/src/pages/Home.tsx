@@ -195,7 +195,7 @@ const Home = () => {
           {!phimBoLazy.shouldLoad ? (
             <SkeletonMovieRow />
           ) : phimBo?.items ? (
-            <PhimRow title={t('home.popularTvShows')} items={phimBo.items} />
+            <PhimRow title={t('home.popularTvShows')} items={phimBo.items} link="/browse?catalog=phim-bo" />
           ) : null}
         </section>
 
@@ -204,7 +204,7 @@ const Home = () => {
           {!animeLazy.shouldLoad ? (
             <SkeletonMovieRow />
           ) : anime?.items ? (
-            <PhimRow title={t('home.animeTvShows')} items={anime.items} />
+            <PhimRow title={t('home.animeTvShows')} items={anime.items} link="/browse?catalog=hoat-hinh" />
           ) : null}
         </section>
 
@@ -213,7 +213,7 @@ const Home = () => {
           {!actionTvLazy.shouldLoad ? (
             <SkeletonMovieRow />
           ) : actionTv?.items ? (
-            <PhimRow title={t('home.actionTvShows')} items={actionTv.items} />
+            <PhimRow title={t('home.actionTvShows')} items={actionTv.items} link="/browse?catalog=phim-bo&phimGenre=hanh-dong" />
           ) : null}
         </section>
 
@@ -222,7 +222,7 @@ const Home = () => {
           {!tvShowsLazy.shouldLoad ? (
             <SkeletonMovieRow />
           ) : tvShows?.items ? (
-            <PhimRow title={t('home.tvShowsCategory')} items={tvShows.items} />
+            <PhimRow title={t('home.tvShowsCategory')} items={tvShows.items} link="/browse?catalog=tv-shows" />
           ) : null}
         </section>
 
@@ -231,7 +231,7 @@ const Home = () => {
           {!comedyTvLazy.shouldLoad ? (
             <SkeletonMovieRow />
           ) : comedyTv?.items ? (
-            <PhimRow title={t('home.comedyTvShows')} items={comedyTv.items} />
+            <PhimRow title={t('home.comedyTvShows')} items={comedyTv.items} link="/browse?catalog=phim-bo&phimGenre=hai-huoc" />
           ) : null}
         </section>
       </div>

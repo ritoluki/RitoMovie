@@ -81,6 +81,8 @@ const Header = () => {
     { name: t('header.home'), path: '/' },
     { name: t('header.singleMovies'), path: '/browse?catalog=phim-le' },
     { name: t('header.seriesMovies'), path: '/browse?catalog=phim-bo' },
+    { name: t('header.hoatHinh'), path: '/browse?catalog=hoat-hinh' },
+    { name: t('header.phimChieuRap'), path: '/browse?catalog=phim-chieu-rap' },
   ];
 
   const isLoadingGenres = isGenresLoading && genres.length === 0;
