@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import { LogoLink } from '@/components/common/Logo';
 import { usePhim } from '@/hooks/usePhim';
+import { getTranslatedGenre, getTranslatedCountry } from '@/utils/translations';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -21,7 +22,7 @@ const Header = () => {
   const countryMenuRef = useRef<HTMLDivElement>(null);
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { useGenres: usePhimGenres, useCountries: usePhimCountries } = usePhim();
   const { data: phimGenresData, isLoading: isGenresLoading } = usePhimGenres();
   const { data: phimCountriesData, isLoading: isCountriesLoading } = usePhimCountries();
@@ -175,7 +176,7 @@ const Header = () => {
                               onClick={() => setActiveDropdown(null)}
                               className="text-gray-300 hover:text-white transition-colors duration-200 text-sm py-1"
                             >
-                              {genre.name}
+                              {getTranslatedGenre(genre.name, i18n.language)}
                             </Link>
                           ))
                         ) : (
@@ -217,7 +218,7 @@ const Header = () => {
                               onClick={() => setActiveDropdown(null)}
                               className="text-gray-300 hover:text-white transition-colors duration-200 text-sm py-1"
                             >
-                              {country.name}
+                              {getTranslatedCountry(country.name, i18n.language)}
                             </Link>
                           ))
                         ) : (

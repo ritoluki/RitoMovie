@@ -253,5 +253,15 @@
     "goHome": "Về trang chủ",
     "networkError": "Lỗi kết nối. Vui lòng kiểm tra kết nối của bạn.",
     "serverError": "Lỗi máy chủ. Vui lòng thử lại sau."
+  },
+  "browse": {
+    "singleMovieList": "Danh sách phim lẻ",
+    "seriesMovieList": "Danh sách phim bộ",
+    "curatedCollection": "Bộ sưu tập được chọn lọc",
+    "filter": "Bộ lọc",
+    "searchResults": "Kết quả tìm kiếm \"{{query}}\"",
+    "foundResults": "Tìm thấy {{count}} kết quả",
+    "featuredMovies": "Phim nổi bật",
+    "discoverNext": "Khám phá bộ phim yêu thích tiếp theo của bạn"
   }
 }

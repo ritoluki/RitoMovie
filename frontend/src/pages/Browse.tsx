@@ -11,6 +11,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Pagination from '@/components/common/Pagination';
 import { FiFilter } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface CertificationOption {
   code: string;
@@ -50,10 +51,7 @@ const PHIM_SORT_OPTIONS: { value: PhimSortField; label: string }[] = [
   { value: '_id', label: 'Thêm gần đây' },
 ];
 
-const PHIM_SORT_TYPE_OPTIONS: { value: PhimSortType; label: string }[] = [
-  { value: 'desc', label: 'Giảm dần' },
-  { value: 'asc', label: 'Tăng dần' },
-];
+const PHIM_SORT_TYPE_OPTIONS: { value: PhimSortType; label: string }[] = [];
 
 const PHIM_CATALOG_LABELS: Record<CatalogType, string> = {
   'phim-bo': 'Phim bộ',
@@ -98,6 +96,7 @@ const Browse = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const { t } = useTranslation();
 
   // Read initial values from URL params
   const searchQuery = searchParams.get('q') || '';
@@ -397,17 +396,19 @@ const Browse = () => {
             <div>
               <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
                 {searchQuery
-                  ? `Kết quả tìm kiếm "${searchQuery}"`
+                  ? t('browse.searchResults', { query: searchQuery })
                   : isPhimFilterActive
-                    ? 'Danh sách phim lẻ'
-                    : 'Phim nổi bật'}
+                    ? selectedPhimCatalog === 'phim-bo'
+                      ? t('browse.seriesMovieList')
+                      : t('browse.singleMovieList')
+                    : t('browse.featuredMovies')}
               </h1>
               <p className="text-gray-400">
                 {searchQuery
-                  ? `Tìm thấy ${movies.length} kết quả`
+                  ? t('browse.foundResults', { count: movies.length })
                   : isPhimFilterActive
-                    ? 'Bộ sưu tập được chọn lọc '
-                    : 'Khám phá bộ phim yêu thích tiếp theo của bạn'}
+                    ? t('browse.curatedCollection')
+                    : t('browse.discoverNext')}
               </p>
             </div>
 
@@ -416,7 +417,7 @@ const Browse = () => {
               <button
                 onClick={() => setShowFilterModal(true)}
                 className="sm:hidden inline-flex items-center justify-center rounded-full bg-gray-800 text-white p-2 hover:bg-gray-700 transition-colors"
-                aria-label="Bộ lọc"
+                aria-label={t('browse.filter')}
               >
                 <FiFilter size={18} />
               </button>
@@ -430,7 +431,7 @@ const Browse = () => {
               className="hidden sm:inline-flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors text-sm font-medium"
             >
               <FiFilter size={20} />
-              <span>Bộ lọc</span>
+              <span>{t('browse.filter')}</span>
             </button>
           )}
         </div>
@@ -529,7 +530,7 @@ const Browse = () => {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-white">
-                    {isPhimMode ? 'Bộ lọc PhimAPI' : 'Phim nổi bật'}
+                    {isPhimMode ? 'Bộ lọc' : 'Phim nổi bật'}
                   </h2>
                   <button
                     onClick={() => setShowFilterModal(false)}
@@ -663,21 +664,6 @@ const Browse = () => {
                               key={option.value}
                               onClick={() => setSelectedPhimSortField(option.value)}
                               className={`px-4 py-2 rounded-md text-sm transition-colors ${selectedPhimSortField === option.value
-                                ? 'bg-yellow-500 text-black font-medium'
-                                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                                }`}
-                            >
-                              {option.label}
-                            </button>
-                          ))}
-                        </div>
-
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          {PHIM_SORT_TYPE_OPTIONS.map((option) => (
-                            <button
-                              key={option.value}
-                              onClick={() => setSelectedPhimSortType(option.value)}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors ${selectedPhimSortType === option.value
                                 ? 'bg-yellow-500 text-black font-medium'
                                 : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                                 }`}

@@ -3,6 +3,7 @@ import Hls from 'hls.js';
 import { useTranslation } from 'react-i18next';
 import {
     FiAirplay,
+    FiInfo,
     FiList,
     FiMaximize,
     FiMinimize,
@@ -582,21 +583,12 @@ const VideoPlayer = ({
         );
     }
 
-    if (!hlsSource) {
-        return (
-            <div className="w-full h-full flex items-center justify-center text-white bg-gray-900">
-                <p className="text-center text-sm md:text-base text-gray-300 max-w-md px-4">
-                    {t('movie.noStreamingData')}
-                </p>
-            </div>
-        );
-    }
-
     const progressMax = duration || 0;
     const progressValue = Math.min(currentTime, progressMax);
     const showNextButton = Boolean(onNextEpisode);
     const showPreview = isHoveringProgress && progressMax > 0;
     const previewStatusReady = previewReady && !previewLoading;
+    const hasNoSource = !hlsSource && !embedSource;
 
     return (
         <div
@@ -607,19 +599,39 @@ const VideoPlayer = ({
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
         >
-            <video
-                ref={videoRef}
-                className="w-full h-full object-contain bg-black"
-                playsInline
-                poster={poster}
-                muted={isMuted}
-                onClick={isMobile ? undefined : togglePlay}
-                controls={isMobile}
-                controlsList={isMobile ? "nodownload" : undefined}
-            />
+            {hasNoSource ? (
+                <div className="relative w-full h-full">
+                    <div
+                        className="w-full h-full bg-cover bg-center bg-no-repeat"
+                        style={{
+                            backgroundImage: poster ? `url(${poster})` : 'none',
+                            backgroundColor: '#000'
+                        }}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+                        <div className="text-center px-6">
+                            <FiInfo size={56} className="mx-auto mb-4 text-red-500" />
+                            <p className="text-red-400 text-base md:text-lg font-semibold underline max-w-md">
+                                {t('movie.noStreamingData')}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <video
+                    ref={videoRef}
+                    className="w-full h-full object-contain bg-black"
+                    playsInline
+                    poster={poster}
+                    muted={isMuted}
+                    onClick={isMobile ? undefined : togglePlay}
+                    controls={isMobile}
+                    controlsList={isMobile ? "nodownload" : undefined}
+                />
+            )}
 
             {/* Center Play/Pause Button Overlay */}
-            {!isMobile && (
+            {!isMobile && !hasNoSource && (
                 <button
                     type="button"
                     onClick={togglePlay}
@@ -636,7 +648,7 @@ const VideoPlayer = ({
                 </button>
             )}
 
-            {!isMobile && (
+            {!isMobile && !hasNoSource && (
                 <div
                     className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/75 to-transparent px-4 pt-6 pb-4 space-y-3 transition-opacity duration-300"
                     style={{

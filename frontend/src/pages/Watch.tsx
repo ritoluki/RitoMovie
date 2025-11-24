@@ -127,20 +127,7 @@ const Watch = () => {
     return <LoadingSpinner fullScreen />;
   }
 
-  if (!streamingData) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <Link
-          to={movie ? `/movie/${movie.id}?type=${mediaType}` : '/'}
-          className="text-red-400 underline"
-        >
-          {t('movie.noStreamingData')}
-        </Link>
-      </div>
-    );
-  }
-
-  const streamingMeta = streamingData.movie;
+  const streamingMeta = streamingData?.movie;
   const displayTitle = movie?.title || movie?.name || streamingMeta?.name || streamingMeta?.origin_name || t('movie.watchNow');
   const ratingValue = movie?.vote_average ?? streamingMeta?.tmdb?.vote_average;
   const releaseSource = movie?.release_date || movie?.first_air_date;
@@ -213,7 +200,7 @@ const Watch = () => {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="hidden md:block absolute top-20 left-4 md:left-8 z-50"
+        className="hidden md:block absolute top-24 left-4 md:left-8 z-30"
       >
         <Link
           to={detailPageLink || '/'}
@@ -247,27 +234,17 @@ const Watch = () => {
               </div>
             </div>
           )}
-          {hasStreams ? (
-            <VideoPlayer
-              hlsSource={currentEpisode?.link_m3u8}
-              embedSource={currentEpisode?.link_embed}
-              poster={posterImage}
-              title={`${displayTitle} • ${currentEpisode?.name || ''}`}
-              onNextEpisode={nextEpisode ? handleNextEpisode : undefined}
-              nextEpisodeLabel={nextEpisode?.name}
-              onEpisodeListToggle={isSeries ? handleScrollToEpisodes : undefined}
-              showEpisodeListButton={isSeries}
-              episodeListLabel={t('watch.toggleEpisodes')}
-            />
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-white p-8 text-center">
-              <FiInfo size={56} className="mb-4 text-gray-500" />
-              <h2 className="text-2xl font-semibold mb-3">{displayTitle}</h2>
-              <p className="text-gray-400 max-w-2xl">
-                {streamingError ? t('movie.noStreamingData') : t('movie.noStreamingData')}
-              </p>
-            </div>
-          )}
+          <VideoPlayer
+            hlsSource={currentEpisode?.link_m3u8}
+            embedSource={currentEpisode?.link_embed}
+            poster={posterImage}
+            title={`${displayTitle} • ${currentEpisode?.name || ''}`}
+            onNextEpisode={nextEpisode ? handleNextEpisode : undefined}
+            nextEpisodeLabel={nextEpisode?.name}
+            onEpisodeListToggle={isSeries ? handleScrollToEpisodes : undefined}
+            showEpisodeListButton={isSeries}
+            episodeListLabel={t('watch.toggleEpisodes')}
+          />
         </div>
 
         {/* Nút back trên mobile - xuống dưới video */}
