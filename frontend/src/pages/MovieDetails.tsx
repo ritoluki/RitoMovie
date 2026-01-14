@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { FiDownload, FiHeart, FiShare2, FiMessageCircle, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { AiFillHeart } from 'react-icons/ai';
@@ -16,8 +16,51 @@ import CastTab from '@/components/movie/tabs/CastTab';
 import GalleryTab from '@/components/movie/tabs/GalleryTab';
 import RecommendationsTab from '@/components/movie/tabs/RecommendationsTab';
 import { useTranslation } from 'react-i18next';
+import type { PhimMovieSummary } from '@/types';
 
 type TabType = 'episodes' | 'gallery' | 'cast' | 'recommendations';
+
+const normalizeText = (value?: string | null) =>
+  (value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+const stripSeasonInfo = (value?: string | null) => {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+
+  const removedParentheses = trimmed.replace(/\s*\([^)]*(season|phan|phần|part)[^)]*\)/gi, '');
+  const removedKeywords = removedParentheses.replace(/(?:season|phan|phần|part)\s*\d+/gi, '');
+  const normalized = removedKeywords.trim();
+  return normalized || trimmed;
+};
+
+const extractSeasonNumber = (item: PhimMovieSummary) => {
+  const originMatch = item.origin_name?.match(/Season\s*(\d+)/i);
+  if (originMatch) return Number(originMatch[1]);
+
+  const normalizedName = normalizeText(item.name || '');
+  const vnMatch = normalizedName.match(/phan\s*(\d+)/i);
+  if (vnMatch) return Number(vnMatch[1]);
+
+  const genericMatch = normalizedName.match(/(?:season|phan)\s*(\d+)/i);
+  return genericMatch ? Number(genericMatch[1]) : undefined;
+};
+
+const sortSeasonOptions = (items: PhimMovieSummary[]) =>
+  [...items].sort((a, b) => {
+    const aSeason = extractSeasonNumber(a);
+    const bSeason = extractSeasonNumber(b);
+    if (typeof aSeason === 'number' && typeof bSeason === 'number' && aSeason !== bSeason) {
+      return bSeason - aSeason;
+    }
+    if (a.year && b.year && a.year !== b.year) {
+      return b.year - a.year;
+    }
+    return b.name.localeCompare(a.name);
+  });
 
 const MovieDetails = () => {
   const { t } = useTranslation();
@@ -36,7 +79,7 @@ const MovieDetails = () => {
     useMovieImages,
     useReleaseDates,
   } = useMovies();
-  const { useMovieByTmdb } = usePhim();
+  const { useMovieByTmdb, useMovieBySlug, useSearch: usePhimSearch } = usePhim();
 
   const { data: movie, isLoading: movieLoading } = useMovieDetails(movieId, { mediaType });
   const { data: credits } = useMovieCredits(movieId, mediaType);
@@ -47,6 +90,61 @@ const MovieDetails = () => {
     movieId,
     mediaType === 'tv' ? 'tv' : 'movie'
   );
+
+  const seasonKeywordCandidates = [
+    stripSeasonInfo(movie?.name),
+    stripSeasonInfo(movie?.original_name),
+    stripSeasonInfo(streamingData?.movie?.origin_name),
+    stripSeasonInfo(streamingData?.movie?.name),
+    stripSeasonInfo(movie?.title),
+  ].filter(Boolean) as string[];
+
+  const fallbackSeasonKeyword =
+    streamingData?.movie?.origin_name ||
+    streamingData?.movie?.name ||
+    movie?.name ||
+    movie?.original_name ||
+    movie?.title;
+
+  const keywordForSeasonSearch = seasonKeywordCandidates[0] || fallbackSeasonKeyword?.trim();
+  const shouldSearchSeasons = mediaType === 'tv' && Boolean(keywordForSeasonSearch);
+  const { data: seasonSearchResults } = usePhimSearch(keywordForSeasonSearch, {
+    enabled: shouldSearchSeasons,
+  });
+
+  const seasonOptions = useMemo(() => {
+    if (!seasonSearchResults?.items?.length) return [];
+    const matchedItems = seasonSearchResults.items.filter((item) => Number(item.tmdb?.id) === movieId);
+    if (!matchedItems.length) return [];
+    return sortSeasonOptions(matchedItems);
+  }, [seasonSearchResults, movieId]);
+
+  const [selectedSeasonSlug, setSelectedSeasonSlug] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!streamingData?.movie?.slug) return;
+    setSelectedSeasonSlug((prev) => prev ?? streamingData.movie.slug);
+  }, [streamingData?.movie?.slug]);
+
+  useEffect(() => {
+    if (!seasonOptions.length) return;
+    if (!selectedSeasonSlug) {
+      setSelectedSeasonSlug(seasonOptions[0].slug);
+      return;
+    }
+    if (!seasonOptions.some((option) => option.slug === selectedSeasonSlug)) {
+      setSelectedSeasonSlug(seasonOptions[0].slug);
+    }
+  }, [seasonOptions, selectedSeasonSlug]);
+
+  const shouldUseSlugQuery = Boolean(selectedSeasonSlug && selectedSeasonSlug !== streamingData?.movie?.slug);
+  const {
+    data: alternateSeasonData,
+    isLoading: alternateSeasonLoading,
+  } = useMovieBySlug(shouldUseSlugQuery ? selectedSeasonSlug : undefined);
+
+  const effectiveStreamingData = shouldUseSlugQuery ? alternateSeasonData : streamingData;
+  const effectiveStreamingLoading = shouldUseSlugQuery ? alternateSeasonLoading : streamingLoading;
 
   const { isAuthenticated } = useAuthStore();
   const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useMovieStore();
@@ -97,6 +195,11 @@ const MovieDetails = () => {
     alert(t('movie.downloadComingSoon'));
   };
 
+  const handleSeasonChange = (slug: string) => {
+    if (!slug || slug === selectedSeasonSlug) return;
+    setSelectedSeasonSlug(slug);
+  };
+
   const certification = useMemo(() => {
     if (!movie) return 'P';
 
@@ -145,8 +248,8 @@ const MovieDetails = () => {
 
   const watchLinkParams = new URLSearchParams();
   watchLinkParams.set('type', mediaType);
-  if (streamingData?.movie?.slug) {
-    watchLinkParams.set('slug', streamingData.movie.slug);
+  if (effectiveStreamingData?.movie?.slug) {
+    watchLinkParams.set('slug', effectiveStreamingData.movie.slug);
   }
   const watchLink = `/watch/${movie.id}?${watchLinkParams.toString()}`;
 
@@ -502,9 +605,13 @@ const MovieDetails = () => {
             movieId={movieId}
             movieTitle={displayTitle}
             mediaType={mediaType}
-            streamingServers={streamingData?.episodes}
-            isStreamingLoading={streamingLoading}
-            slug={streamingData?.movie?.slug}
+            streamingServers={effectiveStreamingData?.episodes}
+            isStreamingLoading={effectiveStreamingLoading}
+            slug={effectiveStreamingData?.movie?.slug}
+            seasonOptions={seasonOptions.length > 1 ? seasonOptions : undefined}
+            selectedSeasonSlug={seasonOptions.length > 1 ? selectedSeasonSlug : undefined}
+            onSeasonChange={seasonOptions.length > 1 ? handleSeasonChange : undefined}
+            isSeasonLoading={shouldUseSlugQuery && effectiveStreamingLoading}
           />
         )}
         {activeTab === 'gallery' && (

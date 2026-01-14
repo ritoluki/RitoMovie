@@ -251,12 +251,47 @@ const Browse = () => {
           setTotalPages(getPhimTotalPages(pagination));
         } else {
           setIsPhimMode(false);
-          setPhimItems([]);
           let data;
 
           if (searchQuery) {
-            data = await movieService.search(searchQuery, page);
+            // Search both TMDB and Phim API in parallel
+            const [tmdbResults, phimResults] = await Promise.allSettled([
+              movieService.search(searchQuery, page),
+              phimService.search(searchQuery, {
+                page,
+                limit: PHIM_PAGE_SIZE,
+              }),
+            ]);
+
+            // Get TMDB results
+            const tmdbData = tmdbResults.status === 'fulfilled' ? tmdbResults.value : { results: [], total_pages: 0, total_results: 0 };
+            
+            // Get Phim results
+            let phimData = { items: [] as PhimMovieSummary[], params: { pagination: { totalPages: 0 } } };
+            if (phimResults.status === 'fulfilled') {
+              const phimResponse = phimResults.value;
+              const payload = phimResponse?.data ?? phimResponse;
+              if (payload) {
+                phimData = {
+                  items: payload.items ?? payload.data?.items ?? [],
+                  params: payload.params ?? payload.data?.params ?? { pagination: { totalPages: 0 } },
+                };
+              }
+            }
+
+            // Combine results: prioritize TMDB results, then add Phim results
+            // For now, we'll show TMDB results as primary and Phim results separately
+            // You can adjust this logic based on your preference
+            setMovies(tmdbData.results);
+            setPhimItems(phimData.items);
+            
+            // Use the maximum total pages from both sources
+            const tmdbTotalPages = tmdbData.total_pages || 0;
+            const phimTotalPages = getPhimTotalPages(phimData.params?.pagination);
+            setTotalPages(Math.max(tmdbTotalPages, phimTotalPages));
           } else {
+            // Clear phimItems when not searching
+            setPhimItems([]);
             data = await movieService.discover({
               page,
               sort_by: sortBy,
@@ -266,10 +301,10 @@ const Browse = () => {
               certification_country: selectedCertification ? CERTIFICATION_COUNTRY : undefined,
               certification: selectedCertification?.tmdbCertification,
             });
-          }
 
-          setMovies(data.results);
-          setTotalPages(data.total_pages);
+            setMovies(data.results);
+            setTotalPages(data.total_pages);
+          }
         }
       } catch (error) {
         console.error('Error fetching movies:', error);
@@ -407,7 +442,7 @@ const Browse = () => {
               </h1>
               <p className="text-gray-400">
                 {searchQuery
-                  ? t('browse.foundResults', { count: movies.length })
+                  ? t('browse.foundResults', { count: movies.length + phimItems.length })
                   : isPhimFilterActive
                     ? t('browse.curatedCollection')
                     : t('browse.discoverNext')}
@@ -442,6 +477,42 @@ const Browse = () => {
         <div>
           {isLoading ? (
             <LoadingSpinner />
+          ) : searchQuery ? (
+            // Show combined search results from both TMDB and Phim API in one grid
+            <>
+              {movies.length > 0 || phimItems.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 md:gap-6">
+                    {movies.map((movie) => (
+                      <MovieCard key={movie.id} movie={movie} />
+                    ))}
+                    {phimItems.map((item) => (
+                      <PhimCard key={item._id || item.slug} item={item} />
+                    ))}
+                  </div>
+                  {totalPages > 1 && (
+                    <div className="mt-8">
+                      <Pagination
+                        currentPage={page}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                        maxPage={500}
+                      />
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-400 text-lg">Không tìm thấy kết quả cho "{searchQuery}"</p>
+                  <button
+                    onClick={clearFilters}
+                    className="mt-4 text-primary-600 hover:text-primary-500 font-medium"
+                  >
+                    Xóa bộ lọc và thử lại
+                  </button>
+                </div>
+              )}
+            </>
           ) : isPhimMode ? (
             phimItems.length > 0 ? (
               <>

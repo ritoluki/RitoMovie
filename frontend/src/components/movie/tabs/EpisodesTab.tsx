@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { FiChevronDown } from 'react-icons/fi';
 import Comments from '../Comments';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
-import { PhimEpisodeServer } from '@/types';
+import { PhimEpisodeServer, PhimMovieSummary } from '@/types';
 
 interface EpisodesTabProps {
   movieId: number;
@@ -12,9 +13,24 @@ interface EpisodesTabProps {
   isStreamingLoading?: boolean;
   mediaType?: 'movie' | 'tv';
   slug?: string;
+  seasonOptions?: PhimMovieSummary[];
+  selectedSeasonSlug?: string;
+  onSeasonChange?: (slug: string) => void;
+  isSeasonLoading?: boolean;
 }
 
-const EpisodesTab = ({ movieId, movieTitle, streamingServers, isStreamingLoading, mediaType = 'movie', slug }: EpisodesTabProps) => {
+const EpisodesTab = ({
+  movieId,
+  movieTitle,
+  streamingServers,
+  isStreamingLoading,
+  mediaType = 'movie',
+  slug,
+  seasonOptions,
+  selectedSeasonSlug,
+  onSeasonChange,
+  isSeasonLoading,
+}: EpisodesTabProps) => {
   const { t } = useTranslation();
   const [activeServerIndex, setActiveServerIndex] = useState(0);
 
@@ -33,9 +49,38 @@ const EpisodesTab = ({ movieId, movieTitle, streamingServers, isStreamingLoading
 
   const isSingleEpisodeMovie = mediaType === 'movie' && (currentServer?.server_data.length === 1);
 
+  const showSeasonSelector = Boolean(seasonOptions && seasonOptions.length > 1);
+
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-gray-800 bg-gray-900/60 backdrop-blur-md p-4">
+        {showSeasonSelector && (
+          <div className="mb-5">
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <span className="text-sm uppercase tracking-wide text-gray-400">{t('movie.selectSeason')}</span>
+              {isSeasonLoading && (
+                <span className="text-xs text-gray-400">{t('common.loading')}</span>
+              )}
+            </div>
+            <div className="relative">
+              <select
+                aria-label={t('movie.selectSeason')}
+                className="w-full appearance-none rounded-xl border border-gray-700 bg-gray-800/70 px-4 py-2.5 pr-10 text-sm text-white transition focus:border-red-500 focus:outline-none focus:ring-0 disabled:opacity-70"
+                disabled={isSeasonLoading}
+                value={selectedSeasonSlug ?? ''}
+                onChange={(event) => onSeasonChange?.(event.target.value)}
+              >
+                {seasonOptions?.map((option) => (
+                  <option key={option.slug} value={option.slug}>
+                    {option.name} {option.year ? `• ${option.year}` : ''}
+                  </option>
+                ))}
+              </select>
+              <FiChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-wrap items-center gap-2 mb-4">
           <span className="text-sm uppercase tracking-wide text-gray-400">{t('movie.selectServer')}</span>
           {streamingServers?.map((server, index) => (

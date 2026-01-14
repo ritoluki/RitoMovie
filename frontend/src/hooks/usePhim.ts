@@ -49,6 +49,27 @@ export const usePhim = () => {
         });
     };
 
+    const useSearch = (keyword?: string, options?: { enabled?: boolean }) => {
+        return useQuery<PhimCatalogData>({
+            queryKey: ['phim', 'search', keyword],
+            queryFn: async () => {
+                const response = await phimService.search(keyword || '');
+
+                if ('data' in response && response.data && 'data' in response.data) {
+                    return response.data.data as PhimCatalogData;
+                }
+
+                if ('data' in response && response.data) {
+                    return response.data as unknown as PhimCatalogData;
+                }
+
+                return response as unknown as PhimCatalogData;
+            },
+            enabled: Boolean(keyword?.trim()) && (options?.enabled ?? true),
+            staleTime: 5 * 60 * 1000,
+        });
+    };
+
     const useCatalogList = (type: CatalogType, params?: CatalogQuery, options?: { enabled?: boolean }) => {
         const keySuffix = params ? JSON.stringify(params) : 'default';
         return useQuery<PhimCatalogData>({
@@ -140,6 +161,7 @@ export const usePhim = () => {
         useLatest,
         useMovieBySlug,
         useMovieByTmdb,
+        useSearch,
         useCatalogList,
         useGenreDetail,
         useCountryDetail,
