@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useMovies } from '@/hooks/useMovies';
 import { usePhim } from '@/hooks/usePhim';
@@ -98,6 +98,12 @@ const Browse = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showFilterModal, setShowFilterModal] = useState(false);
+
+  // Progressive rendering states
+  const [visibleMovieCount, setVisibleMovieCount] = useState(16); // Show 16 items initially
+  const [visiblePhimCount, setVisiblePhimCount] = useState(16);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
   const { t } = useTranslation();
 
   // Read initial values from URL params
@@ -251,12 +257,29 @@ const Browse = () => {
           setTotalPages(getPhimTotalPages(pagination));
         } else {
           setIsPhimMode(false);
-          setPhimItems([]);
           let data;
 
           if (searchQuery) {
-            data = await movieService.search(searchQuery, page);
+            // Search both TMDB and PhimAPI in parallel
+            const [tmdbData, phimData] = await Promise.all([
+              movieService.search(searchQuery, page),
+              phimService.search(searchQuery, {
+                page,
+                limit: PHIM_PAGE_SIZE
+              }).catch(() => null),
+            ]);
+
+            // Set TMDB results
+            setMovies(tmdbData.results);
+            setTotalPages(tmdbData.total_pages);
+
+            // Extract and set PhimAPI results
+            const phimPayload = phimData?.data ?? phimData;
+            const phimResults = phimPayload?.items ?? phimPayload?.data?.items ?? [];
+            setPhimItems(phimResults.slice(0, PHIM_PAGE_SIZE));
           } else {
+            // No search query - clear phim items and use normal TMDB discover
+            setPhimItems([]);
             data = await movieService.discover({
               page,
               sort_by: sortBy,
@@ -266,10 +289,10 @@ const Browse = () => {
               certification_country: selectedCertification ? CERTIFICATION_COUNTRY : undefined,
               certification: selectedCertification?.tmdbCertification,
             });
-          }
 
-          setMovies(data.results);
-          setTotalPages(data.total_pages);
+            setMovies(data.results);
+            setTotalPages(data.total_pages);
+          }
         }
       } catch (error) {
         console.error('Error fetching movies:', error);
@@ -304,6 +327,9 @@ const Browse = () => {
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
+    // Reset visible counts when filters change
+    setVisibleMovieCount(16);
+    setVisiblePhimCount(16);
   }, [
     searchQuery,
     sortBy,
@@ -319,6 +345,31 @@ const Browse = () => {
     phimSortType,
     isPhimFilterActive,
   ]);
+
+  // Progressive rendering - load more items when scrolling
+  useEffect(() => {
+    if (!loadMoreRef.current || isLoading) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          if (isPhimMode && visiblePhimCount < phimItems.length) {
+            setVisiblePhimCount((prev) => Math.min(prev + 8, phimItems.length));
+          } else if (!isPhimMode && !searchQuery && visibleMovieCount < movies.length) {
+            setVisibleMovieCount((prev) => Math.min(prev + 8, movies.length));
+          } else if (searchQuery && (visibleMovieCount < movies.length || visiblePhimCount < phimItems.length)) {
+            setVisibleMovieCount((prev) => Math.min(prev + 8, movies.length));
+            setVisiblePhimCount((prev) => Math.min(prev + 8, phimItems.length));
+          }
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    observer.observe(loadMoreRef.current);
+
+    return () => observer.disconnect();
+  }, [isLoading, isPhimMode, phimItems.length, movies.length, searchQuery, visiblePhimCount, visibleMovieCount]);
 
   // Handle page change with scroll to top
   const handlePageChange = (newPage: number) => {
@@ -446,10 +497,13 @@ const Browse = () => {
             phimItems.length > 0 ? (
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 xl:grid-cols-8 2xl:grid-cols-8 gap-4 md:gap-6">
-                  {phimItems.map((item) => (
+                  {phimItems.slice(0, visiblePhimCount).map((item) => (
                     <PhimCard key={item._id || item.slug} item={item} />
                   ))}
                 </div>
+
+                {/* Load more sentinel */}
+                {visiblePhimCount < phimItems.length && <div ref={loadMoreRef} className="h-10" />}
 
                 {totalPages > 1 && (
                   <Pagination
@@ -473,13 +527,48 @@ const Browse = () => {
                 )}
               </div>
             )
+          ) : searchQuery ? (
+            // Search mode: Show both TMDB and PhimAPI results combined
+            (movies.length > 0 || phimItems.length > 0) ? (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 xl:grid-cols-8 2xl:grid-cols-8 gap-4 md:gap-6">
+                  {/* PhimAPI Results */}
+                  {phimItems.map((item) => (
+                    <PhimCard key={item._id || item.slug} item={item} />
+                  ))}
+
+                  {/* TMDB Results */}
+                  {movies.map((movie) => (
+                    <MovieCard key={movie.id} movie={movie} />
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <Pagination
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    maxPage={500}
+                  />
+                )}
+              </>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-400 text-lg">Không tìm thấy phim nào</p>
+              </div>
+            )
           ) : movies.length > 0 ? (
+            // Normal browse mode
             <>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 md:gap-6">
-                {movies.map((movie) => (
+                {movies.slice(0, visibleMovieCount).map((movie) => (
                   <MovieCard key={movie.id} movie={movie} />
                 ))}
               </div>
+
+              {/* Load more sentinel */}
+              {visibleMovieCount < movies.length && <div ref={loadMoreRef} className="h-10" />}
 
               {/* Pagination */}
               {totalPages > 1 && (

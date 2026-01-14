@@ -8,6 +8,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useMovies } from '@/hooks/useMovies';
 import { usePhim } from '@/hooks/usePhim';
 import MoviePopup from './MoviePopup';
+import LazyImage from '@/components/common/LazyImage';
 
 interface MovieCardProps {
   movie: Movie;
@@ -59,11 +60,11 @@ const MovieCard = ({ movie }: MovieCardProps) => {
 
   const handleMouseEnter = () => {
     if (isMobile) return;
-    // Set timeout to show popup after 500ms
+    // Set timeout to show popup after 1000ms (optimized for performance)
     hoverTimeoutRef.current = setTimeout(() => {
       setShouldFetchDetails(true);
       setShowPopup(true);
-    }, 500);
+    }, 1000);
   };
 
   const handleMouseLeave = () => {
@@ -108,11 +109,10 @@ const MovieCard = ({ movie }: MovieCardProps) => {
         >
           {/* Poster with Overlay Info */}
           <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gray-800">
-            <img
-              src={getImageUrl(movie.poster_path, 'poster', 'medium')}
+            <LazyImage
+              src={getImageUrl(movie.poster_path, 'poster')}
               alt={movie.title}
               className="w-full h-full object-cover"
-              loading="lazy"
             />
 
             {/* Dark gradient overlay */}

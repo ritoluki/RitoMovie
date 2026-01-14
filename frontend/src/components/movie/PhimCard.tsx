@@ -5,6 +5,7 @@ import { PhimMovieSummary } from '@/types';
 import { getPhimImageUrl, truncateText } from '@/utils/helpers';
 import { useMovies } from '@/hooks/useMovies';
 import PhimPopup from './PhimPopup';
+import LazyImage from '@/components/common/LazyImage';
 
 interface PhimCardProps {
     item: PhimMovieSummary;
@@ -64,7 +65,7 @@ const PhimCard = ({ item }: PhimCardProps) => {
         hoverTimeoutRef.current = setTimeout(() => {
             setShouldFetchDetails(true);
             setShowPopup(true);
-        }, 500);
+        }, 1000); // Increased from 500ms for performance
     };
 
     const handleMouseLeave = () => {
@@ -109,7 +110,7 @@ const PhimCard = ({ item }: PhimCardProps) => {
                     whileHover={{ scale: 1.04 }}
                     transition={{ duration: 0.25 }}
                 >
-                    <img src={poster} alt={item.name} className="h-full w-full object-cover" loading="lazy" />
+                    <LazyImage src={poster} alt={item.name} className="h-full w-full object-cover" />
 
                     {/* Dark gradient overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-80" />
