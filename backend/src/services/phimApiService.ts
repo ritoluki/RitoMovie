@@ -3,6 +3,73 @@ import ApiError from '../utils/ApiError';
 
 const PHIM_API_BASE_URL = process.env.PHIM_API_BASE_URL || 'https://phimapi.com';
 
+// Cache manager for failed requests
+interface CacheEntry {
+    timestamp: number;
+    errorType: 'NOT_FOUND' | 'TIMEOUT' | 'ERROR';
+}
+
+class CacheManager {
+    private cache: Map<string, CacheEntry> = new Map();
+    private pendingRequests: Map<string, Promise<unknown>> = new Map();
+    private readonly maxSize = 10000;
+    private readonly ttl = {
+        NOT_FOUND: 60 * 60 * 1000, // 1 hour for 404s (unlikely to change)
+        TIMEOUT: 5 * 60 * 1000,    // 5 minutes for timeouts (may be temporary)
+        ERROR: 10 * 60 * 1000,     // 10 minutes for other errors
+    };
+
+    isInCache(key: string): boolean {
+        const entry = this.cache.get(key);
+        if (!entry) return false;
+
+        const now = Date.now();
+        const ttl = this.ttl[entry.errorType];
+
+        if (now - entry.timestamp > ttl) {
+            this.cache.delete(key);
+            return false;
+        }
+
+        return true;
+    }
+
+    addToCache(key: string, errorType: CacheEntry['errorType']): void {
+        // LRU eviction: remove oldest entries if cache is full
+        if (this.cache.size >= this.maxSize) {
+            const firstKey = this.cache.keys().next().value;
+            if (firstKey) this.cache.delete(firstKey);
+        }
+
+        this.cache.set(key, {
+            timestamp: Date.now(),
+            errorType,
+        });
+    }
+
+    getPendingRequest<T>(key: string): Promise<T> | undefined {
+        return this.pendingRequests.get(key) as Promise<T> | undefined;
+    }
+
+    setPendingRequest<T>(key: string, promise: Promise<T>): void {
+        this.pendingRequests.set(key, promise);
+
+        // Clean up after request completes
+        promise.finally(() => {
+            this.pendingRequests.delete(key);
+        });
+    }
+
+    getCacheStats() {
+        return {
+            size: this.cache.size,
+            pendingRequests: this.pendingRequests.size,
+        };
+    }
+}
+
+const cacheManager = new CacheManager();
+
 export type Version = 'v1' | 'v2' | 'v3';
 
 export type SortType = 'asc' | 'desc';
@@ -25,8 +92,27 @@ type Nullable<T> = {
 
 const phimAxios = axios.create({
     baseURL: PHIM_API_BASE_URL,
-    timeout: 15000,
+    timeout: 30000, // Increased timeout to 30 seconds
+    headers: {
+        'Accept': 'application/json, text/plain, */*',
+        'User-Agent': 'RitoMovie/1.0',
+    },
 });
+
+// Add response interceptor for better error handling
+phimAxios.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+            console.warn(`[PhimAPI] Request timeout: ${error.config?.url}`);
+        } else if (error.response?.status === 404) {
+            console.warn(`[PhimAPI] Resource not found: ${error.config?.url}`);
+        } else {
+            console.error(`[PhimAPI] Request failed: ${error.message}`);
+        }
+        throw error;
+    }
+);
 
 interface StatusPayload {
     status: boolean;
@@ -74,8 +160,53 @@ export const getMovieBySlug = async (slug: string) => {
 };
 
 export const getMovieByTmdb = async (type: 'movie' | 'tv', tmdbId: number) => {
-    const response = await phimAxios.get(`/tmdb/${type}/${tmdbId}`);
-    return ensureSuccess(response.data);
+    const cacheKey = `tmdb:${type}:${tmdbId}`;
+
+    // Check if this request previously failed
+    if (cacheManager.isInCache(cacheKey)) {
+        console.debug(`[PhimAPI] Skipping cached failed request: ${cacheKey}`);
+        return null; // Return null instead of throwing error
+    }
+
+    // Check if there's already a pending request for this ID (deduplication)
+    const pendingRequest = cacheManager.getPendingRequest<unknown>(cacheKey);
+    if (pendingRequest) {
+        console.debug(`[PhimAPI] Reusing pending request: ${cacheKey}`);
+        return pendingRequest;
+    }
+
+    // Create new request
+    const requestPromise = (async () => {
+        try {
+            const response = await phimAxios.get(`/tmdb/${type}/${tmdbId}`);
+            return ensureSuccess(response.data);
+        } catch (error: unknown) {
+            // Classify error type
+            if (axios.isAxiosError(error)) {
+                if (error.response?.status === 404) {
+                    // 404: TMDB ID doesn't exist in PhimAPI - cache it
+                    cacheManager.addToCache(cacheKey, 'NOT_FOUND');
+                    console.debug(`[PhimAPI] TMDB ID not found, cached: ${cacheKey}`);
+                    return null;
+                } else if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+                    // Timeout: may be temporary - cache with shorter TTL
+                    cacheManager.addToCache(cacheKey, 'TIMEOUT');
+                    console.warn(`[PhimAPI] Request timeout, cached: ${cacheKey}`);
+                    return null;
+                }
+            }
+
+            // Other errors: cache with medium TTL
+            cacheManager.addToCache(cacheKey, 'ERROR');
+            console.error(`[PhimAPI] Request failed: ${cacheKey}`, error);
+            return null;
+        }
+    })();
+
+    // Store pending request for deduplication
+    cacheManager.setPendingRequest(cacheKey, requestPromise);
+
+    return requestPromise;
 };
 
 export const searchMovies = async (
@@ -231,3 +362,7 @@ export const getYearDetail = async (
 
     return ensureSuccess(response.data);
 };
+
+// Export cache stats for monitoring/debugging
+export const getCacheStats = () => cacheManager.getCacheStats();
+

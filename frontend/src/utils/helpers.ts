@@ -9,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 export function getImageUrl(
   path: string | null,
   type: 'poster' | 'backdrop' | 'profile' = 'poster',
-  size: 'small' | 'medium' | 'large' | 'xlarge' | 'original' = 'medium'
+  size: 'small' | 'medium' | 'large' | 'xlarge' | 'original' = 'small'
 ): string {
   if (!path) {
     return type === 'profile'

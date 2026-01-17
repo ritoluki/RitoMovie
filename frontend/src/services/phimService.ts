@@ -93,4 +93,15 @@ export const phimService = {
 
         return response.data;
     },
+
+    search: async (keyword: string, params?: Omit<CatalogQuery, 'category' | 'country'>): Promise<ApiResponse<PhimCatalogResponse>> => {
+        const response = await axios.get<ApiResponse<PhimCatalogResponse>>('/phim/search', {
+            params: {
+                keyword,
+                ...params,
+            },
+        });
+
+        return response.data;
+    },
 };
