@@ -49,6 +49,7 @@ backend/src/
 // File: backend/src/middleware/adminAuth.ts
 
 import { Request, Response, NextFunction } from 'express';
+import AuditLog from '../models/AuditLog';
 
 // Levels of admin access
 export enum AdminRole {
@@ -58,16 +59,71 @@ export enum AdminRole {
   ANALYST = 'analyst'              // View-only analytics
 }
 
+// All valid admin roles for validation
+const VALID_ADMIN_ROLES = Object.values(AdminRole);
+
 export const requireAdmin = (allowedRoles: AdminRole[] = [AdminRole.SUPER_ADMIN, AdminRole.ADMIN]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+    const userAgent = req.get('User-Agent') || 'unknown';
+    
     if (!req.user) {
-      return res.status(401).json({ success: false, message: 'Unauthorized' });
+      // Log unauthorized access attempt
+      await AuditLog.create({
+        action: 'UNAUTHORIZED_ACCESS',
+        resource: 'ADMIN_PANEL',
+        details: { 
+          message: 'Access attempt without authentication',
+          path: req.path 
+        },
+        ipAddress,
+        userAgent
+      });
+      
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Authentication required. Please login to access admin panel.' 
+      });
     }
     
-    if (!allowedRoles.includes(req.user.role)) {
+    // Validate that user role is a valid AdminRole
+    if (!VALID_ADMIN_ROLES.includes(req.user.role as AdminRole)) {
+      await AuditLog.create({
+        admin: req.user._id,
+        action: 'INSUFFICIENT_PERMISSIONS',
+        resource: 'ADMIN_PANEL',
+        details: { 
+          message: `Invalid role: ${req.user.role}`,
+          requiredRoles: allowedRoles,
+          path: req.path 
+        },
+        ipAddress,
+        userAgent
+      });
+      
       return res.status(403).json({ 
         success: false, 
-        message: 'Insufficient permissions' 
+        message: `Access denied. Your role '${req.user.role}' is not authorized. Required roles: ${allowedRoles.join(', ')}`
+      });
+    }
+    
+    if (!allowedRoles.includes(req.user.role as AdminRole)) {
+      await AuditLog.create({
+        admin: req.user._id,
+        action: 'INSUFFICIENT_PERMISSIONS',
+        resource: 'ADMIN_PANEL',
+        details: { 
+          message: `Role ${req.user.role} attempted to access restricted resource`,
+          requiredRoles: allowedRoles,
+          path: req.path 
+        },
+        ipAddress,
+        userAgent
+      });
+      
+      return res.status(403).json({ 
+        success: false, 
+        message: `Insufficient permissions. Required roles: ${allowedRoles.join(', ')}. Your role: ${req.user.role}`
       });
     }
     
@@ -76,55 +132,197 @@ export const requireAdmin = (allowedRoles: AdminRole[] = [AdminRole.SUPER_ADMIN,
 };
 ```
 
+#### 🔑 Admin User Bootstrapping
+
+Để tạo Super Admin đầu tiên, sử dụng một trong các phương pháp sau:
+
+**1. Qua Environment Variable (Recommended for production)**
+```bash
+# .env
+ADMIN_BOOTSTRAP_EMAIL=admin@ritomovie.live
+ADMIN_BOOTSTRAP_PASSWORD=SecurePassword123!
+```
+
+```typescript
+// File: backend/src/scripts/bootstrapAdmin.ts
+const bootstrapAdmin = async () => {
+  const adminExists = await User.findOne({ role: 'super_admin' });
+  if (!adminExists && process.env.ADMIN_BOOTSTRAP_EMAIL) {
+    await User.create({
+      email: process.env.ADMIN_BOOTSTRAP_EMAIL,
+      password: process.env.ADMIN_BOOTSTRAP_PASSWORD,
+      name: 'Super Admin',
+      role: 'super_admin'
+    });
+    console.log('Super Admin created successfully');
+  }
+};
+```
+
+**2. Qua CLI Command**
+```bash
+npm run admin:create -- --email admin@example.com --password SecurePass123
+```
+
+**3. Qua API (chỉ khi chưa có admin nào)**
+```typescript
+// POST /api/admin/bootstrap - Chỉ hoạt động khi chưa có super_admin
+```
+
 #### 📊 New Models Required
 
-**1. AuditLog Model** - Tracking all admin actions
+**1. AuditLog Model** - Tracking all admin actions (including security events)
 
 ```typescript
 // File: backend/src/models/AuditLog.ts
-interface IAuditLog {
-  admin: ObjectId;
-  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'LOGIN' | 'LOGOUT' | 'SETTINGS_CHANGE';
-  resource: 'USER' | 'MOVIE' | 'COMMENT' | 'RATING' | 'SETTINGS';
+import mongoose, { Document, Schema } from 'mongoose';
+
+// Define specific detail types for type safety
+interface AuditDetails {
+  message?: string;
+  path?: string;
+  requiredRoles?: string[];
+  oldValue?: Record<string, unknown>;
+  newValue?: Record<string, unknown>;
+  reason?: string;
+  targetEmail?: string;
+}
+
+interface IAuditLog extends Document {
+  admin?: mongoose.Types.ObjectId;  // Optional for unauthenticated events
+  action: 
+    | 'CREATE' | 'UPDATE' | 'DELETE' 
+    | 'LOGIN' | 'LOGOUT' | 'LOGIN_FAILED'
+    | 'UNAUTHORIZED_ACCESS' | 'INSUFFICIENT_PERMISSIONS'
+    | 'SETTINGS_CHANGE' | 'PASSWORD_RESET' | 'ROLE_CHANGE'
+    | 'BAN_USER' | 'UNBAN_USER';
+  resource: 'USER' | 'MOVIE' | 'COMMENT' | 'RATING' | 'SETTINGS' | 'ADMIN_PANEL';
   resourceId?: string;
-  details: Record<string, any>;
+  details: AuditDetails;
   ipAddress: string;
   userAgent: string;
   createdAt: Date;
 }
+
+const AuditLogSchema = new Schema({
+  admin: { type: Schema.Types.ObjectId, ref: 'User', sparse: true },
+  action: { type: String, required: true, enum: [
+    'CREATE', 'UPDATE', 'DELETE', 
+    'LOGIN', 'LOGOUT', 'LOGIN_FAILED',
+    'UNAUTHORIZED_ACCESS', 'INSUFFICIENT_PERMISSIONS',
+    'SETTINGS_CHANGE', 'PASSWORD_RESET', 'ROLE_CHANGE',
+    'BAN_USER', 'UNBAN_USER'
+  ]},
+  resource: { type: String, required: true, enum: ['USER', 'MOVIE', 'COMMENT', 'RATING', 'SETTINGS', 'ADMIN_PANEL'] },
+  resourceId: { type: String },
+  details: { type: Schema.Types.Mixed, default: {} },
+  ipAddress: { type: String, required: true },
+  userAgent: { type: String, required: true },
+}, { timestamps: true });
+
+// Database indexes for query performance
+AuditLogSchema.index({ admin: 1, createdAt: -1 });
+AuditLogSchema.index({ action: 1, createdAt: -1 });
+AuditLogSchema.index({ resource: 1, createdAt: -1 });
+AuditLogSchema.index({ createdAt: -1 }); // For chronological queries
+
+export default mongoose.model<IAuditLog>('AuditLog', AuditLogSchema);
 ```
 
 **2. SystemSetting Model** - Site configuration
 
 ```typescript
 // File: backend/src/models/SystemSetting.ts
-interface ISystemSetting {
+import mongoose, { Document, Schema } from 'mongoose';
+
+// Type-safe value using generics
+type SettingValue = string | number | boolean | Record<string, unknown>;
+
+interface ISystemSetting extends Document {
   key: string;
-  value: any;
+  value: SettingValue;
   type: 'string' | 'number' | 'boolean' | 'json';
   category: 'general' | 'appearance' | 'email' | 'seo' | 'security';
   description: string;
-  updatedBy: ObjectId;
+  isSecret?: boolean; // Ẩn giá trị trong logs (passwords, API keys)
+  updatedBy: mongoose.Types.ObjectId;
   updatedAt: Date;
 }
+
+const SystemSettingSchema = new Schema({
+  key: { type: String, required: true, unique: true },
+  value: { type: Schema.Types.Mixed, required: true },
+  type: { type: String, required: true, enum: ['string', 'number', 'boolean', 'json'] },
+  category: { type: String, required: true, enum: ['general', 'appearance', 'email', 'seo', 'security'] },
+  description: { type: String, required: true },
+  isSecret: { type: Boolean, default: false },
+  updatedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true }
+}, { timestamps: true });
+
+// Index for category-based queries
+SystemSettingSchema.index({ category: 1 });
+
+export default mongoose.model<ISystemSetting>('SystemSetting', SystemSettingSchema);
 ```
 
 **3. Report Model** - User reports & flags
 
 ```typescript
 // File: backend/src/models/Report.ts
-interface IReport {
-  reporter: ObjectId;
+import mongoose, { Document, Schema } from 'mongoose';
+
+interface IReport extends Document {
+  reporter: mongoose.Types.ObjectId;
   type: 'COMMENT' | 'USER' | 'MOVIE' | 'BUG';
-  targetId: string;
-  reason: string;
+  targetId: mongoose.Types.ObjectId | string; // ObjectId for COMMENT/USER/MOVIE, string for BUG
+  targetModel?: 'Comment' | 'User' | 'Movie'; // Giúp populate dynamic reference
+  reason: 'SPAM' | 'HARASSMENT' | 'INAPPROPRIATE' | 'SPOILER' | 'COPYRIGHT' | 'BUG_REPORT' | 'OTHER';
   description: string;
-  status: 'PENDING' | 'REVIEWED' | 'RESOLVED' | 'REJECTED';
-  reviewedBy?: ObjectId;
+  status: 'PENDING' | 'REVIEWING' | 'RESOLVED' | 'REJECTED';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  reviewedBy?: mongoose.Types.ObjectId;
   resolution?: string;
+  resolvedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
+
+const ReportSchema = new Schema({
+  reporter: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  type: { type: String, required: true, enum: ['COMMENT', 'USER', 'MOVIE', 'BUG'] },
+  targetId: { type: Schema.Types.Mixed, required: true },
+  targetModel: { type: String, enum: ['Comment', 'User', 'Movie'] },
+  reason: { 
+    type: String, 
+    required: true, 
+    enum: ['SPAM', 'HARASSMENT', 'INAPPROPRIATE', 'SPOILER', 'COPYRIGHT', 'BUG_REPORT', 'OTHER'] 
+  },
+  description: { type: String, required: true, maxlength: 1000 },
+  status: { type: String, required: true, enum: ['PENDING', 'REVIEWING', 'RESOLVED', 'REJECTED'], default: 'PENDING' },
+  priority: { type: String, enum: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'], default: 'MEDIUM' },
+  reviewedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+  resolution: { type: String, maxlength: 500 },
+  resolvedAt: { type: Date }
+}, { timestamps: true });
+
+// Indexes for report management
+ReportSchema.index({ status: 1, createdAt: -1 });
+ReportSchema.index({ type: 1, status: 1 });
+ReportSchema.index({ priority: 1, status: 1 });
+ReportSchema.index({ reporter: 1, createdAt: -1 });
+
+// Validation middleware to ensure targetModel matches type
+ReportSchema.pre('save', function(next) {
+  if (this.type === 'BUG') {
+    this.targetModel = undefined;
+  } else {
+    this.targetModel = this.type === 'COMMENT' ? 'Comment' : 
+                       this.type === 'USER' ? 'User' : 'Movie';
+  }
+  next();
+});
+
+export default mongoose.model<IReport>('Report', ReportSchema);
 ```
 
 ### 1.2 Frontend - Admin Module Setup
@@ -315,9 +513,16 @@ DELETE /api/admin/genres/:id            - Delete genre
 GET    /api/admin/comments           - List all comments
 PUT    /api/admin/comments/:id       - Update comment status
 DELETE /api/admin/comments/:id       - Delete comment
-GET    /api/admin/reports            - List reports
-PUT    /api/admin/reports/:id        - Review report
-POST   /api/admin/reports/:id/action - Take action on report
+
+# Report Management - Clear action-based endpoints
+GET    /api/admin/reports                 - List reports (with filters: type, status, priority)
+GET    /api/admin/reports/:id             - Get report details
+PUT    /api/admin/reports/:id/status      - Update report status (REVIEWING, RESOLVED, REJECTED)
+PUT    /api/admin/reports/:id/priority    - Update report priority
+POST   /api/admin/reports/:id/resolve     - Resolve report with action taken
+POST   /api/admin/reports/:id/reject      - Reject report with reason
+
+# Moderation Rules
 GET    /api/admin/moderation/rules   - Get moderation rules
 PUT    /api/admin/moderation/rules   - Update moderation rules
 ```
@@ -465,31 +670,54 @@ GET /api/admin/audit-logs/export     - Export logs
 
 ### 5.1 Testing Strategy
 
+#### Testing Frameworks & Tools:
+- **Backend Testing**:
+  - **Jest**: Unit testing framework
+  - **Supertest**: HTTP integration testing
+  - **MongoDB Memory Server**: Database testing in isolation
+  
+- **Frontend Testing**:
+  - **Jest + React Testing Library**: Component testing
+  - **MSW (Mock Service Worker)**: API mocking
+  - **Playwright/Cypress**: E2E testing
+
+#### Test Coverage Requirements:
+- **Controllers**: Minimum 80% coverage
+- **Services**: Minimum 90% coverage
+- **Utilities**: Minimum 95% coverage
+- **Critical Paths**: 100% coverage (auth, payments)
+
+#### Test Categories:
 - **Unit Tests**: Controllers, services, utilities
-- **Integration Tests**: API endpoints
-- **E2E Tests**: Critical user flows
-- **Security Testing**: Authentication, authorization
+- **Integration Tests**: API endpoints với database thực
+- **E2E Tests**: Critical user flows (login, CRUD operations)
+- **Security Testing**: Authentication, authorization, input validation
 
 ### 5.2 Performance Optimization
 
 - **API Optimization**:
-  - Database indexes
-  - Query optimization
-  - Caching (Redis recommended)
+  - Database indexes (đã định nghĩa trong models)
+  - Query optimization với aggregation pipelines
+  - Caching với **Redis** (recommended cho production với multiple instances)
+  - Lưu ý: `node-cache` chỉ phù hợp cho single-instance development
 - **Frontend Optimization**:
-  - Code splitting
-  - Lazy loading
-  - Image optimization
-  - Memoization
+  - Code splitting theo routes
+  - Lazy loading components
+  - Image optimization với WebP
+  - Memoization với React.memo và useMemo
 
 ### 5.3 Security Hardening
 
-- Rate limiting on admin routes
-- CSRF protection
-- Input sanitization
-- SQL injection prevention
-- XSS protection
-- Session management
+- Rate limiting trên admin routes (sử dụng `rate-limiter-flexible`)
+- CSRF protection với `csurf` middleware
+- Input sanitization với `express-validator` và `sanitize-html`
+- **NoSQL Injection prevention**:
+  - Sử dụng Mongoose schema validation
+  - Tránh string concatenation trong queries
+  - Sử dụng đúng MongoDB query operators
+  - Sanitize user inputs trước khi query
+- XSS protection với `helmet` và content security policy
+- Session management với secure cookies và token rotation
 
 ---
 
@@ -564,19 +792,23 @@ GET /api/admin/audit-logs/export     - Export logs
 ### New Dependencies - Backend:
 ```json
 {
-  "chart.js": "For analytics charts",
   "pdfkit": "PDF report generation",
   "exceljs": "Excel export",
-  "node-cache": "In-memory caching",
+  "redis": "Production caching (multi-instance support)",
+  "ioredis": "Redis client cho Node.js",
   "winston": "Advanced logging",
-  "rate-limiter-flexible": "Rate limiting"
+  "rate-limiter-flexible": "Rate limiting",
+  "csurf": "CSRF protection",
+  "sanitize-html": "HTML sanitization"
 }
 ```
 
 ### New Dependencies - Frontend:
 ```json
 {
-  "recharts": "Charts library",
+  "recharts": "Charts library (React-optimized)",
+  "chart.js": "Alternative charting library",
+  "react-chartjs-2": "React wrapper for Chart.js",
   "@tanstack/react-table": "Advanced data tables",
   "react-quill": "Rich text editor",
   "react-dropzone": "File uploads",
