@@ -221,9 +221,10 @@ Tham khảo chi tiết trong ADMIN_PANEL_PLAN.md
 #### TASK-013: Tạo Admin Service
 - **Status**: ⬜ Not Started
 - **Priority**: 🔴 High
-- **Dependencies**: None
+- **Dependencies**: None (sử dụng existing axios config từ `frontend/src/lib/axios.ts`)
 - **File**: `frontend/src/admin/services/adminService.ts`
 - **Description**: API service cho admin endpoints
+- **Note**: Tham khảo API endpoints trong ADMIN_PANEL_PLAN.md và TASK-005
 - **Acceptance Criteria**:
   - [ ] Dashboard API calls
   - [ ] User management API calls
@@ -250,13 +251,13 @@ Tham khảo chi tiết trong ADMIN_PANEL_PLAN.md
 #### TASK-015: Tạo Admin Dashboard Page
 - **Status**: ⬜ Not Started
 - **Priority**: 🔴 High
-- **Dependencies**: TASK-011, TASK-012, TASK-013
+- **Dependencies**: TASK-011, TASK-012, TASK-013, TASK-022, TASK-023
 - **File**: `frontend/src/admin/pages/AdminDashboard.tsx`
 - **Description**: Trang dashboard chính
 - **Spec Reference**: ADMIN_PANEL_PLAN.md > Phase 2 > Dashboard Module
 - **Acceptance Criteria**:
-  - [ ] StatCards cho overview statistics
-  - [ ] Charts (line, bar, pie)
+  - [ ] StatCards cho overview statistics (cần TASK-022)
+  - [ ] Charts (line, bar, pie) (cần TASK-023)
   - [ ] Recent activity feed
   - [ ] Quick actions
 
@@ -265,7 +266,7 @@ Tham khảo chi tiết trong ADMIN_PANEL_PLAN.md
 #### TASK-016: Tạo Admin Users Page
 - **Status**: ⬜ Not Started
 - **Priority**: 🔴 High
-- **Dependencies**: TASK-011, TASK-012, TASK-013
+- **Dependencies**: TASK-011, TASK-012, TASK-013, TASK-021, TASK-024
 - **File**: `frontend/src/admin/pages/AdminUsers.tsx`
 - **Description**: Trang quản lý users
 - **Spec Reference**: ADMIN_PANEL_PLAN.md > Phase 2 > User Management
@@ -281,12 +282,12 @@ Tham khảo chi tiết trong ADMIN_PANEL_PLAN.md
 #### TASK-017: Tạo Admin Movies Page
 - **Status**: ⬜ Not Started
 - **Priority**: 🔴 High
-- **Dependencies**: TASK-011, TASK-012, TASK-013
+- **Dependencies**: TASK-011, TASK-012, TASK-013, TASK-021, TASK-024
 - **File**: `frontend/src/admin/pages/AdminMovies.tsx`
 - **Description**: Trang quản lý movies
 - **Spec Reference**: ADMIN_PANEL_PLAN.md > Phase 2 > Movie Management
 - **Acceptance Criteria**:
-  - [ ] DataTable với pagination
+  - [ ] DataTable với pagination (cần TASK-021)
   - [ ] Search và filter
   - [ ] Add/Edit movie form
   - [ ] TMDB import functionality
@@ -297,11 +298,11 @@ Tham khảo chi tiết trong ADMIN_PANEL_PLAN.md
 #### TASK-018: Tạo Admin Comments Page
 - **Status**: ⬜ Not Started
 - **Priority**: 🟡 Medium
-- **Dependencies**: TASK-011, TASK-012, TASK-013
+- **Dependencies**: TASK-011, TASK-012, TASK-013, TASK-021
 - **File**: `frontend/src/admin/pages/AdminComments.tsx`
 - **Description**: Trang moderation comments
 - **Acceptance Criteria**:
-  - [ ] Comment list với filters
+  - [ ] Comment list với filters (cần TASK-021)
   - [ ] Approve/Reject actions
   - [ ] Delete comment
   - [ ] View in context
@@ -311,11 +312,11 @@ Tham khảo chi tiết trong ADMIN_PANEL_PLAN.md
 #### TASK-019: Tạo Admin Reports Page
 - **Status**: ⬜ Not Started
 - **Priority**: 🟡 Medium
-- **Dependencies**: TASK-011, TASK-012, TASK-013
+- **Dependencies**: TASK-011, TASK-012, TASK-013, TASK-021
 - **File**: `frontend/src/admin/pages/AdminReports.tsx`
 - **Description**: Trang xử lý reports
 - **Acceptance Criteria**:
-  - [ ] Report queue
+  - [ ] Report queue (cần TASK-021)
   - [ ] Filter by type, status, priority
   - [ ] Review và resolve workflow
   - [ ] Action buttons
@@ -547,14 +548,39 @@ Tham khảo chi tiết trong ADMIN_PANEL_PLAN.md
 
 ## 🚀 QUICK START FOR AI AGENT
 
-### Bắt đầu Phase 1:
+### Bắt đầu Phase 1 - Backend Models (có thể làm song song):
 ```
-Thực hiện các tasks theo thứ tự:
-1. TASK-001 (AuditLog Model) - không có dependency
-2. TASK-002 (SystemSetting Model) - không có dependency  
-3. TASK-003 (Report Model) - không có dependency
-4. TASK-004 (Admin Middleware) - cần TASK-001
-5. TASK-005 (Admin Routes) - cần TASK-004
+Các tasks không có dependency - có thể làm SONG SONG:
+- TASK-001 (AuditLog Model)
+- TASK-002 (SystemSetting Model)  
+- TASK-003 (Report Model)
+
+Sau khi hoàn thành các models trên:
+- TASK-004 (Admin Middleware) - cần TASK-001
+- TASK-005 (Admin Routes) - cần TASK-004
+```
+
+### Bắt đầu Phase 1 - Frontend Components (có thể làm song song):
+```
+Các tasks không có dependency - có thể làm SONG SONG:
+- TASK-011 (Admin Layout)
+- TASK-021 (DataTable Component)
+- TASK-022 (StatCard Component)
+- TASK-023 (ChartWrapper Component)
+- TASK-024 (ConfirmDialog Component)
+- TASK-013 (Admin Service)
+
+Sau khi hoàn thành layout:
+- TASK-012 (Admin Routes) - cần TASK-011
+```
+
+### Dependency Flow:
+```
+Backend:
+TASK-001/002/003 (parallel) → TASK-004 → TASK-005 → TASK-006/007/008/009/010 (parallel)
+
+Frontend:
+TASK-011 + TASK-021/022/023/024 (parallel) → TASK-012 → TASK-013 → TASK-015/016/017/018/019 (với common components)
 ```
 
 ### Mẫu prompt cho AI:
@@ -565,6 +591,19 @@ Hãy thực hiện TASK-001 trong file ADMIN_TASKS.md:
 - Đảm bảo code follow TypeScript best practices
 - Khi hoàn thành, update checkbox trong ADMIN_TASKS.md
 - Commit với message: "feat(admin): implement AuditLog model [TASK-001]"
+```
+
+### Mẫu prompt làm nhiều tasks song song:
+```
+Hãy thực hiện đồng thời các tasks sau (không có dependency lẫn nhau):
+- TASK-001: Tạo AuditLog Model
+- TASK-002: Tạo SystemSetting Model
+- TASK-003: Tạo Report Model
+
+Với mỗi task:
+- Đọc spec trong ADMIN_PANEL_PLAN.md
+- Tạo file tương ứng
+- Update checkbox khi hoàn thành
 ```
 
 ---

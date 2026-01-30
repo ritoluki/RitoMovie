@@ -35,7 +35,7 @@ Dự án sử dụng hệ thống task tracking trong các files:
 ### Backend
 - Controllers: Thin controllers, business logic trong services
 - Error handling: Sử dụng asyncHandler và ApiError
-- Validation: express-validator cho input validation
+- Validation: express-validator (đã có trong project) cho input validation
 - Follow existing patterns trong `backend/src/controllers/`
 
 ### Frontend
@@ -119,7 +119,14 @@ export const getUsers = asyncHandler(async (req, res, next) => {
 
 ### Frontend Service Example
 ```typescript
+// Import existing axios instance - đã có sẵn trong project
 import api from '@/lib/axios';
+
+// Axios instance đã được config sẵn với:
+// - baseURL: API_BASE_URL từ constants
+// - Token handling từ localStorage/sessionStorage
+// - Error interceptors
+// - Accept-Language header cho i18n
 
 export const adminService = {
   // Dashboard
