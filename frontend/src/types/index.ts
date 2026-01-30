@@ -134,13 +134,20 @@ export interface MovieImages {
 }
 
 // User types
+export type UserRole = 'user' | 'moderator' | 'analyst' | 'admin' | 'super_admin';
+
 export interface User {
   _id: string;
   email: string;
   name: string;
   avatar?: string;
-  role: 'user' | 'admin';
+  role: UserRole;
   watchlist: number[];
+  isBanned?: boolean;
+  banReason?: string;
+  bannedAt?: string;
+  lastLoginAt?: string;
+  loginCount?: number;
   createdAt: string;
   updatedAt: string;
 }

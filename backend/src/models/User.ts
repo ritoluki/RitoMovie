@@ -2,13 +2,23 @@ import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
+export type UserRole = 'user' | 'moderator' | 'analyst' | 'admin' | 'super_admin';
+
 export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
   avatar?: string;
-  role: 'user' | 'admin';
+  role: UserRole;
   watchlist: number[];
+  // Ban fields
+  isBanned: boolean;
+  banReason?: string;
+  bannedAt?: Date;
+  bannedBy?: mongoose.Types.ObjectId;
+  // Stats
+  lastLoginAt?: Date;
+  loginCount: number;
   createdAt: Date;
   updatedAt: Date;
   matchPassword(enteredPassword: string): Promise<boolean>;
@@ -46,7 +56,7 @@ const UserSchema: Schema = new Schema(
     },
     role: {
       type: String,
-      enum: ['user', 'admin'],
+      enum: ['user', 'moderator', 'analyst', 'admin', 'super_admin'],
       default: 'user',
     },
     watchlist: [
@@ -54,6 +64,29 @@ const UserSchema: Schema = new Schema(
         type: Number,
       },
     ],
+    // Ban fields
+    isBanned: {
+      type: Boolean,
+      default: false,
+    },
+    banReason: {
+      type: String,
+    },
+    bannedAt: {
+      type: Date,
+    },
+    bannedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    // Stats
+    lastLoginAt: {
+      type: Date,
+    },
+    loginCount: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

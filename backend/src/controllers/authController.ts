@@ -6,6 +6,13 @@ import ApiError from '../utils/ApiError';
 // Type for i18n request with translation function
 type TFunction = (key: string, options?: Record<string, unknown>) => string;
 
+// Helper to get translation with fallback
+const getTranslation = (t: TFunction, key: string, fallback: string, options?: Record<string, unknown>): string => {
+  const result = t(key, options);
+  // If translation returns the key itself, use fallback
+  return result === key ? (options ? fallback.replace(/\{\{(\w+)\}\}/g, (_, k) => String(options[k] || '')) : fallback) : result;
+};
+
 // @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
@@ -17,7 +24,7 @@ export const register = asyncHandler(
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      throw new ApiError(400, t('auth.emailExists'));
+      throw new ApiError(400, getTranslation(t, 'auth.emailExists', 'Email already exists'));
     }
 
     // Create user
@@ -32,7 +39,7 @@ export const register = asyncHandler(
 
     res.status(201).json({
       success: true,
-      message: t('auth.registerSuccess'),
+      message: getTranslation(t, 'auth.registerSuccess', 'Registration successful'),
       data: {
         user: {
           _id: user._id,
@@ -59,29 +66,40 @@ export const login = asyncHandler(
 
     // Validate email & password
     if (!email || !password) {
-      throw new ApiError(400, t('validation.required', { field: 'Email and password' }));
+      throw new ApiError(400, getTranslation(t, 'validation.required', 'Email and password are required', { field: 'Email and password' }));
     }
 
     // Check for user (include password for comparison)
     const user = await User.findOne({ email }).select('+password');
 
     if (!user) {
-      throw new ApiError(401, t('auth.invalidCredentials'));
+      throw new ApiError(401, getTranslation(t, 'auth.invalidCredentials', 'Invalid email or password'));
     }
 
     // Check if password matches
     const isMatch = await user.matchPassword(password);
 
     if (!isMatch) {
-      throw new ApiError(401, t('auth.invalidCredentials'));
+      throw new ApiError(401, getTranslation(t, 'auth.invalidCredentials', 'Invalid email or password'));
     }
+
+    // Check if user is banned
+    if (user.isBanned) {
+      const banReason = user.banReason || 'Violation of terms';
+      throw new ApiError(403, getTranslation(t, 'auth.accountBanned', `Your account has been banned. Reason: ${banReason}`, { reason: banReason }));
+    }
+
+    // Update login stats
+    user.lastLoginAt = new Date();
+    user.loginCount = (user.loginCount || 0) + 1;
+    await user.save();
 
     // Generate token with appropriate expiry based on rememberMe
     const token = user.getSignedJwtToken(rememberMe);
 
     res.status(200).json({
       success: true,
-      message: t('auth.loginSuccess'),
+      message: getTranslation(t, 'auth.loginSuccess', 'Login successful'),
       data: {
         user: {
           _id: user._id,
@@ -107,7 +125,7 @@ export const googleLogin = asyncHandler(
     const t: TFunction = (req as unknown as { t: TFunction }).t || ((key: string) => key);
 
     if (!credential) {
-      throw new ApiError(400, t('validation.required', { field: 'Google credential' }));
+      throw new ApiError(400, getTranslation(t, 'validation.required', 'Google credential is required', { field: 'Google credential' }));
     }
 
     try {
@@ -153,7 +171,7 @@ export const googleLogin = asyncHandler(
 
       res.status(200).json({
         success: true,
-        message: t('auth.loginSuccess'),
+        message: getTranslation(t, 'auth.loginSuccess', 'Login successful'),
         data: {
           user: {
             _id: user._id,
@@ -215,7 +233,7 @@ export const updateProfile = asyncHandler(
 
     res.status(200).json({
       success: true,
-      message: t('auth.profileUpdated'),
+      message: getTranslation(t, 'auth.profileUpdated', 'Profile updated successfully'),
       data: user,
     });
   }
@@ -230,20 +248,20 @@ export const updatePassword = asyncHandler(
     const t: TFunction = (req as unknown as { t: TFunction }).t || ((key: string) => key);
 
     if (!currentPassword || !newPassword) {
-      throw new ApiError(400, t('validation.required', { field: 'Current and new password' }));
+      throw new ApiError(400, getTranslation(t, 'validation.required', 'Current and new password are required', { field: 'Current and new password' }));
     }
 
     const user = await User.findById(req.user.id).select('+password');
 
     if (!user) {
-      throw new ApiError(404, t('user.notFound'));
+      throw new ApiError(404, getTranslation(t, 'user.notFound', 'User not found'));
     }
 
     // Check current password
     const isMatch = await user.matchPassword(currentPassword);
 
     if (!isMatch) {
-      throw new ApiError(401, t('auth.invalidCredentials'));
+      throw new ApiError(401, getTranslation(t, 'auth.incorrectPassword', 'Current password is incorrect'));
     }
 
     user.password = newPassword;
@@ -253,7 +271,7 @@ export const updatePassword = asyncHandler(
 
     res.status(200).json({
       success: true,
-      message: t('auth.profileUpdated'),
+      message: getTranslation(t, 'auth.passwordUpdated', 'Password updated successfully'),
       data: { token },
     });
   }

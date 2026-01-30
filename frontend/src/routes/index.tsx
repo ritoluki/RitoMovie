@@ -16,12 +16,18 @@ const Register = lazy(() => import('@/pages/Register'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 const SkeletonTest = lazy(() => import('@/pages/SkeletonTest'));
 
+// Admin routes
+const AdminRoutes = lazy(() => import('@/admin/routes/AdminRoutes'));
+
 const AppRoutes = () => {
   return (
     <Suspense fallback={<LoadingSpinner fullScreen />}>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
+        {/* Admin Panel */}
+        <Route path="/admin/*" element={<AdminRoutes />} />
 
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />

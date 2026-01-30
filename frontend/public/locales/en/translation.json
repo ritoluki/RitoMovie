@@ -31,7 +31,8 @@
     "signIn": "Sign In",
     "genres": "Genres",
     "countries": "Countries",
-    "tagline": "Great movies, watch now!"
+    "tagline": "Great movies, watch now!",
+    "adminDashboard": "Admin Dashboard"
   },
   "home": {
     "popularMovies": "Popular Movies",
@@ -194,7 +195,12 @@
     "monthsAgo": "{{count}} months ago",
     "oneMonthAgo": "1 month ago",
     "yearsAgo": "{{count}} years ago",
-    "oneYearAgo": "1 year ago"
+    "oneYearAgo": "1 year ago",
+    "spoiler": "Spoiler",
+    "revealSpoiler": "Click to reveal spoiler",
+    "hideSpoiler": "Hide spoiler",
+    "reveal": "Reveal",
+    "hide": "Hide"
   },
   "footer": {
     "tagline": "Your favorite destination for streaming the best movies and TV shows.",

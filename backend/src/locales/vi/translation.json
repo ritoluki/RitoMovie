@@ -9,7 +9,10 @@
     "loginSuccess": "Đăng nhập thành công",
     "registerSuccess": "Đăng ký thành công",
     "logoutSuccess": "Đăng xuất thành công",
-    "profileUpdated": "Cập nhật hồ sơ thành công"
+    "profileUpdated": "Cập nhật hồ sơ thành công",
+    "accountBanned": "Tài khoản của bạn đã bị khóa. Lý do: {{reason}}",
+    "passwordUpdated": "Cập nhật mật khẩu thành công",
+    "incorrectPassword": "Mật khẩu hiện tại không đúng"
   },
   "validation": {
     "required": "{{field}} là bắt buộc",

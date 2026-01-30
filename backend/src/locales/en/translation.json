@@ -9,7 +9,10 @@
     "loginSuccess": "Login successful",
     "registerSuccess": "Registration successful",
     "logoutSuccess": "Logout successful",
-    "profileUpdated": "Profile updated successfully"
+    "profileUpdated": "Profile updated successfully",
+    "accountBanned": "Your account has been banned. Reason: {{reason}}",
+    "passwordUpdated": "Password updated successfully",
+    "incorrectPassword": "Current password is incorrect"
   },
   "validation": {
     "required": "{{field}} is required",

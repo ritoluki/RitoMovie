@@ -29,165 +29,165 @@ Tham khảo chi tiết trong ADMIN_PANEL_PLAN.md
 ### Backend Infrastructure
 
 #### TASK-001: Tạo AuditLog Model
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🔴 High
 - **Dependencies**: None
 - **File**: `backend/src/models/AuditLog.ts`
 - **Description**: Tạo model để tracking tất cả admin actions
 - **Spec Reference**: ADMIN_PANEL_PLAN.md > Phase 1 > AuditLog Model
 - **Acceptance Criteria**:
-  - [ ] Schema với các fields: admin, action, resource, resourceId, details, ipAddress, userAgent
-  - [ ] Indexes cho query performance
-  - [ ] TypeScript interface đầy đủ
-  - [ ] Export default model
+  - [x] Schema với các fields: admin, action, resource, resourceId, details, ipAddress, userAgent
+  - [x] Indexes cho query performance
+  - [x] TypeScript interface đầy đủ
+  - [x] Export default model
 
 ---
 
 #### TASK-002: Tạo SystemSetting Model
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🟡 Medium
 - **Dependencies**: None
 - **File**: `backend/src/models/SystemSetting.ts`
 - **Description**: Tạo model để lưu site configuration
 - **Spec Reference**: ADMIN_PANEL_PLAN.md > Phase 1 > SystemSetting Model
 - **Acceptance Criteria**:
-  - [ ] Schema với key, value, type, category, description
-  - [ ] Index cho category-based queries
-  - [ ] Type-safe value handling
+  - [x] Schema với key, value, type, category, description
+  - [x] Index cho category-based queries
+  - [x] Type-safe value handling
 
 ---
 
 #### TASK-003: Tạo Report Model
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🟡 Medium
 - **Dependencies**: None
 - **File**: `backend/src/models/Report.ts`
 - **Description**: Tạo model để xử lý user reports & flags
 - **Spec Reference**: ADMIN_PANEL_PLAN.md > Phase 1 > Report Model
 - **Acceptance Criteria**:
-  - [ ] Schema đầy đủ với validation
-  - [ ] Pre-save middleware để set targetModel
-  - [ ] Indexes cho report management
+  - [x] Schema đầy đủ với validation
+  - [x] Pre-save middleware để set targetModel
+  - [x] Indexes cho report management
 
 ---
 
 #### TASK-004: Tạo Admin Authorization Middleware
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🔴 High
 - **Dependencies**: TASK-001
 - **File**: `backend/src/middleware/adminAuth.ts`
 - **Description**: Tạo middleware kiểm tra quyền admin với security logging
 - **Spec Reference**: ADMIN_PANEL_PLAN.md > Phase 1 > Enhanced Authorization Middleware
 - **Acceptance Criteria**:
-  - [ ] AdminRole enum (SUPER_ADMIN, ADMIN, MODERATOR, ANALYST)
-  - [ ] requireAdmin function với role validation
-  - [ ] Security event logging cho failed attempts
-  - [ ] Descriptive error messages
+  - [x] AdminRole enum (SUPER_ADMIN, ADMIN, MODERATOR, ANALYST)
+  - [x] requireAdmin function với role validation
+  - [x] Security event logging cho failed attempts
+  - [x] Descriptive error messages
 
 ---
 
 #### TASK-005: Tạo Admin Routes
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🔴 High
 - **Dependencies**: TASK-004
 - **File**: `backend/src/routes/admin.ts`
 - **Description**: Setup route structure cho admin API
 - **Spec Reference**: ADMIN_PANEL_PLAN.md > All API Endpoints
 - **Acceptance Criteria**:
-  - [ ] Route prefix /api/admin
-  - [ ] Apply protect và requireAdmin middleware
-  - [ ] Import từ các admin controllers
-  - [ ] Register trong server.ts
+  - [x] Route prefix /api/admin
+  - [x] Apply protect và requireAdmin middleware
+  - [x] Import từ các admin controllers
+  - [x] Register trong server.ts
 
 ---
 
 #### TASK-006: Tạo Admin Dashboard Controller
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🔴 High
 - **Dependencies**: TASK-005
 - **File**: `backend/src/controllers/admin/adminDashboardController.ts`
 - **Description**: Controller xử lý dashboard statistics
 - **Spec Reference**: ADMIN_PANEL_PLAN.md > Phase 2 > Dashboard Module
 - **Acceptance Criteria**:
-  - [ ] getStats - tổng số users, movies, comments, ratings
-  - [ ] getCharts - data cho biểu đồ
-  - [ ] getActivity - recent activity feed
-  - [ ] getAlerts - system alerts
+  - [x] getStats - tổng số users, movies, comments, ratings
+  - [x] getCharts - data cho biểu đồ
+  - [x] getActivity - recent activity feed
+  - [x] getAlerts - system alerts
 
 ---
 
 #### TASK-007: Tạo Admin User Controller
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🔴 High
 - **Dependencies**: TASK-005
 - **File**: `backend/src/controllers/admin/adminUserController.ts`
 - **Description**: Controller quản lý users
 - **Spec Reference**: ADMIN_PANEL_PLAN.md > Phase 2 > User Management
 - **Acceptance Criteria**:
-  - [ ] listUsers - paginated với search, filter, sort
-  - [ ] getUserDetails - chi tiết user
-  - [ ] updateUser - cập nhật thông tin
-  - [ ] changeUserRole - thay đổi role
-  - [ ] banUser / unbanUser - ban/unban user
-  - [ ] deleteUser - xóa user
-  - [ ] bulkAction - xử lý hàng loạt
+  - [x] listUsers - paginated với search, filter, sort
+  - [x] getUserDetails - chi tiết user
+  - [x] updateUser - cập nhật thông tin
+  - [x] changeUserRole - thay đổi role
+  - [x] banUser / unbanUser - ban/unban user
+  - [x] deleteUser - xóa user
+  - [x] bulkAction - xử lý hàng loạt
 
 ---
 
 #### TASK-008: Tạo Admin Movie Controller
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🔴 High
 - **Dependencies**: TASK-005
 - **File**: `backend/src/controllers/admin/adminMovieController.ts`
 - **Description**: Controller quản lý movies
 - **Spec Reference**: ADMIN_PANEL_PLAN.md > Phase 2 > Movie Management
 - **Acceptance Criteria**:
-  - [ ] listMovies - paginated với filters
-  - [ ] createMovie - thêm phim mới
-  - [ ] updateMovie - cập nhật phim
-  - [ ] deleteMovie - xóa phim
-  - [ ] setFeatured - đặt phim nổi bật
-  - [ ] importFromTMDB - import từ TMDB
+  - [x] listMovies - paginated với filters
+  - [x] createMovie - thêm phim mới
+  - [x] updateMovie - cập nhật phim
+  - [x] deleteMovie - xóa phim
+  - [x] setFeatured - đặt phim nổi bật
+  - [x] importFromTMDB - import từ TMDB
 
 ---
 
 #### TASK-009: Tạo Admin Comment Controller
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🟡 Medium
 - **Dependencies**: TASK-005
 - **File**: `backend/src/controllers/admin/adminCommentController.ts`
 - **Description**: Controller quản lý comments và moderation
 - **Spec Reference**: ADMIN_PANEL_PLAN.md > Phase 2 > Comment Moderation
 - **Acceptance Criteria**:
-  - [ ] listComments - tất cả comments
-  - [ ] updateCommentStatus - approve/reject
-  - [ ] deleteComment - xóa comment
-  - [ ] getModerationRules - lấy rules
-  - [ ] updateModerationRules - cập nhật rules
+  - [x] listComments - tất cả comments
+  - [x] updateCommentStatus - approve/reject
+  - [x] deleteComment - xóa comment
+  - [x] getModerationRules - lấy rules
+  - [x] updateModerationRules - cập nhật rules
 
 ---
 
 #### TASK-010: Tạo Admin Report Controller
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🟡 Medium
 - **Dependencies**: TASK-003, TASK-005
 - **File**: `backend/src/controllers/admin/adminReportController.ts`
 - **Description**: Controller xử lý user reports
 - **Spec Reference**: ADMIN_PANEL_PLAN.md > Phase 2 > Report Management
 - **Acceptance Criteria**:
-  - [ ] listReports - danh sách reports
-  - [ ] getReportDetails - chi tiết report
-  - [ ] updateReportStatus - thay đổi status
-  - [ ] updateReportPriority - thay đổi priority
-  - [ ] resolveReport - giải quyết report
-  - [ ] rejectReport - từ chối report
+  - [x] listReports - danh sách reports
+  - [x] getReportDetails - chi tiết report
+  - [x] updateReportStatus - thay đổi status
+  - [x] updateReportPriority - thay đổi priority
+  - [x] resolveReport - giải quyết report
+  - [x] rejectReport - từ chối report
 
 ---
 
 ### Frontend Infrastructure
 
 #### TASK-011: Tạo Admin Layout Component
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🔴 High
 - **Dependencies**: None
 - **Files**: 
@@ -197,40 +197,40 @@ Tham khảo chi tiết trong ADMIN_PANEL_PLAN.md
 - **Description**: Layout chính cho admin panel
 - **Spec Reference**: ADMIN_PANEL_PLAN.md > Phase 1 > Frontend Structure
 - **Acceptance Criteria**:
-  - [ ] Sidebar với navigation menu
-  - [ ] Header với user info, notifications
-  - [ ] Responsive design
-  - [ ] Dark theme theo design system
+  - [x] Sidebar với navigation menu
+  - [x] Header với user info, notifications
+  - [x] Responsive design
+  - [x] Dark theme theo design system
 
 ---
 
 #### TASK-012: Tạo Admin Routes
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🔴 High
 - **Dependencies**: TASK-011
 - **File**: `frontend/src/admin/routes/AdminRoutes.tsx`
 - **Description**: Setup routing cho admin pages
 - **Acceptance Criteria**:
-  - [ ] Route /admin với AdminLayout
-  - [ ] Lazy loading cho các pages
-  - [ ] Protected routes cho admin only
-  - [ ] Integrate vào main routes
+  - [x] Route /admin với AdminLayout
+  - [x] Lazy loading cho các pages
+  - [x] Protected routes cho admin only
+  - [x] Integrate vào main routes
 
 ---
 
 #### TASK-013: Tạo Admin Service
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🔴 High
 - **Dependencies**: None (sử dụng existing axios config từ `frontend/src/lib/axios.ts`)
 - **File**: `frontend/src/admin/services/adminService.ts`
 - **Description**: API service cho admin endpoints
 - **Note**: Tham khảo API endpoints trong ADMIN_PANEL_PLAN.md và TASK-005
 - **Acceptance Criteria**:
-  - [ ] Dashboard API calls
-  - [ ] User management API calls
-  - [ ] Movie management API calls
-  - [ ] Comment/Report API calls
-  - [ ] Settings API calls
+  - [x] Dashboard API calls
+  - [x] User management API calls
+  - [x] Movie management API calls
+  - [x] Comment/Report API calls
+  - [x] Settings API calls
 
 ---
 
@@ -249,152 +249,152 @@ Tham khảo chi tiết trong ADMIN_PANEL_PLAN.md
 ---
 
 #### TASK-015: Tạo Admin Dashboard Page
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🔴 High
 - **Dependencies**: TASK-011, TASK-012, TASK-013, TASK-022, TASK-023
 - **File**: `frontend/src/admin/pages/AdminDashboard.tsx`
 - **Description**: Trang dashboard chính
 - **Spec Reference**: ADMIN_PANEL_PLAN.md > Phase 2 > Dashboard Module
 - **Acceptance Criteria**:
-  - [ ] StatCards cho overview statistics (cần TASK-022)
-  - [ ] Charts (line, bar, pie) (cần TASK-023)
-  - [ ] Recent activity feed
-  - [ ] Quick actions
+  - [x] StatCards cho overview statistics (cần TASK-022)
+  - [x] Charts (line, bar, pie) (cần TASK-023)
+  - [x] Recent activity feed
+  - [x] Quick actions
 
 ---
 
 #### TASK-016: Tạo Admin Users Page
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🔴 High
 - **Dependencies**: TASK-011, TASK-012, TASK-013, TASK-021, TASK-024
 - **File**: `frontend/src/admin/pages/AdminUsers.tsx`
 - **Description**: Trang quản lý users
 - **Spec Reference**: ADMIN_PANEL_PLAN.md > Phase 2 > User Management
 - **Acceptance Criteria**:
-  - [ ] DataTable với pagination
-  - [ ] Search và filter
-  - [ ] User actions (edit, ban, delete)
-  - [ ] Bulk actions
-  - [ ] User detail modal
+  - [x] DataTable với pagination
+  - [x] Search và filter
+  - [x] User actions (edit, ban, delete)
+  - [x] Bulk actions
+  - [x] User detail modal
 
 ---
 
 #### TASK-017: Tạo Admin Movies Page
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🔴 High
 - **Dependencies**: TASK-011, TASK-012, TASK-013, TASK-021, TASK-024
 - **File**: `frontend/src/admin/pages/AdminMovies.tsx`
 - **Description**: Trang quản lý movies
 - **Spec Reference**: ADMIN_PANEL_PLAN.md > Phase 2 > Movie Management
 - **Acceptance Criteria**:
-  - [ ] DataTable với pagination (cần TASK-021)
-  - [ ] Search và filter
-  - [ ] Add/Edit movie form
-  - [ ] TMDB import functionality
-  - [ ] Bulk actions
+  - [x] DataTable với pagination (cần TASK-021)
+  - [x] Search và filter
+  - [x] Add/Edit movie form
+  - [x] TMDB import functionality
+  - [x] Bulk actions
 
 ---
 
 #### TASK-018: Tạo Admin Comments Page
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🟡 Medium
 - **Dependencies**: TASK-011, TASK-012, TASK-013, TASK-021
 - **File**: `frontend/src/admin/pages/AdminComments.tsx`
 - **Description**: Trang moderation comments
 - **Acceptance Criteria**:
-  - [ ] Comment list với filters (cần TASK-021)
-  - [ ] Approve/Reject actions
-  - [ ] Delete comment
-  - [ ] View in context
+  - [x] Comment list với filters (cần TASK-021)
+  - [x] Approve/Reject actions
+  - [x] Delete comment
+  - [x] View in context
 
 ---
 
 #### TASK-019: Tạo Admin Reports Page
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🟡 Medium
 - **Dependencies**: TASK-011, TASK-012, TASK-013, TASK-021
 - **File**: `frontend/src/admin/pages/AdminReports.tsx`
 - **Description**: Trang xử lý reports
 - **Acceptance Criteria**:
-  - [ ] Report queue (cần TASK-021)
-  - [ ] Filter by type, status, priority
-  - [ ] Review và resolve workflow
-  - [ ] Action buttons
+  - [x] Report queue (cần TASK-021)
+  - [x] Filter by type, status, priority
+  - [x] Review và resolve workflow
+  - [x] Action buttons
 
 ---
 
 #### TASK-020: Tạo Admin Settings Page
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🟢 Low
 - **Dependencies**: TASK-011, TASK-012, TASK-013
 - **File**: `frontend/src/admin/pages/AdminSettings.tsx`
 - **Description**: Trang cài đặt hệ thống
 - **Acceptance Criteria**:
-  - [ ] General settings form
-  - [ ] SEO settings form
-  - [ ] Email settings với test
-  - [ ] Security settings
+  - [x] General settings form
+  - [x] SEO settings form
+  - [x] Email settings với test
+  - [x] Security settings
 
 ---
 
 ### Common Components
 
 #### TASK-021: Tạo DataTable Component
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🔴 High
 - **Dependencies**: None
 - **File**: `frontend/src/admin/components/common/DataTable.tsx`
 - **Description**: Reusable data table với đầy đủ tính năng
 - **Acceptance Criteria**:
-  - [ ] Sortable columns
-  - [ ] Filterable
-  - [ ] Pagination
-  - [ ] Row selection
-  - [ ] Bulk actions support
-  - [ ] Loading state
+  - [x] Sortable columns
+  - [x] Filterable
+  - [x] Pagination
+  - [x] Row selection
+  - [x] Bulk actions support
+  - [x] Loading state
 
 ---
 
 #### TASK-022: Tạo StatCard Component
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🟡 Medium
 - **Dependencies**: None
 - **File**: `frontend/src/admin/components/common/StatCard.tsx`
 - **Description**: Card hiển thị statistics
 - **Acceptance Criteria**:
-  - [ ] Title, value, icon
-  - [ ] Trend indicator (up/down)
-  - [ ] Percentage change
-  - [ ] Hover effects
+  - [x] Title, value, icon
+  - [x] Trend indicator (up/down)
+  - [x] Percentage change
+  - [x] Hover effects
 
 ---
 
 #### TASK-023: Tạo ChartWrapper Component
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🟡 Medium
 - **Dependencies**: None
 - **File**: `frontend/src/admin/components/common/ChartWrapper.tsx`
 - **Description**: Wrapper cho charts với Recharts
 - **Acceptance Criteria**:
-  - [ ] LineChart wrapper
-  - [ ] BarChart wrapper
-  - [ ] PieChart wrapper
-  - [ ] Responsive sizing
-  - [ ] Loading state
+  - [x] LineChart wrapper
+  - [x] BarChart wrapper
+  - [x] PieChart wrapper
+  - [x] Responsive sizing
+  - [x] Loading state
 
 ---
 
 #### TASK-024: Tạo ConfirmDialog Component
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🟡 Medium
 - **Dependencies**: None
 - **File**: `frontend/src/admin/components/common/ConfirmDialog.tsx`
 - **Description**: Dialog xác nhận cho dangerous actions
 - **Acceptance Criteria**:
-  - [ ] Title và message
-  - [ ] Confirm và Cancel buttons
-  - [ ] Variant (danger, warning, info)
-  - [ ] Loading state khi processing
+  - [x] Title và message
+  - [x] Confirm và Cancel buttons
+  - [x] Variant (danger, warning, info)
+  - [x] Loading state khi processing
 
 ---
 
@@ -409,46 +409,77 @@ Tham khảo chi tiết trong ADMIN_PANEL_PLAN.md
 ## 📈 PHASE 3: ANALYTICS & ADVANCED
 
 #### TASK-025: Tạo Admin Analytics Controller
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🟡 Medium
 - **Dependencies**: TASK-005
 - **File**: `backend/src/controllers/admin/adminAnalyticsController.ts`
 - **Description**: Controller cho analytics data
 - **Acceptance Criteria**:
-  - [ ] getTrafficAnalytics
-  - [ ] getUserAnalytics
-  - [ ] getContentAnalytics
-  - [ ] getSearchTrends
-  - [ ] exportReport
+  - [x] getTrafficAnalytics
+  - [x] getUserAnalytics
+  - [x] getContentAnalytics
+  - [x] getSearchTrends
+  - [x] exportReport
 
 ---
 
 #### TASK-026: Tạo Admin Analytics Page
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🟡 Medium
 - **Dependencies**: TASK-012, TASK-023
 - **File**: `frontend/src/admin/pages/AdminAnalytics.tsx`
 - **Description**: Trang analytics dashboard
 - **Acceptance Criteria**:
-  - [ ] Traffic charts
-  - [ ] User retention charts
-  - [ ] Content performance
-  - [ ] Date range selector
-  - [ ] Export functionality
+  - [x] Traffic charts
+  - [x] User retention charts
+  - [x] Content performance
+  - [x] Date range selector
+  - [x] Export functionality
 
 ---
 
 #### TASK-027: Tạo Audit Log Page
-- **Status**: ⬜ Not Started
+- **Status**: ✅ Completed
 - **Priority**: 🟢 Low
 - **Dependencies**: TASK-001, TASK-012
 - **File**: `frontend/src/admin/pages/AdminAuditLog.tsx`
 - **Description**: Trang xem audit logs
 - **Acceptance Criteria**:
-  - [ ] Log list với filters
-  - [ ] Search by admin, action, date
-  - [ ] Detail view
-  - [ ] Export to CSV
+  - [x] Log list với filters
+  - [x] Search by admin, action, date
+  - [x] Detail view
+  - [x] Export to CSV
+
+---
+
+#### TASK-028: Tạo Settings Controller
+- **Status**: ✅ Completed
+- **Priority**: 🟡 Medium
+- **Dependencies**: TASK-002, TASK-005
+- **File**: `backend/src/controllers/admin/adminSettingsController.ts`
+- **Description**: Controller cho system settings
+- **Acceptance Criteria**:
+  - [x] getSettings
+  - [x] getCategorySettings
+  - [x] updateSettings
+  - [x] deleteSetting
+  - [x] testEmail
+  - [x] initializeSettings
+
+---
+
+#### TASK-029: Tạo Audit Log Controller
+- **Status**: ✅ Completed
+- **Priority**: 🟡 Medium
+- **Dependencies**: TASK-001, TASK-005
+- **File**: `backend/src/controllers/admin/adminAuditLogController.ts`
+- **Description**: Controller cho audit logs
+- **Acceptance Criteria**:
+  - [x] listAuditLogs
+  - [x] getAuditLogDetails
+  - [x] getAuditLogStats
+  - [x] exportAuditLogs
+  - [x] clearOldAuditLogs
 
 ---
 
@@ -456,7 +487,7 @@ Tham khảo chi tiết trong ADMIN_PANEL_PLAN.md
 
 ## 🧪 PHASE 4: TESTING
 
-#### TASK-028: Unit Tests cho Models
+#### TASK-030: Unit Tests cho Models
 - **Status**: ⬜ Not Started
 - **Priority**: 🟡 Medium
 - **Dependencies**: TASK-001, TASK-002, TASK-003
@@ -468,7 +499,7 @@ Tham khảo chi tiết trong ADMIN_PANEL_PLAN.md
 
 ---
 
-#### TASK-029: Integration Tests cho Admin API
+#### TASK-031: Integration Tests cho Admin API
 - **Status**: ⬜ Not Started
 - **Priority**: 🟡 Medium
 - **Dependencies**: TASK-005 through TASK-010
@@ -481,7 +512,7 @@ Tham khảo chi tiết trong ADMIN_PANEL_PLAN.md
 
 ---
 
-#### TASK-030: E2E Tests cho Admin Panel
+#### TASK-032: E2E Tests cho Admin Panel
 - **Status**: ⬜ Not Started
 - **Priority**: 🟢 Low
 - **Dependencies**: All frontend tasks
