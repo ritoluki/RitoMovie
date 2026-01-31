@@ -31,7 +31,8 @@
     "signIn": "Đăng nhập",
     "genres": "Thể loại",
     "countries": "Quốc gia",
-    "tagline": "Phim hay, xem ngay!"
+    "tagline": "Phim hay, xem ngay!",
+    "adminDashboard": "Quản trị viên"
   },
   "home": {
     "popularMovies": "Phim phổ biến",
@@ -59,6 +60,13 @@
     "passwordPlaceholder": "••••••••",
     "rememberMe": "Ghi nhớ đăng nhập",
     "forgotPassword": "Quên mật khẩu?",
+    "resetEmailSent": "Nếu email tồn tại, liên kết đặt lại mật khẩu đã được gửi",
+    "passwordReset": "Đặt lại mật khẩu thành công",
+    "emailVerified": "Xác minh email thành công",
+    "alreadyVerified": "Email đã được xác minh",
+    "verificationEmailSent": "Email xác minh đã được gửi thành công",
+    "emailError": "Lỗi khi gửi email. Vui lòng thử lại sau",
+    "invalidToken": "Mã không hợp lệ hoặc đã hết hạn",
     "dontHaveAccount": "Chưa có tài khoản?",
     "signUp": "Đăng ký",
     "signInWithGoogle": "Đăng nhập bằng Google",
@@ -194,7 +202,12 @@
     "monthsAgo": "{{count}} tháng trước",
     "oneMonthAgo": "1 tháng trước",
     "yearsAgo": "{{count}} năm trước",
-    "oneYearAgo": "1 năm trước"
+    "oneYearAgo": "1 năm trước",
+    "spoiler": "Spoiler",
+    "revealSpoiler": "Nhấn để xem nội dung spoiler",
+    "hideSpoiler": "Ẩn spoiler",
+    "reveal": "Hiện",
+    "hide": "Ẩn"
   },
   "footer": {
     "tagline": "Điểm đến yêu thích của bạn để xem những bộ phim và chương trình truyền hình hay nhất.",

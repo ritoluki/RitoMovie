@@ -10,6 +10,11 @@ export interface IComment extends Document {
     isSpoiler: boolean;
     parentComment?: mongoose.Types.ObjectId; // For replies
     isDeleted: boolean;
+    // Moderation fields
+    isApproved: boolean;
+    isHidden: boolean;
+    moderatedBy?: mongoose.Types.ObjectId;
+    moderatedAt?: Date;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -62,6 +67,22 @@ const CommentSchema: Schema = new Schema(
         isDeleted: {
             type: Boolean,
             default: false,
+        },
+        // Moderation fields
+        isApproved: {
+            type: Boolean,
+            default: true, // Auto-approve by default, change to false for pre-moderation
+        },
+        isHidden: {
+            type: Boolean,
+            default: false,
+        },
+        moderatedBy: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+        },
+        moderatedAt: {
+            type: Date,
         },
     },
     {

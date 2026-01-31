@@ -31,7 +31,8 @@
     "signIn": "Sign In",
     "genres": "Genres",
     "countries": "Countries",
-    "tagline": "Great movies, watch now!"
+    "tagline": "Great movies, watch now!",
+    "adminDashboard": "Admin Dashboard"
   },
   "home": {
     "popularMovies": "Popular Movies",
@@ -59,6 +60,13 @@
     "passwordPlaceholder": "••••••••",
     "rememberMe": "Remember me",
     "forgotPassword": "Forgot password?",
+    "resetEmailSent": "If that email exists, a password reset link has been sent",
+    "passwordReset": "Password reset successfully",
+    "emailVerified": "Email verified successfully",
+    "alreadyVerified": "Email is already verified",
+    "verificationEmailSent": "Verification email sent successfully",
+    "emailError": "Error sending email. Please try again later",
+    "invalidToken": "Invalid or expired token",
     "dontHaveAccount": "Don't have an account?",
     "signUp": "Sign up",
     "signInWithGoogle": "Sign in with Google",
@@ -194,7 +202,12 @@
     "monthsAgo": "{{count}} months ago",
     "oneMonthAgo": "1 month ago",
     "yearsAgo": "{{count}} years ago",
-    "oneYearAgo": "1 year ago"
+    "oneYearAgo": "1 year ago",
+    "spoiler": "Spoiler",
+    "revealSpoiler": "Click to reveal spoiler",
+    "hideSpoiler": "Hide spoiler",
+    "reveal": "Reveal",
+    "hide": "Hide"
   },
   "footer": {
     "tagline": "Your favorite destination for streaming the best movies and TV shows.",

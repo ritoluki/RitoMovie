@@ -66,8 +66,19 @@ axiosInstance.interceptors.response.use(
       }
 
       // Extract error message from response
-      // API error response structure: { success: false, message: '...', data: null }
-      const errorMessage = data?.message || error.message || 'An error occurred';
+      // API error response structure: { success: false, message: '...', errors: [...] }
+      let errorMessage = data?.message || error.message || 'An error occurred';
+      
+      // If validation errors exist, append the first error detail
+      if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+        const firstError = data.errors[0];
+        if (firstError.field && firstError.message) {
+          errorMessage = `${firstError.field}: ${firstError.message}`;
+        } else if (firstError.message) {
+          errorMessage = firstError.message;
+        }
+      }
+      
       return Promise.reject(errorMessage);
     } else if (error.request) {
       // Request made but no response (network error, server down, etc.)
@@ -79,5 +90,21 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-export default axiosInstance;
+// Override the axios instance type to reflect that response interceptor returns response.data
+// This makes TypeScript aware that api.get<T>() returns T directly, not AxiosResponse<T>
+type AxiosGetType = <T = unknown>(url: string, config?: import('axios').AxiosRequestConfig) => Promise<T>;
+type AxiosPostType = <T = unknown>(url: string, data?: unknown, config?: import('axios').AxiosRequestConfig) => Promise<T>;
+type AxiosPutType = <T = unknown>(url: string, data?: unknown, config?: import('axios').AxiosRequestConfig) => Promise<T>;
+type AxiosPatchType = <T = unknown>(url: string, data?: unknown, config?: import('axios').AxiosRequestConfig) => Promise<T>;
+type AxiosDeleteType = <T = unknown>(url: string, config?: import('axios').AxiosRequestConfig) => Promise<T>;
+
+interface TypedAxiosInstance {
+  get: AxiosGetType;
+  post: AxiosPostType;
+  put: AxiosPutType;
+  patch: AxiosPatchType;
+  delete: AxiosDeleteType;
+}
+
+export default axiosInstance as unknown as TypedAxiosInstance;
 

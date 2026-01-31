@@ -66,6 +66,7 @@ const ReplyItem = ({
   t: any;
 }) => {
   const [replyText, setReplyText] = useState('');
+  const [spoilerRevealed, setSpoilerRevealed] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { user } = useAuthStore();
 
@@ -111,11 +112,28 @@ const ReplyItem = ({
         {/* Reply Header */}
         <div className="flex items-center gap-2 mb-1">
           <h5 className="text-white font-semibold text-sm">{reply.user.name}</h5>
+          {reply.isSpoiler && (
+            <span className="px-1.5 py-0.5 text-xs font-medium rounded bg-orange-900/50 text-orange-300 border border-orange-700">
+              ⚠️
+            </span>
+          )}
           <span className="text-gray-500 text-xs">{timeAgoText}</span>
         </div>
 
-        {/* Reply Text */}
-        <p className="text-gray-300 text-sm leading-relaxed mb-2">{reply.text}</p>
+        {/* Reply Text - with spoiler blur */}
+        <div className="mb-2">
+          <p className={`text-gray-300 text-sm leading-relaxed ${reply.isSpoiler && !spoilerRevealed ? 'blur-sm select-none' : ''}`}>
+            {reply.text}
+          </p>
+          {reply.isSpoiler && (
+            <button
+              onClick={() => setSpoilerRevealed(!spoilerRevealed)}
+              className="mt-1 text-orange-400 hover:text-orange-300 transition-colors text-xs"
+            >
+              {spoilerRevealed ? t('comments.hide', 'Hide') : t('comments.reveal', 'Show')}
+            </button>
+          )}
+        </div>
 
         {/* Reply Actions */}
         <div className="flex items-center gap-3 text-xs">
@@ -217,6 +235,7 @@ const CommentItem = ({
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [activeReplyFormId, setActiveReplyFormId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
+  const [spoilerRevealed, setSpoilerRevealed] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const hasLiked = currentUserId ? comment.likes.includes(currentUserId) : false;
   const hasDisliked = currentUserId ? comment.dislikes.includes(currentUserId) : false;
@@ -268,11 +287,28 @@ const CommentItem = ({
         {/* Header: Name + Badge + Time */}
         <div className="flex items-center gap-2 mb-1">
           <h4 className="text-white font-semibold text-base">{comment.user.name}</h4>
+          {comment.isSpoiler && (
+            <span className="px-2 py-0.5 text-xs font-medium rounded bg-orange-900/50 text-orange-300 border border-orange-700">
+              ⚠️ {t('comments.spoiler', 'Spoiler')}
+            </span>
+          )}
           <span className="text-gray-500 text-sm">{timeAgoText}</span>
         </div>
 
-        {/* Comment Text */}
-        <p className="text-gray-300 text-base leading-relaxed mb-3">{comment.text}</p>
+        {/* Comment Text - with spoiler blur */}
+        <div className="mb-3">
+          <p className={`text-gray-300 text-base leading-relaxed ${comment.isSpoiler && !spoilerRevealed ? 'blur-sm select-none' : ''}`}>
+            {comment.text}
+          </p>
+          {comment.isSpoiler && (
+            <button
+              onClick={() => setSpoilerRevealed(!spoilerRevealed)}
+              className="mt-1 text-orange-400 hover:text-orange-300 transition-colors text-sm"
+            >
+              {spoilerRevealed ? t('comments.hideSpoiler', 'Hide') : t('comments.revealSpoiler', 'Show')}
+            </button>
+          )}
+        </div>
 
         {/* Actions */}
         <div className="flex items-center gap-4 text-sm">

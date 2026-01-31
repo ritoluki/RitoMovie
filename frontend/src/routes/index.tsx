@@ -13,8 +13,14 @@ const MyList = lazy(() => import('@/pages/MyList'));
 const Profile = lazy(() => import('@/pages/Profile'));
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
+const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
+const VerifyEmail = lazy(() => import('@/pages/VerifyEmail'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 const SkeletonTest = lazy(() => import('@/pages/SkeletonTest'));
+
+// Admin routes
+const AdminRoutes = lazy(() => import('@/admin/routes/AdminRoutes'));
 
 const AppRoutes = () => {
   return (
@@ -22,6 +28,12 @@ const AppRoutes = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/verify-email/:token" element={<VerifyEmail />} />
+
+        {/* Admin Panel */}
+        <Route path="/admin/*" element={<AdminRoutes />} />
 
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />

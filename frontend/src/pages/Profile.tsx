@@ -173,9 +173,36 @@ const Profile = () => {
 
                   <div className="flex items-center space-x-3">
                     <FiMail className="text-gray-400" size={20} />
-                    <div>
+                    <div className="flex-1">
                       <p className="text-gray-400 text-sm">{t('profile.emailAddress')}</p>
-                      <p className="text-white font-medium">{user?.email}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-white font-medium">{user?.email}</p>
+                        {user?.isEmailVerified ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">
+                            ✓ Verified
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
+                            ⚠ Unverified
+                          </span>
+                        )}
+                      </div>
+                      {!user?.isEmailVerified && (
+                        <button
+                          onClick={async () => {
+                            try {
+                              const api = (await import('@/lib/axios')).default;
+                              await api.post('/auth/resend-verification');
+                              toast.success('Verification email sent! Please check your inbox.');
+                            } catch (error: any) {
+                              toast.error(error.response?.data?.message || 'Failed to send verification email');
+                            }
+                          }}
+                          className="mt-1 text-xs text-primary-500 hover:text-primary-400 underline"
+                        >
+                          Resend verification email
+                        </button>
+                      )}
                     </div>
                   </div>
 

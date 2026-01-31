@@ -1,5 +1,6 @@
 import axios from 'axios';
 import ApiError from '../utils/ApiError';
+import { apiCache, CACHE_TTL } from '../utils/cache';
 
 const PHIM_API_BASE_URL = process.env.PHIM_API_BASE_URL || 'https://phimapi.com';
 
@@ -92,7 +93,7 @@ type Nullable<T> = {
 
 const phimAxios = axios.create({
     baseURL: PHIM_API_BASE_URL,
-    timeout: 30000, // Increased timeout to 30 seconds
+    timeout: 15000, // Reduced to 15 seconds for better UX
     headers: {
         'Accept': 'application/json, text/plain, */*',
         'User-Agent': 'RitoMovie/1.0',
@@ -144,19 +145,33 @@ const buildQuery = (params: Record<string, unknown>) => {
     );
 };
 
+// Helper to generate cache key for PhimAPI
+const getPhimCacheKey = (endpoint: string, params?: Record<string, unknown>): string => {
+    const paramStr = params ? JSON.stringify(params) : '';
+    return `phim:${endpoint}:${paramStr}`;
+};
+
 export const getLatestMovies = async (options?: { page?: number; version?: Version }) => {
     const version = options?.version ?? 'v1';
-    const suffix = version === 'v1' ? '' : `-${version}`;
-    const response = await phimAxios.get(`/danh-sach/phim-moi-cap-nhat${suffix}`, {
-        params: buildQuery({ page: options?.page ?? 1 }),
-    });
-
-    return ensureSuccess(response.data);
+    const page = options?.page ?? 1;
+    const cacheKey = getPhimCacheKey(`latest/${version}`, { page });
+    
+    return apiCache.getOrSet(cacheKey, async () => {
+        const suffix = version === 'v1' ? '' : `-${version}`;
+        const response = await phimAxios.get(`/danh-sach/phim-moi-cap-nhat${suffix}`, {
+            params: buildQuery({ page }),
+        });
+        return ensureSuccess(response.data);
+    }, CACHE_TTL.SHORT); // Short cache for latest movies
 };
 
 export const getMovieBySlug = async (slug: string) => {
-    const response = await phimAxios.get(`/phim/${slug}`);
-    return ensureSuccess(response.data);
+    const cacheKey = getPhimCacheKey(`movie/${slug}`);
+    
+    return apiCache.getOrSet(cacheKey, async () => {
+        const response = await phimAxios.get(`/phim/${slug}`);
+        return ensureSuccess(response.data);
+    }, CACHE_TTL.LONG); // Movie details rarely change
 };
 
 export const getMovieByTmdb = async (type: 'movie' | 'tv', tmdbId: number) => {
@@ -226,21 +241,24 @@ export const searchMovies = async (
         throw new ApiError(400, 'keyword is required');
     }
 
-    const response = await phimAxios.get('/v1/api/tim-kiem', {
-        params: buildQuery({
-            keyword: params.keyword,
-            page: params.page,
-            sort_field: params.sort_field,
-            sort_type: params.sort_type,
-            sort_lang: params.sort_lang,
-            category: params.category,
-            country: params.country,
-            year: params.year,
-            limit: params.limit,
-        }),
-    });
-
-    return ensureSuccess(response.data);
+    const cacheKey = getPhimCacheKey('search', params as Record<string, unknown>);
+    
+    return apiCache.getOrSet(cacheKey, async () => {
+        const response = await phimAxios.get('/v1/api/tim-kiem', {
+            params: buildQuery({
+                keyword: params.keyword,
+                page: params.page,
+                sort_field: params.sort_field,
+                sort_type: params.sort_type,
+                sort_lang: params.sort_lang,
+                category: params.category,
+                country: params.country,
+                year: params.year,
+                limit: params.limit,
+            }),
+        });
+        return ensureSuccess(response.data);
+    }, CACHE_TTL.SHORT); // Short cache for search results
 };
 
 export const getCatalogList = async (
@@ -256,25 +274,32 @@ export const getCatalogList = async (
         limit?: number;
     }>
 ) => {
-    const response = await phimAxios.get(`/v1/api/danh-sach/${type}`, {
-        params: buildQuery({
-            page: params?.page,
-            sort_field: params?.sort_field,
-            sort_type: params?.sort_type,
-            sort_lang: params?.sort_lang,
-            category: params?.category,
-            country: params?.country,
-            year: params?.year,
-            limit: params?.limit,
-        }),
-    });
-
-    return ensureSuccess(response.data);
+    const cacheKey = getPhimCacheKey(`catalog/${type}`, params as Record<string, unknown>);
+    
+    return apiCache.getOrSet(cacheKey, async () => {
+        const response = await phimAxios.get(`/v1/api/danh-sach/${type}`, {
+            params: buildQuery({
+                page: params?.page,
+                sort_field: params?.sort_field,
+                sort_type: params?.sort_type,
+                sort_lang: params?.sort_lang,
+                category: params?.category,
+                country: params?.country,
+                year: params?.year,
+                limit: params?.limit,
+            }),
+        });
+        return ensureSuccess(response.data);
+    }, CACHE_TTL.MEDIUM);
 };
 
 export const getGenres = async () => {
-    const response = await phimAxios.get('/the-loai');
-    return ensureSuccess(response.data);
+    const cacheKey = getPhimCacheKey('genres');
+    
+    return apiCache.getOrSet(cacheKey, async () => {
+        const response = await phimAxios.get('/the-loai');
+        return ensureSuccess(response.data);
+    }, CACHE_TTL.DAY); // Genres rarely change
 };
 
 export const getGenreDetail = async (
@@ -289,24 +314,31 @@ export const getGenreDetail = async (
         limit?: number;
     }>
 ) => {
-    const response = await phimAxios.get(`/v1/api/the-loai/${slug}`, {
-        params: buildQuery({
-            page: params?.page,
-            sort_field: params?.sort_field,
-            sort_type: params?.sort_type,
-            sort_lang: params?.sort_lang,
-            country: params?.country,
-            year: params?.year,
-            limit: params?.limit,
-        }),
-    });
-
-    return ensureSuccess(response.data);
+    const cacheKey = getPhimCacheKey(`genre/${slug}`, params as Record<string, unknown>);
+    
+    return apiCache.getOrSet(cacheKey, async () => {
+        const response = await phimAxios.get(`/v1/api/the-loai/${slug}`, {
+            params: buildQuery({
+                page: params?.page,
+                sort_field: params?.sort_field,
+                sort_type: params?.sort_type,
+                sort_lang: params?.sort_lang,
+                country: params?.country,
+                year: params?.year,
+                limit: params?.limit,
+            }),
+        });
+        return ensureSuccess(response.data);
+    }, CACHE_TTL.MEDIUM);
 };
 
 export const getCountries = async () => {
-    const response = await phimAxios.get('/quoc-gia');
-    return ensureSuccess(response.data);
+    const cacheKey = getPhimCacheKey('countries');
+    
+    return apiCache.getOrSet(cacheKey, async () => {
+        const response = await phimAxios.get('/quoc-gia');
+        return ensureSuccess(response.data);
+    }, CACHE_TTL.DAY); // Countries rarely change
 };
 
 export const getCountryDetail = async (
@@ -321,19 +353,22 @@ export const getCountryDetail = async (
         limit?: number;
     }>
 ) => {
-    const response = await phimAxios.get(`/v1/api/quoc-gia/${slug}`, {
-        params: buildQuery({
-            page: params?.page,
-            sort_field: params?.sort_field,
-            sort_type: params?.sort_type,
-            sort_lang: params?.sort_lang,
-            category: params?.category,
-            year: params?.year,
-            limit: params?.limit,
-        }),
-    });
-
-    return ensureSuccess(response.data);
+    const cacheKey = getPhimCacheKey(`country/${slug}`, params as Record<string, unknown>);
+    
+    return apiCache.getOrSet(cacheKey, async () => {
+        const response = await phimAxios.get(`/v1/api/quoc-gia/${slug}`, {
+            params: buildQuery({
+                page: params?.page,
+                sort_field: params?.sort_field,
+                sort_type: params?.sort_type,
+                sort_lang: params?.sort_lang,
+                category: params?.category,
+                year: params?.year,
+                limit: params?.limit,
+            }),
+        });
+        return ensureSuccess(response.data);
+    }, CACHE_TTL.MEDIUM);
 };
 
 export const getYearDetail = async (
@@ -348,19 +383,22 @@ export const getYearDetail = async (
         limit?: number;
     }>
 ) => {
-    const response = await phimAxios.get(`/v1/api/nam/${year}`, {
-        params: buildQuery({
-            page: params?.page,
-            sort_field: params?.sort_field,
-            sort_type: params?.sort_type,
-            sort_lang: params?.sort_lang,
-            category: params?.category,
-            country: params?.country,
-            limit: params?.limit,
-        }),
-    });
-
-    return ensureSuccess(response.data);
+    const cacheKey = getPhimCacheKey(`year/${year}`, params as Record<string, unknown>);
+    
+    return apiCache.getOrSet(cacheKey, async () => {
+        const response = await phimAxios.get(`/v1/api/nam/${year}`, {
+            params: buildQuery({
+                page: params?.page,
+                sort_field: params?.sort_field,
+                sort_type: params?.sort_type,
+                sort_lang: params?.sort_lang,
+                category: params?.category,
+                country: params?.country,
+                limit: params?.limit,
+            }),
+        });
+        return ensureSuccess(response.data);
+    }, CACHE_TTL.MEDIUM);
 };
 
 // Export cache stats for monitoring/debugging

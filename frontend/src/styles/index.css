@@ -3,6 +3,12 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Default color values - will be overridden by settings */
+    --color-primary: #eab308;
+    --color-secondary: #dc2626;
+  }
+
   * {
     box-sizing: border-box;
   }

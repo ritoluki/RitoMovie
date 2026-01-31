@@ -5,11 +5,21 @@
     "emailExists": "Email already exists",
     "tokenExpired": "Token has expired",
     "tokenInvalid": "Invalid token",
+    "invalidToken": "Invalid or expired token",
     "unauthorized": "Unauthorized access",
     "loginSuccess": "Login successful",
     "registerSuccess": "Registration successful",
     "logoutSuccess": "Logout successful",
-    "profileUpdated": "Profile updated successfully"
+    "profileUpdated": "Profile updated successfully",
+    "accountBanned": "Your account has been banned. Reason: {{reason}}",
+    "passwordUpdated": "Password updated successfully",
+    "incorrectPassword": "Current password is incorrect",
+    "resetEmailSent": "Password reset email sent successfully",
+    "passwordReset": "Password reset successfully",
+    "emailVerified": "Email verified successfully",
+    "alreadyVerified": "Email is already verified",
+    "verificationEmailSent": "Verification email sent successfully",
+    "emailError": "Error sending email. Please try again later"
   },
   "validation": {
     "required": "{{field}} is required",
@@ -46,4 +56,3 @@
     "processing": "Processing request"
   }
 }
-

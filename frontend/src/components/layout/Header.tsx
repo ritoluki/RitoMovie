@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiSearch, FiUser, FiMenu, FiX, FiLogOut, FiList, FiSettings, FiChevronDown } from 'react-icons/fi';
+import { FiSearch, FiUser, FiMenu, FiX, FiLogOut, FiList, FiSettings, FiChevronDown, FiShield } from 'react-icons/fi';
 import { useAuth } from '@/hooks/useAuth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -322,6 +322,18 @@ const Header = () => {
                           <p className="text-white font-medium whitespace-nowrap">{user?.name}</p>
                           <p className="text-gray-400 text-sm whitespace-nowrap">{user?.email}</p>
                         </div>
+
+                        {/* Admin Dashboard Link - only show for admin roles */}
+                        {user?.role && user.role !== 'user' && (
+                          <Link
+                            to="/admin"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center space-x-2 px-4 py-2 text-orange-400 hover:bg-gray-700 hover:text-orange-300 transition-colors"
+                          >
+                            <FiShield size={18} />
+                            <span>{t('header.adminDashboard', 'Admin Dashboard')}</span>
+                          </Link>
+                        )}
 
                         <Link
                           to="/profile"

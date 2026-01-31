@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import AppRoutes from './routes';
 import ScrollToTop from './components/common/ScrollToTop';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import DocumentHead from './components/common/DocumentHead';
 import './i18n/config';
 
 const queryClient = new QueryClient({
@@ -22,6 +23,7 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
+        <DocumentHead />
         <ScrollToTop />
         <AppRoutes />
         <Toaster
