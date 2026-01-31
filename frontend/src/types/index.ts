@@ -143,6 +143,7 @@ export interface User {
   avatar?: string;
   role: UserRole;
   watchlist: number[];
+  isEmailVerified?: boolean;
   isBanned?: boolean;
   banReason?: string;
   bannedAt?: string;

@@ -222,6 +222,21 @@ export const adminService = {
   
   initializeSettings: () =>
     api.post('/admin/settings/initialize'),
+
+  // ==========================================
+  // Cache Management API (Super Admin only)
+  // ==========================================
+  getCacheStats: () =>
+    api.get('/admin/cache/stats'),
+  
+  warmCache: () =>
+    api.post('/admin/cache/warm'),
+  
+  clearAllCache: () =>
+    api.delete('/admin/cache/clear'),
+  
+  clearCachePattern: (pattern: string) =>
+    api.delete(`/admin/cache/clear/${encodeURIComponent(pattern)}`),
 };
 
 export default adminService;

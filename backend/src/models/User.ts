@@ -1,6 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 export type UserRole = 'user' | 'moderator' | 'analyst' | 'admin' | 'super_admin';
 
@@ -11,6 +12,13 @@ export interface IUser extends Document {
   avatar?: string;
   role: UserRole;
   watchlist: number[];
+  // Email verification
+  isEmailVerified: boolean;
+  emailVerificationToken?: string;
+  emailVerificationExpire?: Date;
+  // Password reset
+  resetPasswordToken?: string;
+  resetPasswordExpire?: Date;
   // Ban fields
   isBanned: boolean;
   banReason?: string;
@@ -23,6 +31,8 @@ export interface IUser extends Document {
   updatedAt: Date;
   matchPassword(enteredPassword: string): Promise<boolean>;
   getSignedJwtToken(rememberMe?: boolean): string;
+  getEmailVerificationToken(): string;
+  getResetPasswordToken(): string;
 }
 
 const UserSchema: Schema = new Schema(
@@ -64,6 +74,16 @@ const UserSchema: Schema = new Schema(
         type: Number,
       },
     ],
+    // Email verification
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationToken: String,
+    emailVerificationExpire: Date,
+    // Password reset
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
     // Ban fields
     isBanned: {
       type: Boolean,
@@ -120,6 +140,40 @@ UserSchema.methods.getSignedJwtToken = function (rememberMe: boolean = true): st
     : '1d';
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return jwt.sign({ id: this._id }, secret, { expiresIn } as any) as string;
+};
+
+// Generate email verification token
+UserSchema.methods.getEmailVerificationToken = function (): string {
+  // Generate token
+  const verificationToken = crypto.randomBytes(20).toString('hex');
+
+  // Hash token and set to emailVerificationToken field
+  this.emailVerificationToken = crypto
+    .createHash('sha256')
+    .update(verificationToken)
+    .digest('hex');
+
+  // Set expire (24 hours)
+  this.emailVerificationExpire = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+  return verificationToken;
+};
+
+// Generate and hash password reset token
+UserSchema.methods.getResetPasswordToken = function (): string {
+  // Generate token
+  const resetToken = crypto.randomBytes(20).toString('hex');
+
+  // Hash token and set to resetPasswordToken field
+  this.resetPasswordToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  // Set expire (1 hour)
+  this.resetPasswordExpire = new Date(Date.now() + 60 * 60 * 1000);
+
+  return resetToken;
 };
 
 export default mongoose.model<IUser>('User', UserSchema);

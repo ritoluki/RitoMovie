@@ -7,7 +7,7 @@ export interface ISystemSetting extends Document {
   key: string;
   value: SettingValue;
   type: 'string' | 'number' | 'boolean' | 'json';
-  category: 'general' | 'appearance' | 'email' | 'seo' | 'security' | 'content';
+  category: 'general' | 'movie' | 'user' | 'appearance' | 'footer' | 'api' | 'email' | 'performance';
   description: string;
   isSecret?: boolean; // Hide value in logs (passwords, API keys)
   isPublic?: boolean; // Expose to frontend without auth
@@ -36,11 +36,12 @@ const SystemSettingSchema = new Schema<ISystemSetting>(
     category: {
       type: String,
       required: true,
-      enum: ['general', 'appearance', 'email', 'seo', 'security', 'content'],
+      enum: ['general', 'movie', 'user', 'appearance', 'footer', 'api', 'email', 'performance'],
     },
     description: {
       type: String,
-      required: true,
+      required: false,
+      default: '',
       trim: true,
     },
     isSecret: {
@@ -62,7 +63,7 @@ const SystemSettingSchema = new Schema<ISystemSetting>(
 
 // Index for category-based queries
 SystemSettingSchema.index({ category: 1 });
-SystemSettingSchema.index({ key: 1 }, { unique: true });
+// Note: key index is already created via unique: true in schema definition
 
 // Virtual to mask secret values
 SystemSettingSchema.methods.toSafeJSON = function () {

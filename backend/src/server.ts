@@ -81,6 +81,16 @@ import commentRoutes from './routes/comments';
 import phimRoutes from './routes/phim';
 import homeRoutes from './routes/home';
 import adminRoutes from './routes/admin';
+import cacheService from './services/cacheService';
+import settingsService from './services/settingsService';
+import { checkMaintenanceMode } from './middleware/settings';
+import { getPublicSettings } from './controllers/admin/adminSettingsController';
+
+// Public settings endpoint (no auth required)
+app.get('/api/settings/public', getPublicSettings);
+
+// Apply maintenance mode check to all routes below
+app.use(checkMaintenanceMode);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/movies', movieRoutes);
@@ -132,6 +142,29 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  
+  // Load settings from database
+  settingsService.loadSettings()
+    .then(() => console.log('[Server] Settings loaded from database'))
+    .catch(err => console.error('[Server] Failed to load settings:', err));
+  
+  // Warm up cache in the background after server starts
+  // This pre-loads frequently accessed data to improve first-request performance
+  if (process.env.ENABLE_CACHE_WARMUP !== 'false') {
+    setTimeout(() => {
+      console.log('[Server] Starting cache warm-up...');
+      cacheService.warmHomeCache(['en', 'vi'])
+        .then(result => {
+          console.log(`[Server] Cache warm-up completed in ${result.duration}ms. Warmed ${result.warmedKeys} keys.`);
+          if (result.errors.length > 0) {
+            console.warn('[Server] Cache warm-up had some errors:', result.errors);
+          }
+        })
+        .catch(err => {
+          console.error('[Server] Cache warm-up failed:', err);
+        });
+    }, 2000); // Wait 2 seconds after server starts to allow DB connection
+  }
 });
 
 // Handle unhandled promise rejections

@@ -5,6 +5,7 @@
     "emailExists": "Email đã tồn tại",
     "tokenExpired": "Token đã hết hạn",
     "tokenInvalid": "Token không hợp lệ",
+    "invalidToken": "Mã không hợp lệ hoặc đã hết hạn",
     "unauthorized": "Truy cập không được phép",
     "loginSuccess": "Đăng nhập thành công",
     "registerSuccess": "Đăng ký thành công",
@@ -12,7 +13,13 @@
     "profileUpdated": "Cập nhật hồ sơ thành công",
     "accountBanned": "Tài khoản của bạn đã bị khóa. Lý do: {{reason}}",
     "passwordUpdated": "Cập nhật mật khẩu thành công",
-    "incorrectPassword": "Mật khẩu hiện tại không đúng"
+    "incorrectPassword": "Mật khẩu hiện tại không đúng",
+    "resetEmailSent": "Email đặt lại mật khẩu đã được gửi thành công",
+    "passwordReset": "Đặt lại mật khẩu thành công",
+    "emailVerified": "Xác minh email thành công",
+    "alreadyVerified": "Email đã được xác minh",
+    "verificationEmailSent": "Email xác minh đã được gửi thành công",
+    "emailError": "Lỗi khi gửi email. Vui lòng thử lại sau"
   },
   "validation": {
     "required": "{{field}} là bắt buộc",
@@ -49,4 +56,3 @@
     "processing": "Đang xử lý yêu cầu"
   }
 }
-

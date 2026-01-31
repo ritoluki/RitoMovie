@@ -7,6 +7,10 @@ import {
   getMe,
   updateProfile,
   updatePassword,
+  forgotPassword,
+  resetPassword,
+  verifyEmail,
+  resendVerification,
 } from '../controllers/authController';
 import { protect } from '../middleware/auth';
 import { validate } from '../middleware/validate';
@@ -70,6 +74,25 @@ const updatePasswordValidation = [
     .withMessage('New password must be at least 6 characters'),
 ];
 
+const forgotPasswordValidation = [
+  body('email')
+    .trim()
+    .notEmpty()
+    .withMessage('Email is required')
+    .isEmail()
+    .withMessage('Please provide a valid email')
+    .normalizeEmail(),
+];
+
+const resetPasswordValidation = [
+  body('token').notEmpty().withMessage('Reset token is required'),
+  body('newPassword')
+    .notEmpty()
+    .withMessage('New password is required')
+    .isLength({ min: 6 })
+    .withMessage('New password must be at least 6 characters'),
+];
+
 // Routes
 router.post('/register', validate(registerValidation), register);
 router.post('/login', validate(loginValidation), login);
@@ -77,6 +100,12 @@ router.post('/google', googleLogin);
 router.get('/me', protect, getMe);
 router.put('/profile', protect, validate(updateProfileValidation), updateProfile);
 router.put('/password', protect, validate(updatePasswordValidation), updatePassword);
+
+// Email verification and password reset
+router.post('/forgot-password', validate(forgotPasswordValidation), forgotPassword);
+router.post('/reset-password', validate(resetPasswordValidation), resetPassword);
+router.get('/verify-email/:token', verifyEmail);
+router.post('/resend-verification', protect, resendVerification);
 
 export default router;
 

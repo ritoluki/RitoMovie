@@ -1,7 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
 import User from '../models/User';
 import asyncHandler from '../utils/asyncHandler';
 import ApiError from '../utils/ApiError';
+import emailService from '../services/emailService';
+import settingsService from '../services/settingsService';
 
 // Type for i18n request with translation function
 type TFunction = (key: string, options?: Record<string, unknown>) => string;
@@ -32,7 +35,25 @@ export const register = asyncHandler(
       name,
       email,
       password,
+      isEmailVerified: false, // Default to unverified
     });
+
+    // Check if email verification is required
+    const requireVerification = await settingsService.getSetting<boolean>('require_email_verification', false);
+    
+    if (requireVerification === true) {
+      // Generate verification token
+      const verificationToken = user.getEmailVerificationToken();
+      await user.save({ validateBeforeSave: false });
+
+      try {
+        // Send verification email
+        await emailService.sendVerificationEmail(user.email, verificationToken, user.name);
+      } catch (error) {
+        console.error('Error sending verification email:', error);
+        // Don't fail registration if email fails
+      }
+    }
 
     // Generate token
     const token = user.getSignedJwtToken();
@@ -48,6 +69,7 @@ export const register = asyncHandler(
           role: user.role,
           avatar: user.avatar,
           watchlist: user.watchlist,
+          isEmailVerified: user.isEmailVerified,
           createdAt: user.createdAt,
         },
         token,
@@ -264,16 +286,219 @@ export const updatePassword = asyncHandler(
       throw new ApiError(401, getTranslation(t, 'auth.incorrectPassword', 'Current password is incorrect'));
     }
 
+  user.password = newPassword;
+  await user.save();
+
+  const token = user.getSignedJwtToken();
+
+  res.status(200).json({
+    success: true,
+    message: getTranslation(t, 'auth.passwordUpdated', 'Password updated successfully'),
+    data: { token },
+  });
+}
+);
+
+// @desc    Forgot password - send reset email
+// @route   POST /api/auth/forgot-password
+// @access  Public
+export const forgotPassword = asyncHandler(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const { email } = req.body;
+    const t: TFunction = (req as unknown as { t: TFunction }).t || ((key: string) => key);
+
+    if (!email) {
+      throw new ApiError(400, getTranslation(t, 'validation.required', 'Email is required', { field: 'Email' }));
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      // Don't reveal if email exists for security
+      res.status(200).json({
+        success: true,
+        message: getTranslation(t, 'auth.resetEmailSent', 'If that email exists, a password reset link has been sent'),
+      });
+      return;
+    }
+
+    // Generate reset token
+    const resetToken = user.getResetPasswordToken();
+    await user.save({ validateBeforeSave: false });
+
+    try {
+      // Send reset email
+      await emailService.sendPasswordResetEmail(user.email, resetToken, user.name);
+
+      res.status(200).json({
+        success: true,
+        message: getTranslation(t, 'auth.resetEmailSent', 'Password reset email sent successfully'),
+      });
+    } catch (error) {
+      console.error('Error sending password reset email:', error);
+      
+      // Clear reset token on error
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+      await user.save({ validateBeforeSave: false });
+
+      throw new ApiError(500, getTranslation(t, 'auth.emailError', 'Error sending email. Please try again later'));
+    }
+  }
+);
+
+// @desc    Reset password with token
+// @route   POST /api/auth/reset-password
+// @access  Public
+export const resetPassword = asyncHandler(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const { token, newPassword } = req.body;
+    const t: TFunction = (req as unknown as { t: TFunction }).t || ((key: string) => key);
+
+    if (!token || !newPassword) {
+      throw new ApiError(400, getTranslation(t, 'validation.required', 'Token and new password are required', { field: 'Token and password' }));
+    }
+
+    // Hash token to compare with stored hash
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    // Find user with valid token
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      throw new ApiError(400, getTranslation(t, 'auth.invalidToken', 'Invalid or expired reset token'));
+    }
+
+    // Set new password
     user.password = newPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
     await user.save();
 
-    const token = user.getSignedJwtToken();
+    // Generate JWT token
+    const jwtToken = user.getSignedJwtToken();
 
     res.status(200).json({
       success: true,
-      message: getTranslation(t, 'auth.passwordUpdated', 'Password updated successfully'),
-      data: { token },
+      message: getTranslation(t, 'auth.passwordReset', 'Password reset successfully'),
+      data: {
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          avatar: user.avatar,
+          watchlist: user.watchlist,
+          isEmailVerified: user.isEmailVerified,
+        },
+        token: jwtToken,
+      },
     });
   }
 );
 
+// @desc    Verify email with token
+// @route   GET /api/auth/verify-email/:token
+// @access  Public
+export const verifyEmail = asyncHandler(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const { token } = req.params;
+    const t: TFunction = (req as unknown as { t: TFunction }).t || ((key: string) => key);
+
+    if (!token) {
+      throw new ApiError(400, getTranslation(t, 'validation.required', 'Verification token is required', { field: 'Token' }));
+    }
+
+    // Hash token to compare with stored hash
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    // Find user with valid token
+    const user = await User.findOne({
+      emailVerificationToken: hashedToken,
+      emailVerificationExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      throw new ApiError(400, getTranslation(t, 'auth.invalidToken', 'Invalid or expired verification token'));
+    }
+
+    // Mark email as verified
+    user.isEmailVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpire = undefined;
+    await user.save();
+
+    // Send welcome email
+    try {
+      await emailService.sendWelcomeEmail(user.email, user.name);
+    } catch (error) {
+      console.error('Error sending welcome email:', error);
+      // Don't fail verification if welcome email fails
+    }
+
+    // Generate JWT token
+    const jwtToken = user.getSignedJwtToken();
+
+    res.status(200).json({
+      success: true,
+      message: getTranslation(t, 'auth.emailVerified', 'Email verified successfully'),
+      data: {
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          avatar: user.avatar,
+          watchlist: user.watchlist,
+          isEmailVerified: user.isEmailVerified,
+        },
+        token: jwtToken,
+      },
+    });
+  }
+);
+
+// @desc    Resend verification email
+// @route   POST /api/auth/resend-verification
+// @access  Private
+export const resendVerification = asyncHandler(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const t: TFunction = (req as unknown as { t: TFunction }).t || ((key: string) => key);
+
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      throw new ApiError(404, getTranslation(t, 'user.notFound', 'User not found'));
+    }
+
+    if (user.isEmailVerified) {
+      throw new ApiError(400, getTranslation(t, 'auth.alreadyVerified', 'Email is already verified'));
+    }
+
+    // Generate new verification token
+    const verificationToken = user.getEmailVerificationToken();
+    await user.save({ validateBeforeSave: false });
+
+    try {
+      // Send verification email
+      await emailService.sendVerificationEmail(user.email, verificationToken, user.name);
+
+      res.status(200).json({
+        success: true,
+        message: getTranslation(t, 'auth.verificationEmailSent', 'Verification email sent successfully'),
+      });
+    } catch (error) {
+      console.error('Error sending verification email:', error);
+      
+      // Clear verification token on error
+      user.emailVerificationToken = undefined;
+      user.emailVerificationExpire = undefined;
+      await user.save({ validateBeforeSave: false });
+
+      throw new ApiError(500, getTranslation(t, 'auth.emailError', 'Error sending email. Please try again later'));
+    }
+  }
+);

@@ -112,4 +112,51 @@ router.get('/audit-logs/export', requireAdminLevel, auditLogController.exportAud
 router.get('/audit-logs/:id', requireAdminLevel, auditLogController.getAuditLogDetails);
 router.delete('/audit-logs/clear', requireSuperAdmin, auditLogController.clearOldAuditLogs);
 
+// ==========================================
+// Cache Management Routes (Super Admin only)
+// ==========================================
+import cacheService from '../services/cacheService';
+import asyncHandler from '../utils/asyncHandler';
+
+// Get cache statistics
+router.get('/cache/stats', requireSuperAdmin, asyncHandler(async (_req, res) => {
+    const stats = cacheService.getCacheStats();
+    res.json({
+        success: true,
+        data: stats,
+        timestamp: new Date().toISOString(),
+    });
+}));
+
+// Warm up cache
+router.post('/cache/warm', requireSuperAdmin, asyncHandler(async (_req, res) => {
+    const result = await cacheService.warmHomeCache(['en', 'vi']);
+    res.json({
+        success: result.success,
+        data: result,
+        timestamp: new Date().toISOString(),
+    });
+}));
+
+// Clear all caches
+router.delete('/cache/clear', requireSuperAdmin, asyncHandler(async (_req, res) => {
+    cacheService.clearAllCaches();
+    res.json({
+        success: true,
+        message: 'All caches cleared',
+        timestamp: new Date().toISOString(),
+    });
+}));
+
+// Clear cache by pattern
+router.delete('/cache/clear/:pattern', requireSuperAdmin, asyncHandler(async (req, res) => {
+    const { pattern } = req.params;
+    const deleted = cacheService.clearCachePattern(pattern);
+    res.json({
+        success: true,
+        message: `Cleared ${deleted} cache keys matching pattern: ${pattern}`,
+        timestamp: new Date().toISOString(),
+    });
+}));
+
 export default router;

@@ -27,8 +27,10 @@ export interface IAuditLog extends Document {
     | 'PASSWORD_RESET'
     | 'ROLE_CHANGE'
     | 'BAN_USER'
-    | 'UNBAN_USER';
-  resource: 'USER' | 'MOVIE' | 'COMMENT' | 'RATING' | 'SETTINGS' | 'ADMIN_PANEL';
+    | 'UNBAN_USER'
+    | 'TEST_EMAIL'
+    | 'INITIALIZE_SETTINGS';
+  resource: 'USER' | 'MOVIE' | 'COMMENT' | 'RATING' | 'SETTINGS' | 'SETTING' | 'ADMIN_PANEL';
   resourceId?: string;
   details: AuditDetails;
   ipAddress: string;
@@ -61,12 +63,14 @@ const AuditLogSchema = new Schema<IAuditLog>(
         'ROLE_CHANGE',
         'BAN_USER',
         'UNBAN_USER',
+        'TEST_EMAIL',
+        'INITIALIZE_SETTINGS',
       ],
     },
     resource: {
       type: String,
       required: true,
-      enum: ['USER', 'MOVIE', 'COMMENT', 'RATING', 'SETTINGS', 'ADMIN_PANEL'],
+      enum: ['USER', 'MOVIE', 'COMMENT', 'RATING', 'SETTINGS', 'SETTING', 'ADMIN_PANEL'],
     },
     resourceId: {
       type: String,
