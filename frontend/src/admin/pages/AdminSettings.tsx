@@ -42,7 +42,7 @@ const categoryLabels: Record<SettingCategory, string> = {
   performance: 'Performance',
 };
 
-const defaultSettings: Record<SettingCategory, Array<{ key: string; label: string; description: string; type: 'string' | 'number' | 'boolean'; defaultValue: unknown; isPublic?: boolean }>> = {
+const defaultSettings: Record<SettingCategory, Array<{ key: string; label: string; description: string; type: 'string' | 'number' | 'boolean' | 'password'; defaultValue: unknown; isPublic?: boolean }>> = {
   general: [
     { key: 'site_name', label: 'Site Name', description: 'The name of your website', type: 'string', defaultValue: 'RitoMovie', isPublic: true },
     { key: 'site_description', label: 'Site Description', description: 'A brief description of your site', type: 'string', defaultValue: 'Your favorite movie streaming platform', isPublic: true },
@@ -142,11 +142,11 @@ const AdminSettings: React.FC = () => {
     onSuccess: () => {
       toast.success('Settings saved successfully');
       queryClient.invalidateQueries({ queryKey: ['admin', 'settings'] });
-      
+
       // Clear cache and force refresh main app settings to apply changes immediately
       clearCache();
       fetchSettings(true);
-      
+
       // Clear form data to ensure fresh data from server
       setFormData({});
       setHasChanges(false);
@@ -162,7 +162,7 @@ const AdminSettings: React.FC = () => {
     onSuccess: () => {
       toast.success('Settings initialized');
       queryClient.invalidateQueries({ queryKey: ['admin', 'settings'] });
-      
+
       // Refresh main app settings
       fetchSettings();
     },
@@ -202,14 +202,14 @@ const AdminSettings: React.FC = () => {
   const handleSave = () => {
     const settingsToUpdate = defaultSettings[activeCategory].map((setting) => {
       const value = formData[setting.key] ?? getSettingValue(setting.key, setting.defaultValue);
-      
+
       // Debug all settings being saved
       console.log(`[Admin Settings] ${setting.key}:`, {
         formData: formData[setting.key],
         serverValue: getSettingValue(setting.key, setting.defaultValue),
         finalValue: value
       });
-      
+
       return {
         key: setting.key,
         value,
@@ -253,7 +253,7 @@ const AdminSettings: React.FC = () => {
       );
     }
 
-    if (setting.type === 'password') {
+    if (setting.type === 'password' || setting.key === 'smtp_password') {
       return (
         <input
           type="password"
@@ -329,11 +329,10 @@ const AdminSettings: React.FC = () => {
                   setFormData({});
                   setHasChanges(false);
                 }}
-                className={`w-full flex items-center gap-3 text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                  activeCategory === category
+                className={`w-full flex items-center gap-3 text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors ${activeCategory === category
                     ? 'bg-red-600 text-white'
                     : 'text-gray-300 hover:bg-gray-700'
-                }`}
+                  }`}
               >
                 {categoryIcons[category]}
                 {categoryLabels[category]}
@@ -357,11 +356,10 @@ const AdminSettings: React.FC = () => {
             {currentSettings.map((setting) => (
               <div
                 key={setting.key}
-                className={`${
-                  setting.type === 'boolean'
+                className={`${setting.type === 'boolean'
                     ? 'flex items-center justify-between py-4 border-b border-gray-700'
                     : ''
-                }`}
+                  }`}
               >
                 {setting.type === 'boolean' ? (
                   <>

@@ -9,7 +9,7 @@ export const movieService = {
     const response = await axios.get<PaginatedResponse<Movie>>(
       `/movies/trending?time_window=${timeWindow}`
     );
-    return response.data;
+    return response;
   },
 
   // Get popular movies
@@ -17,7 +17,7 @@ export const movieService = {
     const response = await axios.get<PaginatedResponse<Movie>>(
       `/movies/popular?page=${page}`
     );
-    return response.data;
+    return response;
   },
 
   // Get top rated movies
@@ -25,7 +25,7 @@ export const movieService = {
     const response = await axios.get<PaginatedResponse<Movie>>(
       `/movies/top-rated?page=${page}`
     );
-    return response.data;
+    return response;
   },
 
   // Get upcoming movies
@@ -33,7 +33,7 @@ export const movieService = {
     const response = await axios.get<PaginatedResponse<Movie>>(
       `/movies/upcoming?page=${page}`
     );
-    return response.data;
+    return response;
   },
 
   // Get now playing movies
@@ -41,7 +41,7 @@ export const movieService = {
     const response = await axios.get<PaginatedResponse<Movie>>(
       `/movies/now-playing?page=${page}`
     );
-    return response.data;
+    return response;
   },
 
   // Get movies by genre
@@ -49,7 +49,7 @@ export const movieService = {
     const response = await axios.get<PaginatedResponse<Movie>>(
       `/movies/genre/${genreId}?page=${page}`
     );
-    return response.data;
+    return response;
   },
 
   // Search movies
@@ -57,7 +57,7 @@ export const movieService = {
     const response = await axios.get<PaginatedResponse<Movie>>(
       `/movies/search?q=${encodeURIComponent(query)}&page=${page}`
     );
-    return response.data;
+    return response;
   },
 
   // Get movie details
@@ -65,7 +65,7 @@ export const movieService = {
     const response = await axios.get<MovieDetails>(`/movies/${movieId}`, {
       params: { type: mediaType },
     });
-    return response.data;
+    return response;
   },
 
   // Get movie videos (trailers, etc.)
@@ -74,7 +74,7 @@ export const movieService = {
       `/movies/${movieId}/videos`,
       { params: { type: mediaType } }
     );
-    return response.data;
+    return response;
   },
 
   // Get movie credits (cast and crew)
@@ -82,7 +82,7 @@ export const movieService = {
     const response = await axios.get<Credits>(`/movies/${movieId}/credits`, {
       params: { type: mediaType },
     });
-    return response.data;
+    return response;
   },
 
   // Get similar movies
@@ -90,7 +90,7 @@ export const movieService = {
     const response = await axios.get<PaginatedResponse<Movie>>(
       `/movies/${movieId}/similar?page=${page}&type=${mediaType}`
     );
-    return response.data;
+    return response;
   },
 
   // Get movie recommendations
@@ -98,19 +98,19 @@ export const movieService = {
     const response = await axios.get<PaginatedResponse<Movie>>(
       `/movies/${movieId}/recommendations?page=${page}&type=${mediaType}`
     );
-    return response.data;
+    return response;
   },
 
   // Get all genres
   getGenres: async (): Promise<{ genres: Genre[] }> => {
     const response = await axios.get<{ genres: Genre[] }>('/movies/genres/list');
-    return response.data;
+    return response;
   },
 
   // Get all countries
   getCountries: async (): Promise<Country[]> => {
     const response = await axios.get<Country[]>('/movies/countries/list');
-    return response.data;
+    return response;
   },
 
   // Discover movies with filters
@@ -136,7 +136,7 @@ export const movieService = {
     const response = await axios.get<PaginatedResponse<Movie>>(
       `/movies/discover?${params.toString()}`
     );
-    return response.data;
+    return response;
   },
 
   // Get movie release dates (for age rating/certification)
@@ -145,7 +145,7 @@ export const movieService = {
       `/movies/${movieId}/release-dates`,
       { params: { type: mediaType } }
     );
-    return response.data;
+    return response;
   },
 
   // Get movie images (backdrops, posters, logos)
@@ -154,7 +154,7 @@ export const movieService = {
       `/movies/${movieId}/images`,
       { params: { type: mediaType } }
     );
-    return response.data;
+    return response;
   },
 
   // ===== TV Series endpoints =====
@@ -164,7 +164,7 @@ export const movieService = {
     const response = await axios.get<PaginatedResponse<Movie>>(
       `/movies/tv/popular?page=${page}`
     );
-    return response.data;
+    return response;
   },
 
   // Get top rated TV series
@@ -172,7 +172,7 @@ export const movieService = {
     const response = await axios.get<PaginatedResponse<Movie>>(
       `/movies/tv/top-rated?page=${page}`
     );
-    return response.data;
+    return response;
   },
 
   // Get on the air TV series
@@ -180,7 +180,7 @@ export const movieService = {
     const response = await axios.get<PaginatedResponse<Movie>>(
       `/movies/tv/on-the-air?page=${page}`
     );
-    return response.data;
+    return response;
   },
 
   // Get airing today TV series
@@ -188,7 +188,7 @@ export const movieService = {
     const response = await axios.get<PaginatedResponse<Movie>>(
       `/movies/tv/airing-today?page=${page}`
     );
-    return response.data;
+    return response;
   },
 
   // Get TV series by genre
@@ -196,7 +196,7 @@ export const movieService = {
     const response = await axios.get<PaginatedResponse<Movie>>(
       `/movies/tv/genre/${genreId}?page=${page}`
     );
-    return response.data;
+    return response;
   },
 };
 

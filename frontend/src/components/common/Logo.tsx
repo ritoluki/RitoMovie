@@ -7,18 +7,19 @@ interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
   showIcon?: boolean;
   animated?: boolean;
+  className?: string;
 }
 
-const Logo = ({ size = 'md', showIcon = true, animated = true }: LogoProps) => {
+const Logo = ({ size = 'md', showIcon = true, animated = true, className = '' }: LogoProps) => {
   const { t } = useTranslation();
   const { settings } = useSettingsStore();
   const siteName = settings.site_name || 'RitoMovie';
-  
+
   // Split site name for gradient effect (e.g., "RitoMovie" -> "Rito" + "Movie")
   const midPoint = Math.ceil(siteName.length / 2);
   const firstHalf = siteName.slice(0, midPoint);
   const secondHalf = siteName.slice(midPoint);
-  
+
   const sizeClasses = {
     sm: 'text-xl md:text-2xl',
     md: 'text-2xl md:text-3xl',
@@ -26,7 +27,7 @@ const Logo = ({ size = 'md', showIcon = true, animated = true }: LogoProps) => {
   };
 
   const LogoContent = (
-    <div className="flex flex-col group">
+    <div className={`flex flex-col group ${className}`}>
       <div className="relative">
         <motion.div
           className={`${sizeClasses[size]} font-bold font-display relative`}
@@ -37,7 +38,7 @@ const Logo = ({ size = 'md', showIcon = true, animated = true }: LogoProps) => {
           <span className="absolute inset-0 bg-gradient-to-r from-red-600 via-red-400 to-white bg-clip-text text-transparent blur-sm opacity-50">
             {siteName}
           </span>
-          
+
           {/* Main text with gradient */}
           <span className="relative bg-gradient-to-r from-red-600 via-red-400 to-white bg-clip-text text-transparent group-hover:from-red-500 group-hover:via-red-300 group-hover:to-gray-100 transition-all duration-300">
             {firstHalf}
@@ -46,7 +47,7 @@ const Logo = ({ size = 'md', showIcon = true, animated = true }: LogoProps) => {
             {secondHalf}
           </span>
         </motion.div>
-        
+
         {/* Animated underline */}
         <motion.div
           className="h-0.5 bg-gradient-to-r from-red-600 via-red-400 to-white rounded-full"

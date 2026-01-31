@@ -46,7 +46,7 @@ const DocumentHead: React.FC = () => {
                 favicon.setAttribute('rel', 'icon');
                 document.head.appendChild(favicon);
             }
-            favicon.href = settings.site_logo;
+            favicon.href = String(settings.site_logo || '');
         }
     }, [settings]);
 

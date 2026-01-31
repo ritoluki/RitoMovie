@@ -47,17 +47,17 @@ export const phimService = {
             },
         });
 
-        return response.data;
+        return response;
     },
 
     getMovieBySlug: async (slug: string): Promise<ApiResponse<PhimMovieDetailResponse>> => {
         const response = await axios.get<ApiResponse<PhimMovieDetailResponse>>(`/phim/movie/${slug}`);
-        return response.data;
+        return response;
     },
 
     getMovieByTmdb: async (tmdbId: number, type: PhimType = 'auto'): Promise<ApiResponse<PhimMovieDetailResponse>> => {
         const response = await axios.get<ApiResponse<PhimMovieDetailResponse>>(`/phim/tmdb/${type}/${tmdbId}`);
-        return response.data;
+        return response;
     },
 
     getCatalogList: async (type: CatalogType, params?: CatalogQuery): Promise<ApiResponse<PhimCatalogResponse>> => {
@@ -65,17 +65,17 @@ export const phimService = {
             params,
         });
 
-        return response.data;
+        return response;
     },
 
     getGenres: async (): Promise<ApiResponse<PhimCategoryListResponse>> => {
         const response = await axios.get<ApiResponse<PhimCategoryListResponse>>('/phim/genres');
-        return response.data;
+        return response;
     },
 
     getCountries: async (): Promise<ApiResponse<PhimCountryListResponse>> => {
         const response = await axios.get<ApiResponse<PhimCountryListResponse>>('/phim/countries');
-        return response.data;
+        return response;
     },
 
     getGenreDetail: async (slug: string, params?: DetailQuery): Promise<ApiResponse<PhimCatalogResponse>> => {
@@ -83,7 +83,7 @@ export const phimService = {
             params,
         });
 
-        return response.data;
+        return response;
     },
 
     getCountryDetail: async (slug: string, params?: DetailQuery): Promise<ApiResponse<PhimCatalogResponse>> => {
@@ -91,7 +91,7 @@ export const phimService = {
             params,
         });
 
-        return response.data;
+        return response;
     },
 
     search: async (keyword: string, params?: Omit<CatalogQuery, 'category' | 'country'>): Promise<ApiResponse<PhimCatalogResponse>> => {
@@ -102,6 +102,6 @@ export const phimService = {
             },
         });
 
-        return response.data;
+        return response;
     },
 };

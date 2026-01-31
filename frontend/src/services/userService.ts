@@ -60,7 +60,7 @@ export const userService = {
     return (response as any).data;
   },
 
-  saveProgress: async (
+  saveMovieProgress: async (
     movieId: number,
     progress: number,
     duration: number
@@ -70,7 +70,7 @@ export const userService = {
       progress,
       duration,
     });
-    return response.data.data;
+    return response.data;
   },
 
   getMovieProgress: async (movieId: number): Promise<WatchHistory | null> => {
@@ -78,7 +78,7 @@ export const userService = {
       const response = await axios.get<ApiResponse<WatchHistory>>(
         `/users/history/${movieId}`
       );
-      return response.data.data;
+      return response.data;
     } catch {
       return null;
     }
@@ -99,7 +99,7 @@ export const userService = {
       rating,
       review,
     });
-    return response.data.data;
+    return response.data;
   },
 
   getMovieRating: async (movieId: number): Promise<Rating | null> => {
@@ -107,7 +107,7 @@ export const userService = {
       const response = await axios.get<ApiResponse<Rating>>(
         `/users/ratings/${movieId}`
       );
-      return response.data.data;
+      return response.data;
     } catch {
       return null;
     }
@@ -115,7 +115,7 @@ export const userService = {
 
   getUserRatings: async (): Promise<Rating[]> => {
     const response = await axios.get<ApiResponse<Rating[]>>('/users/ratings');
-    return response.data.data;
+    return response.data;
   },
 
   deleteRating: async (movieId: number): Promise<void> => {
@@ -128,7 +128,7 @@ export const userService = {
     const response = await axios.get<ApiResponse<{ average: number; count: number }>>(
       `/users/ratings/${movieId}/average`
     );
-    return response.data.data;
+    return response.data;
   },
 };
 

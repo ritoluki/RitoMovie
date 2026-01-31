@@ -9,7 +9,7 @@ const VerifyEmail: React.FC = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const { login, user } = useAuthStore();
-  
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -26,16 +26,14 @@ const VerifyEmail: React.FC = () => {
 
   const verifyEmail = async (verificationToken: string) => {
     try {
-      const response = await api.get(`/auth/verify-email/${verificationToken}`);
+      const response = await api.get<{ success: boolean; data?: { token: string; user: any }; message: string }>(`/auth/verify-email/${verificationToken}`);
 
       if (response.success) {
         setIsSuccess(true);
-        
+
         // Auto-login after successful verification
         if (response.data?.token && response.data?.user) {
-          login(response.data.user, response.data.token);
-          
-          // Redirect after 3 seconds
+          login(response.data.user, response.data.token);          // Redirect after 3 seconds
           setTimeout(() => {
             navigate('/');
           }, 3000);
@@ -53,8 +51,8 @@ const VerifyEmail: React.FC = () => {
     setError('');
 
     try {
-      const response = await api.post('/auth/resend-verification');
-      
+      const response = await api.post<{ success: boolean; message: string }>('/auth/resend-verification');
+
       if (response.success) {
         alert('Verification email sent! Please check your inbox.');
       }
@@ -96,7 +94,7 @@ const VerifyEmail: React.FC = () => {
               <p className="text-gray-400 mb-6">
                 Your email has been verified. Welcome to RitoMovie!
               </p>
-              
+
               <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-6">
                 <p className="text-sm text-green-300">
                   ✨ You can now enjoy all features of RitoMovie, including personalized recommendations and watchlist!
@@ -136,7 +134,7 @@ const VerifyEmail: React.FC = () => {
               <AlertCircle className="w-8 h-8 text-red-500" />
             </div>
             <h2 className="text-xl font-bold text-white mb-2">Verification Failed</h2>
-            
+
             {error && (
               <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
                 <p className="text-sm text-red-300">{error}</p>

@@ -7,17 +7,17 @@ interface MovieState {
   watchlist: number[];
   history: WatchHistory[];
   isLoading: boolean;
-  
+
   // Watchlist actions
   fetchWatchlist: () => Promise<void>;
   addToWatchlist: (movieId: number) => Promise<void>;
   removeFromWatchlist: (movieId: number) => Promise<void>;
   isInWatchlist: (movieId: number) => boolean;
-  
+
   // History actions
   fetchHistory: () => Promise<void>;
   saveProgress: (movieId: number, progress: number, duration: number) => Promise<void>;
-  
+
   // Clear on logout
   clearStore: () => void;
 }
@@ -78,7 +78,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
 
   saveProgress: async (movieId: number, progress: number, duration: number) => {
     try {
-      await userService.saveProgress(movieId, progress, duration);
+      await userService.saveMovieProgress(movieId, progress, duration);
       // Optionally update local history
       await get().fetchHistory();
     } catch (error) {
