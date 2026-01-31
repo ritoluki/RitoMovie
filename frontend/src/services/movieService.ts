@@ -6,111 +6,111 @@ type MediaType = 'movie' | 'tv';
 export const movieService = {
   // Get trending movies
   getTrending: async (timeWindow: 'day' | 'week' = 'week'): Promise<PaginatedResponse<Movie>> => {
-    const response = await axios.get<PaginatedResponse<Movie>>(
+    const response = await axios.get<{ success: boolean; data: PaginatedResponse<Movie> }>(
       `/movies/trending?time_window=${timeWindow}`
     );
-    return response;
+    return response.data;
   },
 
   // Get popular movies
   getPopular: async (page: number = 1): Promise<PaginatedResponse<Movie>> => {
-    const response = await axios.get<PaginatedResponse<Movie>>(
+    const response = await axios.get<{ success: boolean; data: PaginatedResponse<Movie> }>(
       `/movies/popular?page=${page}`
     );
-    return response;
+    return response.data;
   },
 
   // Get top rated movies
   getTopRated: async (page: number = 1): Promise<PaginatedResponse<Movie>> => {
-    const response = await axios.get<PaginatedResponse<Movie>>(
+    const response = await axios.get<{ success: boolean; data: PaginatedResponse<Movie> }>(
       `/movies/top-rated?page=${page}`
     );
-    return response;
+    return response.data;
   },
 
   // Get upcoming movies
   getUpcoming: async (page: number = 1): Promise<PaginatedResponse<Movie>> => {
-    const response = await axios.get<PaginatedResponse<Movie>>(
+    const response = await axios.get<{ success: boolean; data: PaginatedResponse<Movie> }>(
       `/movies/upcoming?page=${page}`
     );
-    return response;
+    return response.data;
   },
 
   // Get now playing movies
   getNowPlaying: async (page: number = 1): Promise<PaginatedResponse<Movie>> => {
-    const response = await axios.get<PaginatedResponse<Movie>>(
+    const response = await axios.get<{ success: boolean; data: PaginatedResponse<Movie> }>(
       `/movies/now-playing?page=${page}`
     );
-    return response;
+    return response.data;
   },
 
   // Get movies by genre
   getByGenre: async (genreId: number, page: number = 1): Promise<PaginatedResponse<Movie>> => {
-    const response = await axios.get<PaginatedResponse<Movie>>(
+    const response = await axios.get<{ success: boolean; data: PaginatedResponse<Movie> }>(
       `/movies/genre/${genreId}?page=${page}`
     );
-    return response;
+    return response.data;
   },
 
   // Search movies
   search: async (query: string, page: number = 1): Promise<PaginatedResponse<Movie>> => {
-    const response = await axios.get<PaginatedResponse<Movie>>(
+    const response = await axios.get<{ success: boolean; data: PaginatedResponse<Movie> }>(
       `/movies/search?q=${encodeURIComponent(query)}&page=${page}`
     );
-    return response;
+    return response.data;
   },
 
   // Get movie details
   getDetails: async (movieId: number, mediaType: MediaType = 'movie'): Promise<MovieDetails> => {
-    const response = await axios.get<MovieDetails>(`/movies/${movieId}`, {
+    const response = await axios.get<{ success: boolean; data: MovieDetails }>(`/movies/${movieId}`, {
       params: { type: mediaType },
     });
-    return response;
+    return response.data;
   },
 
   // Get movie videos (trailers, etc.)
   getVideos: async (movieId: number, mediaType: MediaType = 'movie'): Promise<{ results: Video[] }> => {
-    const response = await axios.get<{ results: Video[] }>(
+    const response = await axios.get<{ success: boolean; data: { results: Video[] } }>(
       `/movies/${movieId}/videos`,
       { params: { type: mediaType } }
     );
-    return response;
+    return response.data;
   },
 
   // Get movie credits (cast and crew)
   getCredits: async (movieId: number, mediaType: MediaType = 'movie'): Promise<Credits> => {
-    const response = await axios.get<Credits>(`/movies/${movieId}/credits`, {
+    const response = await axios.get<{ success: boolean; data: Credits }>(`/movies/${movieId}/credits`, {
       params: { type: mediaType },
     });
-    return response;
+    return response.data;
   },
 
   // Get similar movies
   getSimilar: async (movieId: number, page: number = 1, mediaType: MediaType = 'movie'): Promise<PaginatedResponse<Movie>> => {
-    const response = await axios.get<PaginatedResponse<Movie>>(
+    const response = await axios.get<{ success: boolean; data: PaginatedResponse<Movie> }>(
       `/movies/${movieId}/similar?page=${page}&type=${mediaType}`
     );
-    return response;
+    return response.data;
   },
 
   // Get movie recommendations
   getRecommendations: async (movieId: number, page: number = 1, mediaType: MediaType = 'movie'): Promise<PaginatedResponse<Movie>> => {
-    const response = await axios.get<PaginatedResponse<Movie>>(
+    const response = await axios.get<{ success: boolean; data: PaginatedResponse<Movie> }>(
       `/movies/${movieId}/recommendations?page=${page}&type=${mediaType}`
     );
-    return response;
+    return response.data;
   },
 
   // Get all genres
   getGenres: async (): Promise<{ genres: Genre[] }> => {
-    const response = await axios.get<{ genres: Genre[] }>('/movies/genres/list');
-    return response;
+    const response = await axios.get<{ success: boolean; data: { genres: Genre[] } }>('/movies/genres/list');
+    return response.data;
   },
 
   // Get all countries
   getCountries: async (): Promise<Country[]> => {
-    const response = await axios.get<Country[]>('/movies/countries/list');
-    return response;
+    const response = await axios.get<{ success: boolean; data: Country[] }>('/movies/countries/list');
+    return response.data;
   },
 
   // Discover movies with filters
@@ -133,70 +133,70 @@ export const movieService = {
       }
     });
 
-    const response = await axios.get<PaginatedResponse<Movie>>(
+    const response = await axios.get<{ success: boolean; data: PaginatedResponse<Movie> }>(
       `/movies/discover?${params.toString()}`
     );
-    return response;
+    return response.data;
   },
 
   // Get movie release dates (for age rating/certification)
   getReleaseDates: async (movieId: number, mediaType: MediaType = 'movie'): Promise<ReleaseDatesResponse> => {
-    const response = await axios.get<ReleaseDatesResponse>(
+    const response = await axios.get<{ success: boolean; data: ReleaseDatesResponse }>(
       `/movies/${movieId}/release-dates`,
       { params: { type: mediaType } }
     );
-    return response;
+    return response.data;
   },
 
   // Get movie images (backdrops, posters, logos)
   getImages: async (movieId: number, mediaType: MediaType = 'movie'): Promise<MovieImages> => {
-    const response = await axios.get<MovieImages>(
+    const response = await axios.get<{ success: boolean; data: MovieImages }>(
       `/movies/${movieId}/images`,
       { params: { type: mediaType } }
     );
-    return response;
+    return response.data;
   },
 
   // ===== TV Series endpoints =====
 
   // Get popular TV series
   getPopularTvShows: async (page: number = 1): Promise<PaginatedResponse<Movie>> => {
-    const response = await axios.get<PaginatedResponse<Movie>>(
+    const response = await axios.get<{ success: boolean; data: PaginatedResponse<Movie> }>(
       `/movies/tv/popular?page=${page}`
     );
-    return response;
+    return response.data;
   },
 
   // Get top rated TV series
   getTopRatedTvShows: async (page: number = 1): Promise<PaginatedResponse<Movie>> => {
-    const response = await axios.get<PaginatedResponse<Movie>>(
+    const response = await axios.get<{ success: boolean; data: PaginatedResponse<Movie> }>(
       `/movies/tv/top-rated?page=${page}`
     );
-    return response;
+    return response.data;
   },
 
   // Get on the air TV series
   getOnTheAirTvShows: async (page: number = 1): Promise<PaginatedResponse<Movie>> => {
-    const response = await axios.get<PaginatedResponse<Movie>>(
+    const response = await axios.get<{ success: boolean; data: PaginatedResponse<Movie> }>(
       `/movies/tv/on-the-air?page=${page}`
     );
-    return response;
+    return response.data;
   },
 
   // Get airing today TV series
   getAiringTodayTvShows: async (page: number = 1): Promise<PaginatedResponse<Movie>> => {
-    const response = await axios.get<PaginatedResponse<Movie>>(
+    const response = await axios.get<{ success: boolean; data: PaginatedResponse<Movie> }>(
       `/movies/tv/airing-today?page=${page}`
     );
-    return response;
+    return response.data;
   },
 
   // Get TV series by genre
   getTvShowsByGenre: async (genreId: number, page: number = 1): Promise<PaginatedResponse<Movie>> => {
-    const response = await axios.get<PaginatedResponse<Movie>>(
+    const response = await axios.get<{ success: boolean; data: PaginatedResponse<Movie> }>(
       `/movies/tv/genre/${genreId}?page=${page}`
     );
-    return response;
+    return response.data;
   },
 };
 

@@ -104,8 +104,9 @@ const MovieDetails = () => {
     if (releaseCert) return releaseCert;
 
     if (movie.adult) return 'T18';
-    if (movie.vote_average >= 7.5) return 'T16';
-    if (movie.vote_average >= 6) return 'T13';
+    const voteAvg = movie.vote_average ?? 0;
+    if (voteAvg >= 7.5) return 'T16';
+    if (voteAvg >= 6) return 'T13';
     return 'P';
   }, [releaseDates, movie]);
 
@@ -213,7 +214,7 @@ const MovieDetails = () => {
                 <div className="flex items-center gap-1.5 bg-yellow-500/20 backdrop-blur-sm border border-yellow-500/40 px-3 py-1.5 rounded-lg">
                   <span className="text-yellow-400 font-bold text-sm">★</span>
                   <span className="text-white font-semibold text-sm">
-                    {movie.vote_average.toFixed(1)}
+                    {(movie.vote_average ?? 0).toFixed(1)}
                   </span>
                 </div>
 
@@ -285,7 +286,7 @@ const MovieDetails = () => {
                 <div className="flex items-center gap-1.5 bg-yellow-500/20 backdrop-blur-sm border border-yellow-500/40 px-3 py-1.5 rounded-lg">
                   <span className="text-yellow-400 font-bold text-sm">★</span>
                   <span className="text-white font-semibold text-sm">
-                    {movie.vote_average.toFixed(1)}
+                    {(movie.vote_average ?? 0).toFixed(1)}
                   </span>
                 </div>
 
