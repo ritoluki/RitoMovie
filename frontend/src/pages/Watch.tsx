@@ -37,21 +37,24 @@ const Watch = () => {
   } = useMovieDetails(movieId, { mediaType });
 
   const tmdbType = mediaType === 'tv' ? 'tv' : 'movie';
+
+  // Prefer slug lookup when available (slug identifies the exact season for multi-season shows).
+  // Fall back to TMDB ID only when there is no slug at all.
   const {
     data: streamingByTmdb,
     isLoading: streamingByTmdbLoading,
     isError: streamingByTmdbError,
-  } = useMovieByTmdb(hasNumericId ? movieId : undefined, tmdbType);
+  } = useMovieByTmdb(resolvedSlug ? undefined : (hasNumericId ? movieId : undefined), tmdbType);
 
   const {
     data: streamingBySlug,
     isLoading: streamingBySlugLoading,
     isError: streamingBySlugError,
-  } = useMovieBySlug(!hasNumericId ? resolvedSlug : undefined);
+  } = useMovieBySlug(resolvedSlug);
 
-  const streamingData = streamingByTmdb ?? streamingBySlug;
-  const streamingLoading = streamingByTmdbLoading || (!streamingByTmdb && streamingBySlugLoading);
-  const streamingError = streamingByTmdbError && !streamingBySlug ? streamingByTmdbError : streamingBySlugError;
+  const streamingData = streamingBySlug ?? streamingByTmdb;
+  const streamingLoading = resolvedSlug ? streamingBySlugLoading : streamingByTmdbLoading;
+  const streamingError = resolvedSlug ? streamingBySlugError : streamingByTmdbError;
 
   const [activeServerIndex, setActiveServerIndex] = useState(0);
   const [selectedEpisodeSlug, setSelectedEpisodeSlug] = useState<string | null>(null);
