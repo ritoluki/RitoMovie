@@ -52,7 +52,7 @@ const PhimPopup = ({ item, tmdbMovie, isLoading, isVisible, onClose, cardRef }: 
   };
 
   const watchHref = buildWatchHref();
-  const detailHref = tmdbId ? `/movie/${tmdbId}?type=${mediaType}` : watchHref;
+  const detailHref = tmdbId ? `/movie/${tmdbId}?type=${mediaType}&phimSlug=${encodeURIComponent(slug)}` : watchHref;
   const qualityLabel = item.quality || item.lang;
   const langLabel = item.lang;
   const episodeLabel = item.episode_current || item.time;

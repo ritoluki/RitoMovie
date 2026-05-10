@@ -25,6 +25,7 @@ const MovieDetails = () => {
   const [searchParams] = useSearchParams();
   const mediaTypeParam = searchParams.get('type');
   const mediaType: 'movie' | 'tv' = mediaTypeParam === 'tv' ? 'tv' : 'movie';
+  const phimSlug = searchParams.get('phimSlug') || undefined;
   const movieId = parseInt(id || '0');
   const [activeTab, setActiveTab] = useState<TabType>('episodes');
   const [showMovieInfo, setShowMovieInfo] = useState(false);
@@ -36,17 +37,22 @@ const MovieDetails = () => {
     useMovieImages,
     useReleaseDates,
   } = useMovies();
-  const { useMovieByTmdb } = usePhim();
+  const { useMovieByTmdb, useMovieBySlug } = usePhim();
 
   const { data: movie, isLoading: movieLoading } = useMovieDetails(movieId, { mediaType });
   const { data: credits } = useMovieCredits(movieId, mediaType);
   const { data: similar } = useSimilarMovies(movieId, 1, mediaType);
   const { data: images } = useMovieImages(movieId, mediaType);
   const { data: releaseDates } = useReleaseDates(movieId, mediaType);
-  const { data: streamingData, isLoading: streamingLoading } = useMovieByTmdb(
-    movieId,
+
+  const { data: streamingBySlug, isLoading: streamingBySlugLoading } = useMovieBySlug(phimSlug);
+  const { data: streamingByTmdb, isLoading: streamingByTmdbLoading } = useMovieByTmdb(
+    phimSlug ? undefined : movieId,
     mediaType === 'tv' ? 'tv' : 'movie'
   );
+
+  const streamingData = phimSlug ? streamingBySlug : streamingByTmdb;
+  const streamingLoading = phimSlug ? streamingBySlugLoading : streamingByTmdbLoading;
 
   const { isAuthenticated } = useAuthStore();
   const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useMovieStore();
