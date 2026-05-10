@@ -462,7 +462,9 @@ const Browse = () => {
                 {searchQuery
                   ? t('browse.searchResults', { query: searchQuery })
                   : isPhimFilterActive
-                    ? t(CATALOG_TITLE_KEYS[selectedPhimCatalog] ?? 'browse.singleMovieList')
+                    ? catalogFilter
+                      ? t(CATALOG_TITLE_KEYS[catalogFilter])
+                      : t('browse.movieList')
                     : t('browse.featuredMovies')}
               </h1>
               <p className="text-gray-400">
