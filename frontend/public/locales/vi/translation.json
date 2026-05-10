@@ -225,7 +225,12 @@
     "emailPlaceholder": "Email của bạn",
     "subscribe": "Đăng ký",
     "allRightsReserved": "Tất cả quyền được bảo lưu.",
-    "builtWith": "Được xây dựng với ❤️ bằng React, TypeScript & Node.js"
+    "builtWith": "Được xây dựng với ❤️ bằng React, TypeScript & Node.js",
+    "aboutProject": "Về dự án",
+    "projectDescription": "RitoMovie là dự án cá nhân, phi thương mại, được xây dựng nhằm mục đích học tập và phát triển. Toàn bộ nội dung được lấy từ các API công khai.",
+    "nonCommercialBadge": "Cá nhân · Phi thương mại",
+    "nonCommercialDisclaimer": "Dự án cá nhân phi thương mại",
+    "viewSourceCode": "Xem mã nguồn"
   },
   "browse": {
     "title": "Duyệt phim",

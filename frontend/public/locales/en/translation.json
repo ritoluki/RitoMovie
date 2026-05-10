@@ -225,7 +225,12 @@
     "emailPlaceholder": "Your email",
     "subscribe": "Subscribe",
     "allRightsReserved": "All rights reserved.",
-    "builtWith": "Built with ❤️ using React, TypeScript & Node.js"
+    "builtWith": "Built with ❤️ using React, TypeScript & Node.js",
+    "aboutProject": "About This Project",
+    "projectDescription": "RitoMovie is a personal, non-commercial project built for learning and development purposes. All content is sourced from public APIs.",
+    "nonCommercialBadge": "Personal · Non-commercial",
+    "nonCommercialDisclaimer": "Personal non-commercial project",
+    "viewSourceCode": "View Source Code"
   },
   "browse": {
     "title": "Browse Movies",
