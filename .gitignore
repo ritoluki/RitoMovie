@@ -7,3 +7,6 @@
 **/.DS_Store
 **/coverage/
 backend/uploads/videos/
+
+# Claude Code local settings
+.claude/settings.local.json
