@@ -65,6 +65,17 @@ const PHIM_CATALOG_LABELS: Record<CatalogType, string> = {
   'phim-long-tieng': 'Lồng tiếng',
 };
 
+const CATALOG_TITLE_KEYS: Record<CatalogType, string> = {
+  'phim-le': 'browse.singleMovieList',
+  'phim-bo': 'browse.seriesMovieList',
+  'hoat-hinh': 'browse.animationList',
+  'phim-chieu-rap': 'browse.cinemaList',
+  'tv-shows': 'browse.tvShowsList',
+  'phim-vietsub': 'browse.vietsubList',
+  'phim-thuyet-minh': 'browse.dubbedList',
+  'phim-long-tieng': 'browse.voiceoverList',
+};
+
 const isValidPhimCatalog = (value: string | null): value is CatalogType => {
   if (!value) return false;
   return PHIM_CATALOG_TYPES.includes(value as CatalogType);
@@ -451,9 +462,7 @@ const Browse = () => {
                 {searchQuery
                   ? t('browse.searchResults', { query: searchQuery })
                   : isPhimFilterActive
-                    ? selectedPhimCatalog === 'phim-bo'
-                      ? t('browse.seriesMovieList')
-                      : t('browse.singleMovieList')
+                    ? t(CATALOG_TITLE_KEYS[selectedPhimCatalog] ?? 'browse.singleMovieList')
                     : t('browse.featuredMovies')}
               </h1>
               <p className="text-gray-400">

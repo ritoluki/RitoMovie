@@ -235,7 +235,21 @@
     "popularity": "Phổ biến",
     "releaseDate": "Ngày phát hành",
     "rating": "Đánh giá",
-    "noMoviesFound": "Không tìm thấy phim"
+    "noMoviesFound": "Không tìm thấy phim",
+    "singleMovieList": "Danh sách phim lẻ",
+    "seriesMovieList": "Danh sách phim bộ",
+    "animationList": "Danh sách hoạt hình",
+    "cinemaList": "Danh sách phim chiếu rạp",
+    "tvShowsList": "Danh sách TV Shows",
+    "vietsubList": "Danh sách phim vietsub",
+    "dubbedList": "Danh sách phim thuyết minh",
+    "voiceoverList": "Danh sách phim lồng tiếng",
+    "curatedCollection": "Bộ sưu tập được chọn lọc",
+    "filter": "Bộ lọc",
+    "searchResults": "Kết quả tìm kiếm \"{{query}}\"",
+    "foundResults": "Tìm thấy {{count}} kết quả",
+    "featuredMovies": "Phim nổi bật",
+    "discoverNext": "Khám phá bộ phim yêu thích tiếp theo của bạn"
   },
   "myList": {
     "title": "Danh sách của tôi",
@@ -270,14 +284,4 @@
     "networkError": "Lỗi kết nối. Vui lòng kiểm tra kết nối của bạn.",
     "serverError": "Lỗi máy chủ. Vui lòng thử lại sau."
   },
-  "browse": {
-    "singleMovieList": "Danh sách phim lẻ",
-    "seriesMovieList": "Danh sách phim bộ",
-    "curatedCollection": "Bộ sưu tập được chọn lọc",
-    "filter": "Bộ lọc",
-    "searchResults": "Kết quả tìm kiếm \"{{query}}\"",
-    "foundResults": "Tìm thấy {{count}} kết quả",
-    "featuredMovies": "Phim nổi bật",
-    "discoverNext": "Khám phá bộ phim yêu thích tiếp theo của bạn"
-  }
 }
