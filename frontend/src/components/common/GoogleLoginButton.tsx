@@ -9,7 +9,7 @@ interface GoogleLoginButtonProps {
     onError?: () => void;
 }
 
-const GoogleLoginButton = ({ onSuccess, onError }: GoogleLoginButtonProps) => {
+const ConfiguredGoogleLoginButton = ({ onSuccess, onError }: GoogleLoginButtonProps) => {
     const { loginWithGoogle } = useAuthStore();
     const { t } = useTranslation();
 
@@ -45,6 +45,13 @@ const GoogleLoginButton = ({ onSuccess, onError }: GoogleLoginButtonProps) => {
             <span>{t('auth.signInWithGoogle')}</span>
         </button>
     );
+};
+
+const GoogleLoginButton = (props: GoogleLoginButtonProps) => {
+    // The OAuth hook requires a configured client ID. Hide this optional sign-in
+    // method when the deployment has not supplied one; email/password still works.
+    if (!import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim()) return null;
+    return <ConfiguredGoogleLoginButton {...props} />;
 };
 
 export default GoogleLoginButton;

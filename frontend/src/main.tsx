@@ -7,13 +7,21 @@ import './styles/index.css';
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
+const AppWithRouter = () => (
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>
+);
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter>
+    {googleClientId ? (
       <GoogleOAuthProvider clientId={googleClientId}>
-        <App />
+        <AppWithRouter />
       </GoogleOAuthProvider>
-    </BrowserRouter>
+    ) : (
+      <AppWithRouter />
+    )}
   </React.StrictMode>
 );
 

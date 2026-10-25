@@ -126,20 +126,23 @@ const Login = () => {
             </Button>
           </form>
 
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-700"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-gray-800/50 text-gray-400">Or continue with</span>
-            </div>
-          </div>
+          {import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() && (
+            <>
+              {/* Divider */}
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-700"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-4 bg-gray-800/50 text-gray-400">Or continue with</span>
+                </div>
+              </div>
 
-          {/* Google Login Button */}
-          <GoogleLoginButton 
-            onSuccess={() => navigate(from, { replace: true })}
-          />
+              <GoogleLoginButton
+                onSuccess={() => navigate(from, { replace: true })}
+              />
+            </>
+          )}
 
           <div className="mt-6 text-center">
             <p className="text-gray-400">
