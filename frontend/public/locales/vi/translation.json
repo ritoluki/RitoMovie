@@ -35,6 +35,7 @@
     "adminDashboard": "Quản trị viên"
   },
   "home": {
+    "recentlyUpdated": "Vừa cập nhật",
     "popularMovies": "Phim phổ biến",
     "topRated": "Đánh giá cao",
     "actionMovies": "Phim hành động",
@@ -122,6 +123,7 @@
     "noActorsFound": "Không tìm thấy diễn viên nào"
   },
   "movie": {
+    "keywords": "Từ khóa nội dung",
     "watchNow": "Xem ngay",
     "play": "Phát",
     "myList": "Danh sách của tôi",
@@ -233,6 +235,14 @@
     "viewSourceCode": "Xem mã nguồn"
   },
   "browse": {
+    "audioLanguage": "Ngôn ngữ phim",
+    "allLanguages": "Tất cả ngôn ngữ",
+    "narrated": "Thuyết minh",
+    "voiceDubbed": "Lồng tiếng",
+    "yearRange": "Khoảng năm phát hành",
+    "fromYear": "Từ năm",
+    "toYear": "Đến năm",
+    "invalidYearRange": "Nhập đủ hai năm từ 1800 đến 2200; năm bắt đầu phải nhỏ hơn hoặc bằng năm kết thúc.",
     "title": "Duyệt phim",
     "filterByGenre": "Lọc theo thể loại",
     "allGenres": "Tất cả thể loại",

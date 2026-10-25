@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import asyncHandler from '../utils/asyncHandler';
 import ApiError from '../utils/ApiError';
+import { parsePhimYear } from '../utils/phimPayload';
 import {
     CatalogType,
     SortLang,
@@ -157,7 +158,7 @@ export const searchCatalog = asyncHandler(
                 : undefined,
             category: req.query.category?.toString(),
             country: req.query.country?.toString(),
-            year: parseNumber(req.query.year?.toString()),
+            year: parsePhimYear(req.query.year?.toString()),
             limit: parseLimit(req.query.limit?.toString()),
         });
 
@@ -190,7 +191,7 @@ export const fetchCatalogList = asyncHandler(
                 : undefined,
             category: req.query.category?.toString(),
             country: req.query.country?.toString(),
-            year: parseNumber(req.query.year?.toString()),
+            year: parsePhimYear(req.query.year?.toString()),
             limit: parseLimit(req.query.limit?.toString()),
         });
 
@@ -230,7 +231,7 @@ export const fetchGenreDetail = asyncHandler(
                 ? (req.query.sort_lang!.toString() as SortLang)
                 : undefined,
             country: req.query.country?.toString(),
-            year: parseNumber(req.query.year?.toString()),
+            year: parsePhimYear(req.query.year?.toString()),
             limit: parseLimit(req.query.limit?.toString()),
         });
 
@@ -267,7 +268,7 @@ export const fetchCountryDetail = asyncHandler(
                 ? (req.query.sort_lang!.toString() as SortLang)
                 : undefined,
             category: req.query.category?.toString(),
-            year: parseNumber(req.query.year?.toString()),
+            year: parsePhimYear(req.query.year?.toString()),
             limit: parseLimit(req.query.limit?.toString()),
         });
 

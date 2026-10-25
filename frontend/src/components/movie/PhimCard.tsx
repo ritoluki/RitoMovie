@@ -55,7 +55,7 @@ const PhimCard = ({ item }: PhimCardProps) => {
     const slugPath = encodeURIComponent(slug);
     const detailHref = tmdbId
         ? `/movie/${tmdbId}?type=${mediaType}&phimSlug=${encodeURIComponent(slug)}`
-        : `/watch/${slugPath}?type=${mediaType}`;
+        : `/movie/0?type=${mediaType}&phimSlug=${slugPath}`;
     const poster = getPhimImageUrl(item.thumb_url || item.poster_url);
     const episodeLabel = item.episode_current || item.time || '';
     const qualityLabel = item.quality || item.lang || '';

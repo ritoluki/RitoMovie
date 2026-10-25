@@ -7,12 +7,24 @@ import {
     PhimCatalogData,
     PhimCategoryListResponse,
     PhimCountryListResponse,
+    PhimMovieExtras,
 } from '@/types';
 
 type Version = 'v1' | 'v2' | 'v3';
 type PhimType = 'movie' | 'tv' | 'auto';
 
 export const usePhim = () => {
+    const useHomeUpdates = () => useQuery<PhimCatalogData>({
+        queryKey: ['phim', 'home'],
+        queryFn: async () => (await phimService.getHome()).data.data,
+        staleTime: 2 * 60 * 1000,
+    });
+    const useExtras = (slug?: string) => useQuery<PhimMovieExtras>({
+        queryKey: ['phim', 'extras', slug],
+        queryFn: async () => (await phimService.getExtras(slug!)).data,
+        enabled: Boolean(slug),
+        staleTime: 10 * 60 * 1000,
+    });
     const useLatest = (options?: { page?: number; version?: Version }) => {
         return useQuery<PhimLatestResponse>({
             queryKey: ['phim', 'latest', options?.page ?? 1, options?.version ?? 'v1'],
@@ -137,6 +149,8 @@ export const usePhim = () => {
     };
 
     return {
+        useHomeUpdates,
+        useExtras,
         useLatest,
         useMovieBySlug,
         useMovieByTmdb,

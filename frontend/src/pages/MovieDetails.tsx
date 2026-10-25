@@ -16,6 +16,7 @@ import CastTab from '@/components/movie/tabs/CastTab';
 import GalleryTab from '@/components/movie/tabs/GalleryTab';
 import RecommendationsTab from '@/components/movie/tabs/RecommendationsTab';
 import { useTranslation } from 'react-i18next';
+import { phimToMovieDetails, phimActorNames, selectPhimImages } from '@/utils/phimFallback';
 
 type TabType = 'episodes' | 'gallery' | 'cast' | 'recommendations';
 
@@ -37,12 +38,12 @@ const MovieDetails = () => {
     useMovieImages,
     useReleaseDates,
   } = useMovies();
-  const { useMovieByTmdb, useMovieBySlug } = usePhim();
+  const { useMovieByTmdb, useMovieBySlug, useExtras } = usePhim();
 
-  const { data: movie, isLoading: movieLoading } = useMovieDetails(movieId, { mediaType });
-  const { data: credits } = useMovieCredits(movieId, mediaType);
-  const { data: similar } = useSimilarMovies(movieId, 1, mediaType);
-  const { data: images } = useMovieImages(movieId, mediaType);
+  const { data: tmdbMovie, isLoading: movieLoading } = useMovieDetails(movieId, { mediaType });
+  const { data: credits, isLoading: creditsLoading } = useMovieCredits(movieId, mediaType);
+  const { data: similar, isLoading: similarLoading } = useSimilarMovies(movieId, 1, mediaType);
+  const { data: tmdbImages, isLoading: imagesLoading } = useMovieImages(movieId, mediaType);
   const { data: releaseDates } = useReleaseDates(movieId, mediaType);
 
   const { data: streamingBySlug, isLoading: streamingBySlugLoading } = useMovieBySlug(phimSlug);
@@ -53,6 +54,9 @@ const MovieDetails = () => {
 
   const streamingData = phimSlug ? streamingBySlug : streamingByTmdb;
   const streamingLoading = phimSlug ? streamingBySlugLoading : streamingByTmdbLoading;
+  const { data: extras, isLoading: extrasLoading } = useExtras(streamingData?.movie?.slug || phimSlug);
+  const movie = tmdbMovie || (streamingData?.movie ? phimToMovieDetails(streamingData.movie, movieId) : undefined);
+  const images = selectPhimImages(tmdbImages, extras?.images);
 
   const { isAuthenticated } = useAuthStore();
   const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useMovieStore();
@@ -116,7 +120,7 @@ const MovieDetails = () => {
     return 'P';
   }, [releaseDates, movie]);
 
-  if (movieLoading) {
+  if (!movie && (movieLoading || streamingLoading)) {
     return <LoadingSpinner fullScreen />;
   }
 
@@ -137,7 +141,7 @@ const MovieDetails = () => {
     ? `${Math.floor(runtimeMinutes / 60)}h ${runtimeMinutes % 60}m`
     : undefined;
 
-  const cast = credits?.cast || [];
+  const cast = credits?.cast?.length ? credits.cast : extras?.cast?.length ? extras.cast : phimActorNames(streamingData?.movie?.actor);
   const recommendedMovies = similar?.results || [];
 
   // Generate clip-path for tilted poster (matching TopMoviesTiltedSection style)
@@ -155,7 +159,7 @@ const MovieDetails = () => {
   if (streamingData?.movie?.slug) {
     watchLinkParams.set('slug', streamingData.movie.slug);
   }
-  const watchLink = `/watch/${movie.id}?${watchLinkParams.toString()}`;
+  const watchLink = `/watch/${movie.id || encodeURIComponent(streamingData?.movie?.slug || '')}?${watchLinkParams.toString()}`;
 
   return (
     <div className="min-h-screen bg-gray-900 -mt-16 md:-mt-20">
@@ -435,7 +439,7 @@ const MovieDetails = () => {
             <div className="flex items-center gap-3 flex-wrap pt-2">
               <Button
                 onClick={handleWatchlistClick}
-                disabled={!isAuthenticated}
+                disabled={!isAuthenticated || movieId <= 0}
                 variant={inWatchlist ? 'danger' : 'outline'}
                 size="sm"
                 className={inWatchlist ? 'bg-red-600 hover:bg-red-700 border-red-600' : ''}
@@ -477,6 +481,14 @@ const MovieDetails = () => {
       </div>
 
       {/* Tabs Navigation */}
+      {!!extras?.keywords.length && (
+        <div className="container mx-auto px-4 md:px-8 mt-8">
+          <h2 className="text-sm font-medium text-gray-400 mb-3">{t('movie.keywords')}</h2>
+          <div className="flex flex-wrap gap-2">
+            {extras.keywords.map(keyword => <span key={keyword} className="rounded-full border border-gray-700 bg-gray-800 px-3 py-1 text-sm text-gray-300">{keyword}</span>)}
+          </div>
+        </div>
+      )}
       <div className="border-b border-gray-800 bg-gray-900/95 backdrop-blur-md sticky top-16 md:top-20 z-40 mt-12">
         <div className="container mx-auto px-4 md:px-8">
           <div className="flex gap-8">
@@ -515,16 +527,16 @@ const MovieDetails = () => {
           />
         )}
         {activeTab === 'gallery' && (
-          <GalleryTab movieId={movieId} images={images} isLoading={!images} />
+          <GalleryTab movieId={movieId} images={images} isLoading={!images && (imagesLoading || extrasLoading)} />
         )}
         {activeTab === 'cast' && (
-          <CastTab movieId={movieId} cast={cast} isLoading={!credits} />
+          <CastTab movieId={movieId} cast={cast} isLoading={!cast.length && (creditsLoading || extrasLoading)} />
         )}
         {activeTab === 'recommendations' && (
           <RecommendationsTab
             mediaType={mediaType}
             movies={recommendedMovies}
-            isLoading={!similar}
+            isLoading={similarLoading}
           />
         )}
       </div>

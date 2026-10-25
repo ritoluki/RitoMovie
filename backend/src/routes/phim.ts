@@ -1,4 +1,6 @@
 import express from 'express';
+import asyncHandler from '../utils/asyncHandler';
+import { getHomeUpdates, getMovieExtras } from '../services/phimApiService';
 import {
     fetchCatalogList,
     fetchCountries,
@@ -13,6 +15,14 @@ import {
 } from '../controllers/phimController';
 
 const router = express.Router();
+
+router.get('/home', asyncHandler(async (req, res) => {
+    const page = Math.max(1, Math.floor(Number(req.query.page) || 1));
+    res.json({ success: true, data: await getHomeUpdates(page) });
+}));
+router.get('/movie/:slug/extras', asyncHandler(async (req, res) => {
+    res.json({ success: true, data: await getMovieExtras(req.params.slug) });
+}));
 
 router.get('/latest', fetchLatestMovies);
 router.get('/movie/:slug', fetchMovieBySlug);

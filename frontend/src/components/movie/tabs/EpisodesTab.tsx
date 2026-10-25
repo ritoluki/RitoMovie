@@ -100,7 +100,7 @@ const EpisodesTab = ({ movieId, movieTitle, streamingServers, isStreamingLoading
       </div>
 
       <div className="pt-8 border-t border-gray-800" data-comments-section>
-        <Comments movieId={movieId} />
+        {movieId > 0 && <Comments movieId={movieId} />}
       </div>
     </div>
   );

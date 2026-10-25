@@ -6,6 +6,7 @@ import {
     PhimCountryListResponse,
     PhimLatestResponse,
     PhimMovieDetailResponse,
+    PhimMovieExtras,
 } from '@/types';
 
 type PhimType = 'movie' | 'tv' | 'auto';
@@ -29,7 +30,7 @@ export type CatalogQuery = {
     sort_lang?: 'vietsub' | 'thuyet-minh' | 'long-tieng';
     category?: string;
     country?: string;
-    year?: number;
+    year?: number | string;
     limit?: number;
 };
 
@@ -39,6 +40,8 @@ type DetailQuery = Omit<CatalogQuery, 'category' | 'country'> & {
 };
 
 export const phimService = {
+    getHome: async (page = 1) => axios.get<ApiResponse<PhimCatalogResponse>>('/phim/home', { params: { page } }),
+    getExtras: async (slug: string) => axios.get<ApiResponse<PhimMovieExtras>>(`/phim/movie/${encodeURIComponent(slug)}/extras`),
     getLatest: async (options?: { page?: number; version?: Version }): Promise<ApiResponse<PhimLatestResponse>> => {
         const response = await axios.get<ApiResponse<PhimLatestResponse>>('/phim/latest', {
             params: {

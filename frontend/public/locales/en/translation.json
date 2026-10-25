@@ -35,6 +35,7 @@
     "adminDashboard": "Admin Dashboard"
   },
   "home": {
+    "recentlyUpdated": "Recently updated",
     "popularMovies": "Popular Movies",
     "topRated": "Top Rated",
     "actionMovies": "Action Movies",
@@ -122,6 +123,7 @@
     "noActorsFound": "No actors found"
   },
   "movie": {
+    "keywords": "Content keywords",
     "watchNow": "Watch Now",
     "play": "Play",
     "myList": "My List",
@@ -233,6 +235,14 @@
     "viewSourceCode": "View Source Code"
   },
   "browse": {
+    "audioLanguage": "Audio and subtitles",
+    "allLanguages": "All languages",
+    "narrated": "Vietnamese narration",
+    "voiceDubbed": "Vietnamese dubbing",
+    "yearRange": "Release year range",
+    "fromYear": "From year",
+    "toYear": "To year",
+    "invalidYearRange": "Enter both years between 1800 and 2200, with the start year before or equal to the end year.",
     "title": "Browse Movies",
     "filterByGenre": "Filter by Genre",
     "allGenres": "All Genres",

@@ -2,6 +2,7 @@ import axios from 'axios';
 import ApiError from '../utils/ApiError';
 import { apiCache, CACHE_TTL } from '../utils/cache';
 import { addExternalApiRetries, describeExternalApiError } from '../utils/externalApi';
+import { ensurePhimSuccess, normalizePhimExtras } from '../utils/phimPayload';
 
 const PHIM_API_BASE_URL = process.env.PHIM_API_BASE_URL || 'https://phimapi.com';
 
@@ -118,28 +119,29 @@ phimAxios.interceptors.response.use(
     }
 );
 
-interface StatusPayload {
-    status: boolean;
-    msg?: string;
-}
+const ensureSuccess = ensurePhimSuccess;
 
-const isStatusPayload = (payload: unknown): payload is StatusPayload => {
-    return Boolean(payload && typeof payload === 'object' && 'status' in payload);
-};
+export const getHomeUpdates = (page = 1) => apiCache.getOrSet(`phim:home:${page}`, async () => {
+    const response = await phimAxios.get('/v1/api/home', { params: { page } });
+    return ensurePhimSuccess(response.data);
+}, CACHE_TTL.SHORT);
 
-const ensureSuccess = <T>(payload: unknown): T => {
-    if (isStatusPayload(payload)) {
-        if (!payload.status) {
-            throw new ApiError(404, payload.msg || 'PhimAPI request failed');
-        }
-        return payload as T;
-    }
-
-    if (!payload) {
-        throw new ApiError(404, 'Empty response from PhimAPI');
-    }
-
-    return payload as T;
+export const getMovieExtras = async (slug: string) => {
+    const resources = ['images', 'peoples', 'keywords'];
+    const results = await Promise.allSettled(resources.map(resource =>
+        apiCache.getOrSet(`phim:extras:${slug}:${resource}`, async () => {
+            const response = await phimAxios.get(`/v1/api/phim/${encodeURIComponent(slug)}/${resource}`);
+            return ensurePhimSuccess(response.data);
+        }, CACHE_TTL.HOUR)
+    ));
+    const warnings: string[] = [];
+    const payloads = results.map((result, index) => {
+        if (result.status === 'fulfilled') return result.value;
+        warnings.push(resources[index]);
+        console.warn(`[PhimAPI] ${resources[index]}: ${describeExternalApiError(result.reason)}`);
+        return {};
+    });
+    return { ...normalizePhimExtras(payloads[0], payloads[1], payloads[2]), unavailable: warnings };
 };
 
 const buildQuery = (params: Record<string, unknown>) => {
@@ -236,7 +238,7 @@ export const searchMovies = async (
         sort_lang?: SortLang;
         category?: string;
         country?: string;
-        year?: number;
+        year?: number | string;
         limit?: number;
     }>
 ) => {
@@ -273,7 +275,7 @@ export const getCatalogList = async (
         sort_lang?: SortLang;
         category?: string;
         country?: string;
-        year?: number;
+        year?: number | string;
         limit?: number;
     }>
 ) => {
@@ -313,7 +315,7 @@ export const getGenreDetail = async (
         sort_type?: SortType;
         sort_lang?: SortLang;
         country?: string;
-        year?: number;
+        year?: number | string;
         limit?: number;
     }>
 ) => {
@@ -352,7 +354,7 @@ export const getCountryDetail = async (
         sort_type?: SortType;
         sort_lang?: SortLang;
         category?: string;
-        year?: number;
+        year?: number | string;
         limit?: number;
     }>
 ) => {

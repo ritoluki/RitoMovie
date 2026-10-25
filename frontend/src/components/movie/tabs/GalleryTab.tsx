@@ -74,7 +74,7 @@ const GalleryTab = ({ movieId, images, isLoading }: GalleryTabProps) => {
               onClick={() => setSelectedImage(image.file_path)}
             >
               <img
-                src={getImageUrl(image.file_path, 'backdrop', 'medium')}
+                src={getImageUrl(image.file_path, imageType === 'posters' ? 'poster' : 'backdrop', 'medium')}
                 alt={`Gallery image ${index + 1}`}
                 className="w-full h-full object-cover"
                 loading="lazy"

@@ -126,6 +126,7 @@ const Browse = () => {
   const phimGenreParam = searchParams.get('phimGenre') || '';
   const phimCountryParam = searchParams.get('phimCountry') || '';
   const phimYearParam = searchParams.get('phimYear') || '';
+  const phimLangParam = searchParams.get('phimLang') || '';
   const phimSortFieldParam = searchParams.get('phimSortField');
   const phimSortTypeParam = searchParams.get('phimSortType');
   const phimSortField = isValidPhimSortField(phimSortFieldParam) ? phimSortFieldParam : 'modified.time';
@@ -139,6 +140,7 @@ const Browse = () => {
       Boolean(phimGenreParam) ||
       Boolean(phimCountryParam) ||
       Boolean(phimYearParam) ||
+      Boolean(phimLangParam) ||
       Boolean(phimSortFieldParam) ||
       Boolean(phimSortTypeParam)
     );
@@ -153,6 +155,10 @@ const Browse = () => {
   const [selectedPhimGenre, setSelectedPhimGenre] = useState<string>(phimGenreParam);
   const [selectedPhimCountry, setSelectedPhimCountry] = useState<string>(phimCountryParam);
   const [selectedPhimYear, setSelectedPhimYear] = useState<string>(phimYearParam);
+  const [selectedPhimLang, setSelectedPhimLang] = useState(phimLangParam);
+  const validPhimYear = !selectedPhimYear || (/^\d{4}(,\d{4})?$/.test(selectedPhimYear) &&
+    selectedPhimYear.split(',').every(year => Number(year) >= 1800 && Number(year) <= 2200) &&
+    (!selectedPhimYear.includes(',') || Number(selectedPhimYear.split(',')[0]) <= Number(selectedPhimYear.split(',')[1])));
   const [selectedPhimSortField, setSelectedPhimSortField] = useState<PhimSortField>(phimSortField);
   const [selectedPhimSortType, setSelectedPhimSortType] = useState<PhimSortType>(phimSortType);
   const { useGenres } = useMovies();
@@ -205,6 +211,7 @@ const Browse = () => {
     setSelectedPhimGenre(searchParams.get('phimGenre') || '');
     setSelectedPhimCountry(searchParams.get('phimCountry') || '');
     setSelectedPhimYear(searchParams.get('phimYear') || '');
+    setSelectedPhimLang(searchParams.get('phimLang') || '');
 
     const phimSortFieldParam = searchParams.get('phimSortField');
     setSelectedPhimSortField(
@@ -224,14 +231,13 @@ const Browse = () => {
           setIsPhimMode(true);
           setMovies([]);
           let response;
-          const parsedYear = phimYearParam ? Number(phimYearParam) : undefined;
-          const yearFilter = parsedYear && Number.isFinite(parsedYear) ? parsedYear : undefined;
           const basePhimParams = {
             page,
             limit: PHIM_PAGE_SIZE,
             sort_field: phimSortField,
             sort_type: phimSortType,
-            year: yearFilter,
+            year: phimYearParam || undefined,
+            sort_lang: (['vietsub', 'thuyet-minh', 'long-tieng'].includes(phimLangParam) ? phimLangParam : undefined) as 'vietsub' | 'thuyet-minh' | 'long-tieng' | undefined,
           } as const;
 
           if (catalogFilter) {
@@ -324,6 +330,7 @@ const Browse = () => {
     phimGenreParam,
     phimCountryParam,
     phimYearParam,
+    phimLangParam,
     phimSortField,
     phimSortType,
     searchQuery,
@@ -352,6 +359,7 @@ const Browse = () => {
     phimGenreParam,
     phimCountryParam,
     phimYearParam,
+    phimLangParam,
     phimSortField,
     phimSortType,
     isPhimFilterActive,
@@ -390,11 +398,13 @@ const Browse = () => {
 
   const applyFilters = () => {
     if (isPhimMode) {
+      if (!validPhimYear) return;
       const params: Record<string, string> = {};
       if (selectedPhimCatalog) params.catalog = selectedPhimCatalog;
       if (selectedPhimGenre) params.phimGenre = selectedPhimGenre;
       if (selectedPhimCountry) params.phimCountry = selectedPhimCountry;
       if (selectedPhimYear) params.phimYear = selectedPhimYear;
+      if (selectedPhimLang) params.phimLang = selectedPhimLang;
       if (selectedPhimSortField) params.phimSortField = selectedPhimSortField;
       if (selectedPhimSortType) params.phimSortType = selectedPhimSortType;
       setSearchParams(params);
@@ -418,6 +428,7 @@ const Browse = () => {
       setSelectedPhimGenre('');
       setSelectedPhimCountry('');
       setSelectedPhimYear('');
+      setSelectedPhimLang('');
       setSelectedPhimSortField('modified.time');
       setSelectedPhimSortType('desc');
       setSelectedPhimCatalog(catalogToReset);
@@ -729,6 +740,29 @@ const Browse = () => {
                         </div>
                       </div>
 
+                      <div>
+                        <label htmlFor="phim-language" className="block text-white font-medium mb-3">{t('browse.audioLanguage')}</label>
+                        <select id="phim-language" value={selectedPhimLang} onChange={event => setSelectedPhimLang(event.target.value)} className="w-full rounded-md bg-gray-800 p-3 text-white border border-gray-700">
+                          <option value="">{t('browse.allLanguages')}</option>
+                          <option value="vietsub">Vietsub</option>
+                          <option value="thuyet-minh">{t('browse.narrated')}</option>
+                          <option value="long-tieng">{t('browse.voiceDubbed')}</option>
+                        </select>
+                      </div>
+                      <div>
+                        <h3 className="text-white font-medium mb-3">{t('browse.yearRange')}</h3>
+                        <div className="grid grid-cols-2 gap-3">
+                          <input type="number" min="1800" max="2200" aria-label={t('browse.fromYear')} placeholder={t('browse.fromYear')} value={selectedPhimYear.includes(',') ? selectedPhimYear.split(',')[0] : ''} onChange={event => {
+                            const end = selectedPhimYear.includes(',') ? selectedPhimYear.split(',')[1] : '';
+                            setSelectedPhimYear(event.target.value || end ? `${event.target.value},${end}` : '');
+                          }} className="min-w-0 rounded-md border border-gray-700 bg-gray-800 p-3 text-white" />
+                          <input type="number" min="1800" max="2200" aria-label={t('browse.toYear')} placeholder={t('browse.toYear')} value={selectedPhimYear.includes(',') ? selectedPhimYear.split(',')[1] : ''} onChange={event => {
+                            const start = selectedPhimYear.includes(',') ? selectedPhimYear.split(',')[0] : '';
+                            setSelectedPhimYear(start || event.target.value ? `${start},${event.target.value}` : '');
+                          }} className="min-w-0 rounded-md border border-gray-700 bg-gray-800 p-3 text-white" />
+                        </div>
+                        {!validPhimYear && <p role="alert" className="text-red-400 text-sm mt-2">{t('browse.invalidYearRange')}</p>}
+                      </div>
                       {/* Year */}
                       <div>
                         <h3 className="text-white font-medium mb-3">Năm phát hành:</h3>

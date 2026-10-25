@@ -17,6 +17,8 @@ export function getImageUrl(
       : 'https://via.placeholder.com/500x750?text=No+Image';
   }
 
+  if (/^https?:\/\//i.test(path)) return path;
+
   const sizeMap = IMAGE_SIZES[type];
   const imageSize = sizeMap[size as keyof typeof sizeMap];
 

@@ -67,7 +67,7 @@ const CastTab = ({ movieId, cast, isLoading }: CastTabProps) => {
 
       {/* Comments Section */}
       <div className="pt-8 border-t border-gray-800">
-        <Comments movieId={movieId} />
+        {movieId > 0 && <Comments movieId={movieId} />}
       </div>
     </div>
   );

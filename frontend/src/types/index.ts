@@ -332,6 +332,13 @@ export interface PhimMovieDetailResponse {
   episodes: PhimEpisodeServer[];
 }
 
+export interface PhimMovieExtras {
+  images: MovieImages;
+  cast: Cast[];
+  keywords: string[];
+  unavailable: string[];
+}
+
 export interface PhimCatalogParams {
   type_slug?: string;
   filterCategory?: string[];

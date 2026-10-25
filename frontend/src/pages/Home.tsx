@@ -9,6 +9,7 @@ import SectionDivider from '@/components/common/SectionDivider';
 import SkeletonMovieRow from '@/components/common/SkeletonMovieRow';
 import { useLazyLoadSection } from '@/hooks/useLazyLoadSection';
 import { useHomeData } from '@/hooks/useHomeData';
+import { usePhim } from '@/hooks/usePhim';
 import { useEffect } from 'react';
 import { useMovieStore } from '@/store/movieStore';
 import { useAuthStore } from '@/store/authStore';
@@ -30,6 +31,8 @@ const Home = () => {
    * Lazy loading is still used for rendering sections progressively
    */
   const { data: homeData, isLoading, error } = useHomeData();
+  const { useHomeUpdates } = usePhim();
+  const { data: updates } = useHomeUpdates();
 
   // Lazy loading sections for progressive rendering
   const topRatedLazy = useLazyLoadSection({ loadImmediately: true, delay: 100 });
@@ -97,6 +100,7 @@ const Home = () => {
 
       {/* Movie Rows */}
       <div className="relative mt-8 md:mt-12 lg:mt-16 z-10 space-y-8 pb-16">
+        <PhimRow title={t('home.recentlyUpdated')} items={updates?.items} />
         {/* ========== PRIORITY 1: CRITICAL ========== */}
         {/* Top 10 TV Series - Uses trending data */}
         {trending?.results && (
