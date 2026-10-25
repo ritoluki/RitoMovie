@@ -1,3 +1,4 @@
+import { SelectField } from '@/components/ui/select-field';
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -303,10 +304,10 @@ const AdminAuditLog: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-700">
             <div>
               <label className="block text-gray-400 text-sm mb-1">Action</label>
-              <select
+              <SelectField
                 value={actionFilter}
-                onChange={(e) => setActionFilter(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white"
+                onValueChange={value => setActionFilter(value)}
+                className="w-full sm:w-44"
               >
                 <option value="">All Actions</option>
                 <option value="CREATE">Create</option>
@@ -318,15 +319,15 @@ const AdminAuditLog: React.FC = () => {
                 <option value="REJECT">Reject</option>
                 <option value="LOGIN">Login</option>
                 <option value="UNAUTHORIZED_ACCESS">Unauthorized Access</option>
-              </select>
+              </SelectField>
             </div>
 
             <div>
               <label className="block text-gray-400 text-sm mb-1">Resource</label>
-              <select
+              <SelectField
                 value={resourceFilter}
-                onChange={(e) => setResourceFilter(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white"
+                onValueChange={value => setResourceFilter(value)}
+                className="w-full sm:w-44"
               >
                 <option value="">All Resources</option>
                 <option value="USER">User</option>
@@ -334,7 +335,7 @@ const AdminAuditLog: React.FC = () => {
                 <option value="COMMENT">Comment</option>
                 <option value="REPORT">Report</option>
                 <option value="SETTING">Setting</option>
-              </select>
+              </SelectField>
             </div>
 
             <div>

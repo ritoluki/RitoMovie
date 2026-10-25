@@ -1,5 +1,9 @@
 {
   "common": {
+    "selectOption": "Chọn một mục",
+    "language": "Ngôn ngữ",
+    "actions": "Thao tác",
+    "mainNavigation": "Khám phá phim",
     "loading": "Đang tải...",
     "noData": "Không có dữ liệu",
     "save": "Lưu",
@@ -18,6 +22,8 @@
     "swipeUp": "Khám phá"
   },
   "header": {
+    "searchHint": "Nhập tên phim và nhấn Enter để tìm kiếm.",
+    "navigationHint": "Tìm bộ phim tiếp theo dành cho bạn.",
     "home": "Trang chủ",
     "movies": "Phim",
     "singleMovies": "Phim lẻ",
@@ -244,6 +250,24 @@
     "viewSourceCode": "Xem mã nguồn"
   },
   "browse": {
+    "filterDescription": "Thu hẹp lựa chọn để tìm đúng bộ phim bạn muốn xem.",
+    "catalogLabel": "Danh mục",
+    "allCountries": "Tất cả quốc gia",
+    "allYears": "Tất cả năm",
+    "allRatings": "Tất cả độ tuổi",
+    "yearLabel": "Năm phát hành",
+    "certificationLabel": "Phân loại độ tuổi",
+    "sortLabel": "Sắp xếp theo",
+    "sortDirection": "Thứ tự",
+    "sortUpdated": "Vừa cập nhật",
+    "sortAdded": "Vừa thêm",
+    "sortPopular": "Phổ biến nhất",
+    "sortRating": "Điểm cao nhất",
+    "sortNewest": "Mới phát hành",
+    "ascending": "Tăng dần",
+    "descending": "Giảm dần",
+    "clearFilters": "Đặt lại",
+    "applyFilters": "Áp dụng bộ lọc",
     "audioLanguage": "Ngôn ngữ phim",
     "allLanguages": "Tất cả ngôn ngữ",
     "narrated": "Thuyết minh",

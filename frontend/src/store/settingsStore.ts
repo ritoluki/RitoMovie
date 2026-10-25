@@ -96,7 +96,7 @@ const DEFAULT_SETTINGS: PublicSettings = {
     enable_ratings: true,
     enable_watchlist: true,
 
-    primary_color: '#eab308',
+    primary_color: '#dc2626',
     secondary_color: '#dc2626',
     dark_mode_default: true,
     show_movie_posters: true,
@@ -238,6 +238,10 @@ export const useSettingsStore = create<SettingsStore>()(
 
                     // Set custom CSS properties
                     root.style.setProperty('--color-primary', settings.primary_color);
+                    const brandHex = settings.primary_color?.replace('#', '');
+                    if (/^[0-9a-f]{6}$/i.test(brandHex)) {
+                        root.style.setProperty('--ui-primary', [0, 2, 4].map(index => parseInt(brandHex.slice(index, index + 2), 16)).join(' '));
+                    }
                     root.style.setProperty('--color-secondary', settings.secondary_color);
 
                     // Apply dark mode

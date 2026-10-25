@@ -1,3 +1,4 @@
+import { SelectField } from '@/components/ui/select-field';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -288,29 +289,29 @@ const AdminReports: React.FC = () => {
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <select
+        <SelectField
           value={queryParams.type || ''}
-          onChange={(e) => setQueryParams({ ...queryParams, type: e.target.value as ReportQueryParams['type'], page: 1 })}
-          className="px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-lg text-sm text-white focus:outline-none focus:border-red-500"
+          onValueChange={value => setQueryParams({ ...queryParams, type: value as ReportQueryParams['type'], page: 1 })}
+          className="w-full sm:w-44"
         >
           <option value="">All Types</option>
           <option value="COMMENT">Comment</option>
           <option value="USER">User</option>
           <option value="MOVIE">Movie</option>
           <option value="BUG">Bug</option>
-        </select>
+        </SelectField>
 
-        <select
+        <SelectField
           value={queryParams.priority || ''}
-          onChange={(e) => setQueryParams({ ...queryParams, priority: e.target.value as ReportQueryParams['priority'], page: 1 })}
-          className="px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-lg text-sm text-white focus:outline-none focus:border-red-500"
+          onValueChange={value => setQueryParams({ ...queryParams, priority: value as ReportQueryParams['priority'], page: 1 })}
+          className="w-full sm:w-44"
         >
           <option value="">All Priorities</option>
           <option value="CRITICAL">Critical</option>
           <option value="HIGH">High</option>
           <option value="MEDIUM">Medium</option>
           <option value="LOW">Low</option>
-        </select>
+        </SelectField>
       </div>
 
       {/* Bulk actions */}

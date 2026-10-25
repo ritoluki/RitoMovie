@@ -10,7 +10,18 @@ import PhimCard from '@/components/movie/PhimCard';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Pagination from '@/components/common/Pagination';
 import { FiFilter } from 'react-icons/fi';
-import { motion, AnimatePresence } from 'framer-motion';
+import Button from '@/components/common/Button';
+import Dropdown from '@/components/common/Dropdown';
+import { Input } from '@/components/ui/input';
+import { Combobox } from '@/components/ui/combobox';
+import {
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
+import { getTranslatedGenre, getTranslatedCountry } from '@/utils/translations';
 import { useTranslation } from 'react-i18next';
 
 interface CertificationOption {
@@ -24,10 +35,30 @@ const CERTIFICATION_COUNTRY = 'US';
 
 const CERTIFICATION_OPTIONS: CertificationOption[] = [
   { code: 'P', name: 'P', description: 'Mọi lứa tuổi', tmdbCertification: 'G' },
-  { code: 'K', name: 'K', description: 'Dưới 13 tuổi', tmdbCertification: 'PG' },
-  { code: 'T13', name: 'T13', description: '13 tuổi trở lên', tmdbCertification: 'PG-13' },
-  { code: 'T16', name: 'T16', description: '16 tuổi trở lên', tmdbCertification: 'R' },
-  { code: 'T18', name: 'T18', description: '18 tuổi trở lên', tmdbCertification: 'NC-17' },
+  {
+    code: 'K',
+    name: 'K',
+    description: 'Dưới 13 tuổi',
+    tmdbCertification: 'PG',
+  },
+  {
+    code: 'T13',
+    name: 'T13',
+    description: '13 tuổi trở lên',
+    tmdbCertification: 'PG-13',
+  },
+  {
+    code: 'T16',
+    name: 'T16',
+    description: '16 tuổi trở lên',
+    tmdbCertification: 'R',
+  },
+  {
+    code: 'T18',
+    name: 'T18',
+    description: '18 tuổi trở lên',
+    tmdbCertification: 'NC-17',
+  },
 ];
 
 const PHIM_CATALOG_TYPES: CatalogType[] = [
@@ -45,25 +76,6 @@ const PHIM_PAGE_SIZE = 24;
 
 type PhimSortField = '_id' | 'modified.time' | 'year';
 type PhimSortType = 'asc' | 'desc';
-
-const PHIM_SORT_OPTIONS: { value: PhimSortField; label: string }[] = [
-  { value: 'modified.time', label: 'Mới cập nhật' },
-  { value: 'year', label: 'Năm phát hành' },
-  { value: '_id', label: 'Thêm gần đây' },
-];
-
-const PHIM_SORT_TYPE_OPTIONS: { value: PhimSortType; label: string }[] = [];
-
-const PHIM_CATALOG_LABELS: Record<CatalogType, string> = {
-  'phim-bo': 'Phim bộ',
-  'phim-le': 'Phim lẻ',
-  'tv-shows': 'TV Shows',
-  'hoat-hinh': 'Hoạt hình',
-  'phim-chieu-rap': 'Chiếu rạp',
-  'phim-vietsub': 'Vietsub',
-  'phim-thuyet-minh': 'Thuyết minh',
-  'phim-long-tieng': 'Lồng tiếng',
-};
 
 const CATALOG_TITLE_KEYS: Record<CatalogType, string> = {
   'phim-le': 'browse.singleMovieList',
@@ -115,35 +127,40 @@ const Browse = () => {
   const [visiblePhimCount, setVisiblePhimCount] = useState(16);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   // Read initial values from URL params
   const searchQuery = searchParams.get('q') || '';
   const genreParam = searchParams.get('genre') || '';
   const countryParam = searchParams.get('country') || '';
   const catalogParamRaw = searchParams.get('catalog');
-  const catalogFilter = isValidPhimCatalog(catalogParamRaw) ? catalogParamRaw : undefined;
+  const catalogFilter = isValidPhimCatalog(catalogParamRaw)
+    ? catalogParamRaw
+    : undefined;
   const phimGenreParam = searchParams.get('phimGenre') || '';
   const phimCountryParam = searchParams.get('phimCountry') || '';
   const phimYearParam = searchParams.get('phimYear') || '';
   const phimLangParam = searchParams.get('phimLang') || '';
   const phimSortFieldParam = searchParams.get('phimSortField');
   const phimSortTypeParam = searchParams.get('phimSortType');
-  const phimSortField = isValidPhimSortField(phimSortFieldParam) ? phimSortFieldParam : 'modified.time';
-  const phimSortType = isValidPhimSortType(phimSortTypeParam) ? phimSortTypeParam : 'desc';
+  const phimSortField = isValidPhimSortField(phimSortFieldParam)
+    ? phimSortFieldParam
+    : 'modified.time';
+  const phimSortType = isValidPhimSortType(phimSortTypeParam)
+    ? phimSortTypeParam
+    : 'desc';
   const sortParam = searchParams.get('sort_by') || 'popularity.desc';
   const yearParam = searchParams.get('year') || '';
   const ratingParam = searchParams.get('rating') || '';
   const isPhimFilterActive =
-    !searchQuery && (
-      Boolean(catalogFilter) ||
+    !searchQuery &&
+    (Boolean(catalogFilter) ||
       Boolean(phimGenreParam) ||
       Boolean(phimCountryParam) ||
       Boolean(phimYearParam) ||
       Boolean(phimLangParam) ||
       Boolean(phimSortFieldParam) ||
-      Boolean(phimSortTypeParam)
-    );
+      Boolean(phimSortTypeParam));
 
   // Filters
   const [selectedGenre, setSelectedGenre] = useState<string>(genreParam);
@@ -151,19 +168,33 @@ const Browse = () => {
   const [selectedYear, setSelectedYear] = useState<string>(yearParam);
   const [selectedRating, setSelectedRating] = useState<string>(ratingParam);
   const [sortBy, setSortBy] = useState(sortParam);
-  const [selectedPhimCatalog, setSelectedPhimCatalog] = useState<CatalogType>(catalogFilter ?? 'phim-le');
-  const [selectedPhimGenre, setSelectedPhimGenre] = useState<string>(phimGenreParam);
-  const [selectedPhimCountry, setSelectedPhimCountry] = useState<string>(phimCountryParam);
-  const [selectedPhimYear, setSelectedPhimYear] = useState<string>(phimYearParam);
+  const [selectedPhimCatalog, setSelectedPhimCatalog] = useState<CatalogType>(
+    catalogFilter ?? 'phim-le'
+  );
+  const [selectedPhimGenre, setSelectedPhimGenre] =
+    useState<string>(phimGenreParam);
+  const [selectedPhimCountry, setSelectedPhimCountry] =
+    useState<string>(phimCountryParam);
+  const [selectedPhimYear, setSelectedPhimYear] =
+    useState<string>(phimYearParam);
   const [selectedPhimLang, setSelectedPhimLang] = useState(phimLangParam);
-  const validPhimYear = !selectedPhimYear || (/^\d{4}(,\d{4})?$/.test(selectedPhimYear) &&
-    selectedPhimYear.split(',').every(year => Number(year) >= 1800 && Number(year) <= 2200) &&
-    (!selectedPhimYear.includes(',') || Number(selectedPhimYear.split(',')[0]) <= Number(selectedPhimYear.split(',')[1])));
-  const [selectedPhimSortField, setSelectedPhimSortField] = useState<PhimSortField>(phimSortField);
-  const [selectedPhimSortType, setSelectedPhimSortType] = useState<PhimSortType>(phimSortType);
+  const validPhimYear =
+    !selectedPhimYear ||
+    (/^\d{4}(,\d{4})?$/.test(selectedPhimYear) &&
+      selectedPhimYear
+        .split(',')
+        .every((year) => Number(year) >= 1800 && Number(year) <= 2200) &&
+      (!selectedPhimYear.includes(',') ||
+        Number(selectedPhimYear.split(',')[0]) <=
+          Number(selectedPhimYear.split(',')[1])));
+  const [selectedPhimSortField, setSelectedPhimSortField] =
+    useState<PhimSortField>(phimSortField);
+  const [selectedPhimSortType, setSelectedPhimSortType] =
+    useState<PhimSortType>(phimSortType);
   const { useGenres } = useMovies();
   const { data: genresData } = useGenres();
-  const { useGenres: usePhimGenres, useCountries: usePhimCountries } = usePhim();
+  const { useGenres: usePhimGenres, useCountries: usePhimCountries } =
+    usePhim();
   const { data: phimGenresData } = usePhimGenres();
   const { data: phimCountriesData } = usePhimCountries();
 
@@ -207,7 +238,11 @@ const Browse = () => {
     setSelectedRating(ratingParam);
 
     const catalogParam = searchParams.get('catalog');
-    setSelectedPhimCatalog(isValidPhimCatalog(catalogParam) ? (catalogParam as CatalogType) : 'phim-le');
+    setSelectedPhimCatalog(
+      isValidPhimCatalog(catalogParam)
+        ? (catalogParam as CatalogType)
+        : 'phim-le'
+    );
     setSelectedPhimGenre(searchParams.get('phimGenre') || '');
     setSelectedPhimCountry(searchParams.get('phimCountry') || '');
     setSelectedPhimYear(searchParams.get('phimYear') || '');
@@ -215,11 +250,15 @@ const Browse = () => {
 
     const phimSortFieldParam = searchParams.get('phimSortField');
     setSelectedPhimSortField(
-      isValidPhimSortField(phimSortFieldParam) ? phimSortFieldParam : 'modified.time'
+      isValidPhimSortField(phimSortFieldParam)
+        ? phimSortFieldParam
+        : 'modified.time'
     );
 
     const phimSortTypeParam = searchParams.get('phimSortType');
-    setSelectedPhimSortType(isValidPhimSortType(phimSortTypeParam) ? phimSortTypeParam : 'desc');
+    setSelectedPhimSortType(
+      isValidPhimSortType(phimSortTypeParam) ? phimSortTypeParam : 'desc'
+    );
   }, [searchParams]);
 
   // Fetch movies based on filters or search
@@ -237,7 +276,15 @@ const Browse = () => {
             sort_field: phimSortField,
             sort_type: phimSortType,
             year: phimYearParam || undefined,
-            sort_lang: (['vietsub', 'thuyet-minh', 'long-tieng'].includes(phimLangParam) ? phimLangParam : undefined) as 'vietsub' | 'thuyet-minh' | 'long-tieng' | undefined,
+            sort_lang: (['vietsub', 'thuyet-minh', 'long-tieng'].includes(
+              phimLangParam
+            )
+              ? phimLangParam
+              : undefined) as
+              | 'vietsub'
+              | 'thuyet-minh'
+              | 'long-tieng'
+              | undefined,
           } as const;
 
           if (catalogFilter) {
@@ -257,7 +304,10 @@ const Browse = () => {
               category: phimGenreParam || undefined,
             });
           } else {
-            response = await phimService.getCatalogList('phim-le', basePhimParams);
+            response = await phimService.getCatalogList(
+              'phim-le',
+              basePhimParams
+            );
           }
 
           const payload = response?.data ?? response;
@@ -270,7 +320,8 @@ const Browse = () => {
 
           const items = payload.items ?? payload.data?.items ?? [];
           setPhimItems(items.slice(0, PHIM_PAGE_SIZE));
-          const pagination = payload.params?.pagination ?? payload.data?.params?.pagination;
+          const pagination =
+            payload.params?.pagination ?? payload.data?.params?.pagination;
           setTotalPages(getPhimTotalPages(pagination));
         } else {
           setIsPhimMode(false);
@@ -280,10 +331,12 @@ const Browse = () => {
             // Search both TMDB and PhimAPI in parallel
             const [tmdbData, phimData] = await Promise.all([
               movieService.search(searchQuery, page),
-              phimService.search(searchQuery, {
-                page,
-                limit: PHIM_PAGE_SIZE
-              }).catch(() => null),
+              phimService
+                .search(searchQuery, {
+                  page,
+                  limit: PHIM_PAGE_SIZE,
+                })
+                .catch(() => null),
             ]);
 
             // Set TMDB results
@@ -292,7 +345,8 @@ const Browse = () => {
 
             // Extract and set PhimAPI results
             const phimPayload = phimData?.data ?? phimData;
-            const phimResults = phimPayload?.items ?? phimPayload?.data?.items ?? [];
+            const phimResults =
+              phimPayload?.items ?? phimPayload?.data?.items ?? [];
             setPhimItems(phimResults.slice(0, PHIM_PAGE_SIZE));
           } else {
             // No search query - clear phim items and use normal TMDB discover
@@ -303,7 +357,9 @@ const Browse = () => {
               with_genres: selectedGenre,
               with_origin_country: selectedCountry || undefined,
               year: selectedYear ? parseInt(selectedYear) : undefined,
-              certification_country: selectedCertification ? CERTIFICATION_COUNTRY : undefined,
+              certification_country: selectedCertification
+                ? CERTIFICATION_COUNTRY
+                : undefined,
               certification: selectedCertification?.tmdbCertification,
             });
 
@@ -374,9 +430,17 @@ const Browse = () => {
         if (entries[0].isIntersecting) {
           if (isPhimMode && visiblePhimCount < phimItems.length) {
             setVisiblePhimCount((prev) => Math.min(prev + 8, phimItems.length));
-          } else if (!isPhimMode && !searchQuery && visibleMovieCount < movies.length) {
+          } else if (
+            !isPhimMode &&
+            !searchQuery &&
+            visibleMovieCount < movies.length
+          ) {
             setVisibleMovieCount((prev) => Math.min(prev + 8, movies.length));
-          } else if (searchQuery && (visibleMovieCount < movies.length || visiblePhimCount < phimItems.length)) {
+          } else if (
+            searchQuery &&
+            (visibleMovieCount < movies.length ||
+              visiblePhimCount < phimItems.length)
+          ) {
             setVisibleMovieCount((prev) => Math.min(prev + 8, movies.length));
             setVisiblePhimCount((prev) => Math.min(prev + 8, phimItems.length));
           }
@@ -388,7 +452,15 @@ const Browse = () => {
     observer.observe(loadMoreRef.current);
 
     return () => observer.disconnect();
-  }, [isLoading, isPhimMode, phimItems.length, movies.length, searchQuery, visiblePhimCount, visibleMovieCount]);
+  }, [
+    isLoading,
+    isPhimMode,
+    phimItems.length,
+    movies.length,
+    searchQuery,
+    visiblePhimCount,
+    visibleMovieCount,
+  ]);
 
   // Handle page change with scroll to top
   const handlePageChange = (newPage: number) => {
@@ -455,115 +527,140 @@ const Browse = () => {
 
   const hasActiveFilters = Boolean(
     searchQuery ||
-    selectedGenre ||
-    selectedCountry ||
-    selectedYear ||
-    selectedRating ||
-    isPhimFilterActive
+      selectedGenre ||
+      selectedCountry ||
+      selectedYear ||
+      selectedRating ||
+      isPhimFilterActive
   );
 
   return (
-    <div className="min-h-screen py-8">
-      <div className="container mx-auto px-4 md:px-8">
-        {/* Header */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                {searchQuery
-                  ? t('browse.searchResults', { query: searchQuery })
-                  : isPhimFilterActive
-                    ? catalogFilter
-                      ? t(CATALOG_TITLE_KEYS[catalogFilter])
-                      : t('browse.movieList')
-                    : t('browse.featuredMovies')}
-              </h1>
-              <p className="text-gray-400">
-                {searchQuery
-                  ? t('browse.foundResults', { count: movies.length })
-                  : isPhimFilterActive
-                    ? t('browse.curatedCollection')
-                    : t('browse.discoverNext')}
-              </p>
+    <Sheet open={showFilterModal} onOpenChange={setShowFilterModal}>
+      <div className="min-h-screen py-8">
+        <div className="container mx-auto px-4 md:px-8">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-4 mb-8">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                  {searchQuery
+                    ? t('browse.searchResults', { query: searchQuery })
+                    : isPhimFilterActive
+                      ? catalogFilter
+                        ? t(CATALOG_TITLE_KEYS[catalogFilter])
+                        : t('browse.movieList')
+                      : t('browse.featuredMovies')}
+                </h1>
+                <p className="text-gray-400">
+                  {searchQuery
+                    ? t('browse.foundResults', { count: movies.length })
+                    : isPhimFilterActive
+                      ? t('browse.curatedCollection')
+                      : t('browse.discoverNext')}
+                </p>
+              </div>
             </div>
-
-            {/* Mobile Filter Icon */}
             {!searchQuery && (
-              <button
-                onClick={() => setShowFilterModal(true)}
-                className="sm:hidden inline-flex items-center justify-center rounded-full bg-gray-800 text-white p-2 hover:bg-gray-700 transition-colors"
-                aria-label={t('browse.filter')}
-              >
-                <FiFilter size={18} />
-              </button>
+              <SheetTrigger asChild>
+                <Button
+                  variant="outline"
+                  aria-label={t('browse.filter')}
+                  className="shrink-0"
+                >
+                  <FiFilter size={17} />
+                  <span className="hidden sm:inline">{t('browse.filter')}</span>
+                </Button>
+              </SheetTrigger>
             )}
           </div>
+          {/* Movies Grid */}
+          <div>
+            {isLoading ? (
+              <LoadingSpinner />
+            ) : isPhimMode ? (
+              phimItems.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 xl:grid-cols-8 2xl:grid-cols-8 gap-4 md:gap-6">
+                    {phimItems.slice(0, visiblePhimCount).map((item) => (
+                      <PhimCard key={item._id || item.slug} item={item} />
+                    ))}
+                  </div>
 
-          {/* Filter Button */}
-          {!searchQuery && (
-            <button
-              onClick={() => setShowFilterModal(true)}
-              className="hidden sm:inline-flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors text-sm font-medium"
-            >
-              <FiFilter size={20} />
-              <span>{t('browse.filter')}</span>
-            </button>
-          )}
-        </div>
+                  {/* Load more sentinel */}
+                  {visiblePhimCount < phimItems.length && (
+                    <div ref={loadMoreRef} className="h-10" />
+                  )}
 
-        {/* Movies Grid */}
-        <div>
-          {isLoading ? (
-            <LoadingSpinner />
-          ) : isPhimMode ? (
-            phimItems.length > 0 ? (
+                  {totalPages > 1 && (
+                    <Pagination
+                      currentPage={page}
+                      totalPages={totalPages}
+                      onPageChange={handlePageChange}
+                      maxPage={500}
+                    />
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-400 text-lg">
+                    Không tìm thấy nội dung phù hợp
+                  </p>
+                  {hasActiveFilters && (
+                    <button
+                      onClick={clearFilters}
+                      className="mt-4 text-primary-600 hover:text-primary-500 font-medium"
+                    >
+                      Xóa bộ lọc và thử lại
+                    </button>
+                  )}
+                </div>
+              )
+            ) : searchQuery ? (
+              // Search mode: Show both TMDB and PhimAPI results combined
+              movies.length > 0 || phimItems.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 xl:grid-cols-8 2xl:grid-cols-8 gap-4 md:gap-6">
+                    {/* PhimAPI Results */}
+                    {phimItems.map((item) => (
+                      <PhimCard key={item._id || item.slug} item={item} />
+                    ))}
+
+                    {/* TMDB Results */}
+                    {movies.map((movie) => (
+                      <MovieCard key={movie.id} movie={movie} />
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <Pagination
+                      currentPage={page}
+                      totalPages={totalPages}
+                      onPageChange={handlePageChange}
+                      maxPage={500}
+                    />
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-400 text-lg">
+                    Không tìm thấy phim nào
+                  </p>
+                </div>
+              )
+            ) : movies.length > 0 ? (
+              // Normal browse mode
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 xl:grid-cols-8 2xl:grid-cols-8 gap-4 md:gap-6">
-                  {phimItems.slice(0, visiblePhimCount).map((item) => (
-                    <PhimCard key={item._id || item.slug} item={item} />
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 md:gap-6">
+                  {movies.slice(0, visibleMovieCount).map((movie) => (
+                    <MovieCard key={movie.id} movie={movie} />
                   ))}
                 </div>
 
                 {/* Load more sentinel */}
-                {visiblePhimCount < phimItems.length && <div ref={loadMoreRef} className="h-10" />}
-
-                {totalPages > 1 && (
-                  <Pagination
-                    currentPage={page}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                    maxPage={500}
-                  />
+                {visibleMovieCount < movies.length && (
+                  <div ref={loadMoreRef} className="h-10" />
                 )}
-              </>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-gray-400 text-lg">Không tìm thấy nội dung phù hợp</p>
-                {hasActiveFilters && (
-                  <button
-                    onClick={clearFilters}
-                    className="mt-4 text-primary-600 hover:text-primary-500 font-medium"
-                  >
-                    Xóa bộ lọc và thử lại
-                  </button>
-                )}
-              </div>
-            )
-          ) : searchQuery ? (
-            // Search mode: Show both TMDB and PhimAPI results combined
-            (movies.length > 0 || phimItems.length > 0) ? (
-              <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 xl:grid-cols-8 2xl:grid-cols-8 gap-4 md:gap-6">
-                  {/* PhimAPI Results */}
-                  {phimItems.map((item) => (
-                    <PhimCard key={item._id || item.slug} item={item} />
-                  ))}
-
-                  {/* TMDB Results */}
-                  {movies.map((movie) => (
-                    <MovieCard key={movie.id} movie={movie} />
-                  ))}
-                </div>
 
                 {/* Pagination */}
                 {totalPages > 1 && (
@@ -578,412 +675,253 @@ const Browse = () => {
             ) : (
               <div className="text-center py-12">
                 <p className="text-gray-400 text-lg">Không tìm thấy phim nào</p>
-              </div>
-            )
-          ) : movies.length > 0 ? (
-            // Normal browse mode
-            <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 md:gap-6">
-                {movies.slice(0, visibleMovieCount).map((movie) => (
-                  <MovieCard key={movie.id} movie={movie} />
-                ))}
-              </div>
-
-              {/* Load more sentinel */}
-              {visibleMovieCount < movies.length && <div ref={loadMoreRef} className="h-10" />}
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <Pagination
-                  currentPage={page}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
-                  maxPage={500}
-                />
-              )}
-            </>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-400 text-lg">Không tìm thấy phim nào</p>
-              {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="mt-4 text-primary-600 hover:text-primary-500 font-medium"
-                >
-                  Xóa bộ lọc và thử lại
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Filter Modal */}
-      <AnimatePresence>
-        {showFilterModal && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowFilterModal(false)}
-              className="fixed inset-0 bg-black/70 z-50"
-            />
-
-            {/* Modal */}
-            <motion.div
-              initial={{ opacity: 0, x: '100%' }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-gray-900 z-50 overflow-y-auto"
-            >
-              <div className="p-6">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-white">
-                    {isPhimMode ? 'Bộ lọc' : 'Phim nổi bật'}
-                  </h2>
-                  <button
-                    onClick={() => setShowFilterModal(false)}
-                    className="text-gray-400 hover:text-white text-2xl"
-                  >
-                    ×
-                  </button>
-                </div>
-
-                {/* Filters */}
-                <div className="space-y-6">
-                  {isPhimMode ? (
-                    <>
-                      {/* Catalog */}
-                      <div>
-                        <h3 className="text-white font-medium mb-3">Danh mục:</h3>
-                        <div className="grid grid-cols-2 gap-2">
-                          {PHIM_CATALOG_TYPES.map((catalog) => (
-                            <button
-                              key={catalog}
-                              onClick={() => setSelectedPhimCatalog(catalog)}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors ${selectedPhimCatalog === catalog
-                                ? 'bg-yellow-500 text-black font-medium'
-                                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                                }`}
-                            >
-                              {PHIM_CATALOG_LABELS[catalog]}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Phim genres */}
-                      <div>
-                        <h3 className="text-white font-medium mb-3">Thể loại:</h3>
-                        <div className="flex flex-wrap gap-2 max-h-56 overflow-y-auto pr-1">
-                          <button
-                            onClick={() => setSelectedPhimGenre('')}
-                            className={`px-4 py-2 rounded-md text-sm transition-colors ${selectedPhimGenre === ''
-                              ? 'bg-yellow-500 text-black font-medium'
-                              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                              }`}
-                          >
-                            Tất cả
-                          </button>
-                          {phimGenres.length > 0 ? (
-                            phimGenres.map((genre) => (
-                              <button
-                                key={genre.slug || genre._id || genre.name}
-                                onClick={() => setSelectedPhimGenre(genre.slug || '')}
-                                className={`px-4 py-2 rounded-md text-sm transition-colors ${selectedPhimGenre === (genre.slug || '')
-                                  ? 'bg-yellow-500 text-black font-medium'
-                                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                                  }`}
-                              >
-                                {genre.name}
-                              </button>
-                            ))
-                          ) : (
-                            <p className="text-gray-400 text-sm">Đang tải thể loại...</p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Phim countries */}
-                      <div>
-                        <h3 className="text-white font-medium mb-3">Quốc gia:</h3>
-                        <div className="flex flex-wrap gap-2 max-h-56 overflow-y-auto pr-1">
-                          <button
-                            onClick={() => setSelectedPhimCountry('')}
-                            className={`px-4 py-2 rounded-md text-sm transition-colors ${selectedPhimCountry === ''
-                              ? 'bg-yellow-500 text-black font-medium'
-                              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                              }`}
-                          >
-                            Tất cả
-                          </button>
-                          {phimCountries.length > 0 ? (
-                            phimCountries.map((country) => (
-                              <button
-                                key={country.slug || country._id || country.name}
-                                onClick={() => setSelectedPhimCountry(country.slug || '')}
-                                className={`px-4 py-2 rounded-md text-sm transition-colors ${selectedPhimCountry === (country.slug || '')
-                                  ? 'bg-yellow-500 text-black font-medium'
-                                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                                  }`}
-                              >
-                                {country.name}
-                              </button>
-                            ))
-                          ) : (
-                            <p className="text-gray-400 text-sm">Đang tải quốc gia...</p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div>
-                        <label htmlFor="phim-language" className="block text-white font-medium mb-3">{t('browse.audioLanguage')}</label>
-                        <select id="phim-language" value={selectedPhimLang} onChange={event => setSelectedPhimLang(event.target.value)} className="w-full rounded-md bg-gray-800 p-3 text-white border border-gray-700">
-                          <option value="">{t('browse.allLanguages')}</option>
-                          <option value="vietsub">Vietsub</option>
-                          <option value="thuyet-minh">{t('browse.narrated')}</option>
-                          <option value="long-tieng">{t('browse.voiceDubbed')}</option>
-                        </select>
-                      </div>
-                      <div>
-                        <h3 className="text-white font-medium mb-3">{t('browse.yearRange')}</h3>
-                        <div className="grid grid-cols-2 gap-3">
-                          <input type="number" min="1800" max="2200" aria-label={t('browse.fromYear')} placeholder={t('browse.fromYear')} value={selectedPhimYear.includes(',') ? selectedPhimYear.split(',')[0] : ''} onChange={event => {
-                            const end = selectedPhimYear.includes(',') ? selectedPhimYear.split(',')[1] : '';
-                            setSelectedPhimYear(event.target.value || end ? `${event.target.value},${end}` : '');
-                          }} className="min-w-0 rounded-md border border-gray-700 bg-gray-800 p-3 text-white" />
-                          <input type="number" min="1800" max="2200" aria-label={t('browse.toYear')} placeholder={t('browse.toYear')} value={selectedPhimYear.includes(',') ? selectedPhimYear.split(',')[1] : ''} onChange={event => {
-                            const start = selectedPhimYear.includes(',') ? selectedPhimYear.split(',')[0] : '';
-                            setSelectedPhimYear(start || event.target.value ? `${start},${event.target.value}` : '');
-                          }} className="min-w-0 rounded-md border border-gray-700 bg-gray-800 p-3 text-white" />
-                        </div>
-                        {!validPhimYear && <p role="alert" className="text-red-400 text-sm mt-2">{t('browse.invalidYearRange')}</p>}
-                      </div>
-                      {/* Year */}
-                      <div>
-                        <h3 className="text-white font-medium mb-3">Năm phát hành:</h3>
-                        <div className="grid grid-cols-4 gap-2">
-                          <button
-                            onClick={() => setSelectedPhimYear('')}
-                            className={`px-4 py-2 rounded-md text-sm transition-colors ${selectedPhimYear === ''
-                              ? 'bg-yellow-500 text-black font-medium'
-                              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                              }`}
-                          >
-                            Tất cả
-                          </button>
-                          {years.map((year) => (
-                            <button
-                              key={year}
-                              onClick={() => setSelectedPhimYear(year.toString())}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors ${selectedPhimYear === year.toString()
-                                ? 'bg-yellow-500 text-black font-medium'
-                                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                                }`}
-                            >
-                              {year}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Sort */}
-                      <div>
-                        <h3 className="text-white font-medium mb-3">Sắp xếp:</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {PHIM_SORT_OPTIONS.map((option) => (
-                            <button
-                              key={option.value}
-                              onClick={() => setSelectedPhimSortField(option.value)}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors ${selectedPhimSortField === option.value
-                                ? 'bg-yellow-500 text-black font-medium'
-                                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                                }`}
-                            >
-                              {option.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      {/* Quốc gia */}
-                      <div>
-                        <h3 className="text-white font-medium mb-3">Quốc gia:</h3>
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            onClick={() => setSelectedCountry('')}
-                            className={`px-4 py-2 rounded-md text-sm transition-colors ${selectedCountry === ''
-                              ? 'bg-yellow-500 text-black font-medium'
-                              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                              }`}
-                          >
-                            Tất cả
-                          </button>
-                          {countries.map((country) => (
-                            <button
-                              key={country.code}
-                              onClick={() => setSelectedCountry(country.code)}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors ${selectedCountry === country.code
-                                ? 'bg-yellow-500 text-black font-medium'
-                                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                                }`}
-                            >
-                              {country.name}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Thể loại */}
-                      <div>
-                        <h3 className="text-white font-medium mb-3">Thể loại:</h3>
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            onClick={() => setSelectedGenre('')}
-                            className={`px-4 py-2 rounded-md text-sm transition-colors ${selectedGenre === ''
-                              ? 'bg-yellow-500 text-black font-medium'
-                              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                              }`}
-                          >
-                            Tất cả
-                          </button>
-                          {genres.map((genre) => (
-                            <button
-                              key={genre.id}
-                              onClick={() => setSelectedGenre(genre.id.toString())}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors ${selectedGenre === genre.id.toString()
-                                ? 'bg-yellow-500 text-black font-medium'
-                                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                                }`}
-                            >
-                              {genre.name}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Năm sản xuất */}
-                      <div>
-                        <h3 className="text-white font-medium mb-3">Năm sản xuất:</h3>
-                        <div className="grid grid-cols-5 gap-2">
-                          <button
-                            onClick={() => setSelectedYear('')}
-                            className={`px-4 py-2 rounded-md text-sm transition-colors ${selectedYear === ''
-                              ? 'bg-yellow-500 text-black font-medium'
-                              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                              }`}
-                          >
-                            Tất cả
-                          </button>
-                          {years.map((year) => (
-                            <button
-                              key={year}
-                              onClick={() => setSelectedYear(year.toString())}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors ${selectedYear === year.toString()
-                                ? 'bg-yellow-500 text-black font-medium'
-                                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                                }`}
-                            >
-                              {year}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Xếp hạng */}
-                      <div>
-                        <h3 className="text-white font-medium mb-3">Xếp hạng:</h3>
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            onClick={() => setSelectedRating('')}
-                            className={`px-4 py-2 rounded-md text-sm transition-colors ${selectedRating === ''
-                              ? 'bg-yellow-500 text-black font-medium'
-                              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                              }`}
-                          >
-                            Tất cả
-                          </button>
-                          {CERTIFICATION_OPTIONS.map((cert) => (
-                            <button
-                              key={cert.code}
-                              onClick={() => setSelectedRating(cert.code)}
-                              className={`px-4 py-2 rounded-md text-sm transition-colors ${selectedRating === cert.code
-                                ? 'bg-yellow-500 text-black font-medium'
-                                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                                }`}
-                              title={cert.description}
-                            >
-                              <span className="font-bold">{cert.name}</span>
-                              <span className="ml-1.5 text-xs opacity-80">({cert.description})</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Sắp xếp */}
-                      <div>
-                        <h3 className="text-white font-medium mb-3">Sắp xếp:</h3>
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            onClick={() => setSortBy('popularity.desc')}
-                            className={`px-4 py-2 rounded-md text-sm transition-colors ${sortBy === 'popularity.desc'
-                              ? 'bg-yellow-500 text-black font-medium'
-                              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                              }`}
-                          >
-                            Mới nhất
-                          </button>
-                          <button
-                            onClick={() => setSortBy('vote_average.desc')}
-                            className={`px-4 py-2 rounded-md text-sm transition-colors ${sortBy === 'vote_average.desc'
-                              ? 'bg-yellow-500 text-black font-medium'
-                              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                              }`}
-                          >
-                            Phổ biến nhất
-                          </button>
-                          <button
-                            onClick={() => setSortBy('release_date.desc')}
-                            className={`px-4 py-2 rounded-md text-sm transition-colors ${sortBy === 'release_date.desc'
-                              ? 'bg-yellow-500 text-black font-medium'
-                              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                              }`}
-                          >
-                            Năm phát hành
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-4 mt-8">
-                  <button
-                    onClick={applyFilters}
-                    className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-6 rounded-lg transition-colors"
-                  >
-                    Lọc kết quả
-                  </button>
+                {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
-                    className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg transition-colors"
+                    className="mt-4 text-primary-600 hover:text-primary-500 font-medium"
                   >
-                    Đóng
+                    Xóa bộ lọc và thử lại
                   </button>
-                </div>
+                )}
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </div>
+            )}
+          </div>
+        </div>
+
+        <SheetContent closeLabel={t('common.close')}>
+          <div className="border-b border-border px-6 pb-5 pt-6">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[.18em] text-brand">
+              RitoMovie
+            </p>
+            <SheetTitle>{t('browse.filter')}</SheetTitle>
+            <SheetDescription className="mt-2">
+              {t('browse.filterDescription')}
+            </SheetDescription>
+          </div>
+          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain p-6">
+            {isPhimMode ? (
+              <>
+                <Dropdown
+                  label={t('browse.catalogLabel')}
+                  value={selectedPhimCatalog}
+                  onChange={(value) =>
+                    setSelectedPhimCatalog(value as CatalogType)
+                  }
+                  options={PHIM_CATALOG_TYPES.map((value) => ({
+                    value,
+                    label: t(CATALOG_TITLE_KEYS[value]),
+                  }))}
+                />
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <Combobox
+                    label={t('header.genres')}
+                    value={selectedPhimGenre}
+                    onChange={setSelectedPhimGenre}
+                    options={[
+                      { value: '', label: t('browse.allGenres') },
+                      ...phimGenres.map((item) => ({
+                        value: item.slug,
+                        label: getTranslatedGenre(item.name, i18n.language),
+                      })),
+                    ]}
+                  />
+                  <Combobox
+                    label={t('header.countries')}
+                    value={selectedPhimCountry}
+                    onChange={setSelectedPhimCountry}
+                    options={[
+                      { value: '', label: t('browse.allCountries') },
+                      ...phimCountries.map((item) => ({
+                        value: item.slug,
+                        label: getTranslatedCountry(item.name, i18n.language),
+                      })),
+                    ]}
+                  />
+                </div>
+                <Dropdown
+                  id="phim-language"
+                  label={t('browse.audioLanguage')}
+                  value={selectedPhimLang}
+                  onChange={setSelectedPhimLang}
+                  options={[
+                    { value: '', label: t('browse.allLanguages') },
+                    { value: 'vietsub', label: 'Vietsub' },
+                    { value: 'thuyet-minh', label: t('browse.narrated') },
+                    { value: 'long-tieng', label: t('browse.voiceDubbed') },
+                  ]}
+                />
+                <Dropdown
+                  label={t('browse.yearLabel')}
+                  value={
+                    selectedPhimYear.includes(',') ? 'range' : selectedPhimYear
+                  }
+                  onChange={(value) =>
+                    setSelectedPhimYear(value === 'range' ? ',' : value)
+                  }
+                  options={[
+                    { value: '', label: t('browse.allYears') },
+                    { value: 'range', label: t('browse.yearRange') },
+                    ...years.map((year) => ({
+                      value: String(year),
+                      label: String(year),
+                    })),
+                  ]}
+                />
+                {selectedPhimYear.includes(',') && (
+                  <div className="rounded-xl border border-border bg-background/50 p-4 space-y-3">
+                    <p className="text-xs text-muted-foreground">
+                      {t('browse.yearRange')}
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input
+                        type="number"
+                        min="1800"
+                        max="2200"
+                        aria-label={t('browse.fromYear')}
+                        placeholder={t('browse.fromYear')}
+                        value={selectedPhimYear.split(',')[0]}
+                        onChange={(event) =>
+                          setSelectedPhimYear(
+                            `${event.target.value},${selectedPhimYear.split(',')[1] || ''}`
+                          )
+                        }
+                      />
+                      <Input
+                        type="number"
+                        min="1800"
+                        max="2200"
+                        aria-label={t('browse.toYear')}
+                        placeholder={t('browse.toYear')}
+                        value={selectedPhimYear.split(',')[1]}
+                        onChange={(event) =>
+                          setSelectedPhimYear(
+                            `${selectedPhimYear.split(',')[0] || ''},${event.target.value}`
+                          )
+                        }
+                      />
+                    </div>
+                    {!validPhimYear && (
+                      <p role="alert" className="text-xs text-red-400">
+                        {t('browse.invalidYearRange')}
+                      </p>
+                    )}
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-4">
+                  <Dropdown
+                    label={t('browse.sortLabel')}
+                    value={selectedPhimSortField}
+                    onChange={(value) =>
+                      setSelectedPhimSortField(value as PhimSortField)
+                    }
+                    options={[
+                      {
+                        value: 'modified.time',
+                        label: t('browse.sortUpdated'),
+                      },
+                      { value: 'year', label: t('browse.yearLabel') },
+                      { value: '_id', label: t('browse.sortAdded') },
+                    ]}
+                  />
+                  <Dropdown
+                    label={t('browse.sortDirection')}
+                    value={selectedPhimSortType}
+                    onChange={(value) =>
+                      setSelectedPhimSortType(value as PhimSortType)
+                    }
+                    options={[
+                      { value: 'desc', label: t('browse.descending') },
+                      { value: 'asc', label: t('browse.ascending') },
+                    ]}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <Combobox
+                  label={t('header.genres')}
+                  value={selectedGenre}
+                  onChange={setSelectedGenre}
+                  options={[
+                    { value: '', label: t('browse.allGenres') },
+                    ...genres.map((item) => ({
+                      value: String(item.id),
+                      label: item.name,
+                    })),
+                  ]}
+                />
+                <Combobox
+                  label={t('header.countries')}
+                  value={selectedCountry}
+                  onChange={setSelectedCountry}
+                  options={[
+                    { value: '', label: t('browse.allCountries') },
+                    ...countries.map((item) => ({
+                      value: item.code,
+                      label: item.name,
+                    })),
+                  ]}
+                />
+                <Dropdown
+                  label={t('browse.yearLabel')}
+                  value={selectedYear}
+                  onChange={setSelectedYear}
+                  options={[
+                    { value: '', label: t('browse.allYears') },
+                    ...years.map((year) => ({
+                      value: String(year),
+                      label: String(year),
+                    })),
+                  ]}
+                />
+                <Dropdown
+                  label={t('browse.certificationLabel')}
+                  value={selectedRating}
+                  onChange={setSelectedRating}
+                  options={[
+                    { value: '', label: t('browse.allRatings') },
+                    ...CERTIFICATION_OPTIONS.map((item) => ({
+                      value: item.code,
+                      label: `${item.name} · ${item.description}`,
+                    })),
+                  ]}
+                />
+                <Dropdown
+                  label={t('browse.sortLabel')}
+                  value={sortBy}
+                  onChange={setSortBy}
+                  options={[
+                    {
+                      value: 'popularity.desc',
+                      label: t('browse.sortPopular'),
+                    },
+                    {
+                      value: 'vote_average.desc',
+                      label: t('browse.sortRating'),
+                    },
+                    {
+                      value: 'release_date.desc',
+                      label: t('browse.sortNewest'),
+                    },
+                  ]}
+                />
+              </>
+            )}
+          </div>
+          <div className="flex items-center justify-between gap-3 border-t border-border bg-card p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+            <Button variant="ghost" onClick={clearFilters}>
+              {t('browse.clearFilters')}
+            </Button>
+            <Button
+              onClick={applyFilters}
+              disabled={isPhimMode && !validPhimYear}
+            >
+              {t('browse.applyFilters')}
+            </Button>
+          </div>
+        </SheetContent>
+      </div>
+    </Sheet>
   );
 };
 

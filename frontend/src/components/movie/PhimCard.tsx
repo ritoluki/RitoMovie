@@ -6,6 +6,7 @@ import { getPhimImageUrl, truncateText } from '@/utils/helpers';
 import { useMovies } from '@/hooks/useMovies';
 import PhimPopup from './PhimPopup';
 import LazyImage from '@/components/common/LazyImage';
+import { Badge } from '@/components/ui/badge';
 
 interface PhimCardProps {
     item: PhimMovieSummary;
@@ -111,6 +112,7 @@ const PhimCard = ({ item }: PhimCardProps) => {
                     transition={{ duration: 0.25 }}
                 >
                     <LazyImage src={poster} alt={item.name} className="h-full w-full object-cover" />
+                    {item.quality && <Badge className="absolute left-2 top-2 border-white/10 bg-black/65 text-white backdrop-blur-sm">{item.quality}</Badge>}
 
                     {/* Dark gradient overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-80" />

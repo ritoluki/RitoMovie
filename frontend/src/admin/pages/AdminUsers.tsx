@@ -1,3 +1,4 @@
+import { SelectField } from '@/components/ui/select-field';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -255,27 +256,27 @@ const AdminUsers: React.FC = () => {
           className="sm:w-64"
         />
         
-        <select
+        <SelectField
           value={queryParams.role || ''}
-          onChange={(e) => setQueryParams({ ...queryParams, role: e.target.value || undefined, page: 1 })}
-          className="px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-lg text-sm text-white focus:outline-none focus:border-red-500"
+          onValueChange={value => setQueryParams({ ...queryParams, role: value || undefined, page: 1 })}
+          className="w-full sm:w-44"
         >
           <option value="">All Roles</option>
           <option value="user">User</option>
           <option value="moderator">Moderator</option>
           <option value="admin">Admin</option>
           <option value="super_admin">Super Admin</option>
-        </select>
+        </SelectField>
 
-        <select
+        <SelectField
           value={queryParams.status || ''}
-          onChange={(e) => setQueryParams({ ...queryParams, status: e.target.value as 'active' | 'banned' | undefined, page: 1 })}
-          className="px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-lg text-sm text-white focus:outline-none focus:border-red-500"
+          onValueChange={value => setQueryParams({ ...queryParams, status: value as 'active' | 'banned' | undefined, page: 1 })}
+          className="w-full sm:w-44"
         >
           <option value="">All Status</option>
           <option value="active">Active</option>
           <option value="banned">Banned</option>
-        </select>
+        </SelectField>
       </div>
 
       {/* Bulk actions */}

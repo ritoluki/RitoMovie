@@ -1,3 +1,4 @@
+import { SelectField } from '@/components/ui/select-field';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -249,10 +250,10 @@ const AdminMovies: React.FC = () => {
           className="sm:w-64"
         />
 
-        <select
+        <SelectField
           value={queryParams.genre || ''}
-          onChange={(e) => setQueryParams({ ...queryParams, genre: e.target.value || undefined, page: 1 })}
-          className="px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-lg text-sm text-white focus:outline-none focus:border-red-500"
+          onValueChange={value => setQueryParams({ ...queryParams, genre: value || undefined, page: 1 })}
+          className="w-full sm:w-44"
         >
           <option value="">All Genres</option>
           {genres.map((genre) => (
@@ -260,17 +261,17 @@ const AdminMovies: React.FC = () => {
               {genre._id} ({genre.count})
             </option>
           ))}
-        </select>
+        </SelectField>
 
-        <select
+        <SelectField
           value={queryParams.status || ''}
-          onChange={(e) => setQueryParams({ ...queryParams, status: e.target.value as 'featured' | 'trending' | undefined, page: 1 })}
-          className="px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-lg text-sm text-white focus:outline-none focus:border-red-500"
+          onValueChange={value => setQueryParams({ ...queryParams, status: value as 'featured' | 'trending' | undefined, page: 1 })}
+          className="w-full sm:w-44"
         >
           <option value="">All Status</option>
           <option value="featured">Featured</option>
           <option value="trending">Trending</option>
-        </select>
+        </SelectField>
       </div>
 
       {/* Bulk actions */}

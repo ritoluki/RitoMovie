@@ -1,6 +1,13 @@
 import { useState, useMemo } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
-import { FiDownload, FiHeart, FiShare2, FiMessageCircle, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import {
+  FiDownload,
+  FiHeart,
+  FiShare2,
+  FiMessageCircle,
+  FiChevronDown,
+  FiChevronUp,
+} from 'react-icons/fi';
 import { AiFillHeart } from 'react-icons/ai';
 import { IoPlay } from 'react-icons/io5';
 import { useMovies } from '@/hooks/useMovies';
@@ -16,7 +23,13 @@ import CastTab from '@/components/movie/tabs/CastTab';
 import GalleryTab from '@/components/movie/tabs/GalleryTab';
 import RecommendationsTab from '@/components/movie/tabs/RecommendationsTab';
 import { useTranslation } from 'react-i18next';
-import { phimToMovieDetails, phimActorNames, selectPhimImages } from '@/utils/phimFallback';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import {
+  phimToMovieDetails,
+  phimActorNames,
+  selectPhimImages,
+} from '@/utils/phimFallback';
 
 type TabType = 'episodes' | 'gallery' | 'cast' | 'recommendations';
 
@@ -31,33 +44,49 @@ const MovieDetails = () => {
   const [activeTab, setActiveTab] = useState<TabType>('episodes');
   const [showMovieInfo, setShowMovieInfo] = useState(false);
 
-  const {
-    useMovieDetails,
-    useMovieCredits,
-    useMovieImages,
-    useReleaseDates,
-  } = useMovies();
+  const { useMovieDetails, useMovieCredits, useMovieImages, useReleaseDates } =
+    useMovies();
   const { useMovieByTmdb, useMovieBySlug, useExtras } = usePhim();
 
-  const { data: tmdbMovie, isLoading: movieLoading } = useMovieDetails(movieId, { mediaType });
-  const { data: credits, isLoading: creditsLoading } = useMovieCredits(movieId, mediaType);
-  const { data: tmdbImages, isLoading: imagesLoading } = useMovieImages(movieId, mediaType);
+  const { data: tmdbMovie, isLoading: movieLoading } = useMovieDetails(
+    movieId,
+    { mediaType }
+  );
+  const { data: credits, isLoading: creditsLoading } = useMovieCredits(
+    movieId,
+    mediaType
+  );
+  const { data: tmdbImages, isLoading: imagesLoading } = useMovieImages(
+    movieId,
+    mediaType
+  );
   const { data: releaseDates } = useReleaseDates(movieId, mediaType);
 
-  const { data: streamingBySlug, isLoading: streamingBySlugLoading } = useMovieBySlug(phimSlug);
-  const { data: streamingByTmdb, isLoading: streamingByTmdbLoading } = useMovieByTmdb(
-    phimSlug ? undefined : movieId,
-    mediaType === 'tv' ? 'tv' : 'movie'
-  );
+  const { data: streamingBySlug, isLoading: streamingBySlugLoading } =
+    useMovieBySlug(phimSlug);
+  const { data: streamingByTmdb, isLoading: streamingByTmdbLoading } =
+    useMovieByTmdb(
+      phimSlug ? undefined : movieId,
+      mediaType === 'tv' ? 'tv' : 'movie'
+    );
 
   const streamingData = phimSlug ? streamingBySlug : streamingByTmdb;
-  const streamingLoading = phimSlug ? streamingBySlugLoading : streamingByTmdbLoading;
-  const { data: extras, isLoading: extrasLoading } = useExtras(streamingData?.movie?.slug || phimSlug);
-  const movie = tmdbMovie || (streamingData?.movie ? phimToMovieDetails(streamingData.movie, movieId) : undefined);
+  const streamingLoading = phimSlug
+    ? streamingBySlugLoading
+    : streamingByTmdbLoading;
+  const { data: extras, isLoading: extrasLoading } = useExtras(
+    streamingData?.movie?.slug || phimSlug
+  );
+  const movie =
+    tmdbMovie ||
+    (streamingData?.movie
+      ? phimToMovieDetails(streamingData.movie, movieId)
+      : undefined);
   const images = selectPhimImages(tmdbImages, extras?.images);
 
   const { isAuthenticated } = useAuthStore();
-  const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useMovieStore();
+  const { isInWatchlist, addToWatchlist, removeFromWatchlist } =
+    useMovieStore();
 
   const inWatchlist = isInWatchlist(movieId);
 
@@ -130,19 +159,29 @@ const MovieDetails = () => {
     );
   }
 
-  const displayTitle = movie.title || movie.name || movie.original_name || t('movie.movieInfo');
-  const originalTitle = movie.original_title || movie.original_name || movie.title;
+  const displayTitle =
+    movie.title || movie.name || movie.original_name || t('movie.movieInfo');
+  const originalTitle =
+    movie.original_title || movie.original_name || movie.title;
   const releaseDate = movie.release_date || movie.first_air_date;
-  const releaseYear = releaseDate ? new Date(releaseDate).getFullYear() : undefined;
-  const runtimeMinutes = movie.runtime ?? movie.episode_run_time?.[0];
-  const runtimeLabel = typeof runtimeMinutes === 'number'
-    ? `${Math.floor(runtimeMinutes / 60)}h ${runtimeMinutes % 60}m`
+  const releaseYear = releaseDate
+    ? new Date(releaseDate).getFullYear()
     : undefined;
+  const runtimeMinutes = movie.runtime ?? movie.episode_run_time?.[0];
+  const runtimeLabel =
+    typeof runtimeMinutes === 'number'
+      ? `${Math.floor(runtimeMinutes / 60)}h ${runtimeMinutes % 60}m`
+      : undefined;
 
-  const cast = credits?.cast?.length ? credits.cast : extras?.cast?.length ? extras.cast : phimActorNames(streamingData?.movie?.actor);
+  const cast = credits?.cast?.length
+    ? credits.cast
+    : extras?.cast?.length
+      ? extras.cast
+      : phimActorNames(streamingData?.movie?.actor);
 
   // Generate clip-path for tilted poster (matching TopMoviesTiltedSection style)
-  const clipPathRight = 'polygon(94.239% 100%, 5.761% 100%, 5.761% 100%, 4.826% 99.95%, 3.94% 99.803%, 3.113% 99.569%, 2.358% 99.256%, 1.687% 98.87%, 1.111% 98.421%, .643% 97.915%, .294% 97.362%, .075% 96.768%, 0 96.142%, 0 3.858%, 0 3.858%, .087% 3.185%, .338% 2.552%, .737% 1.968%, 1.269% 1.442%, 1.92% .984%, 2.672% .602%, 3.512% .306%, 4.423% .105%, 5.391% .008%, 6.4% .024%, 94.879% 6.625%, 94.879% 6.625%, 95.731% 6.732%, 96.532% 6.919%, 97.272% 7.178%, 97.942% 7.503%, 98.533% 7.887%, 99.038% 8.323%, 99.445% 8.805%, 99.747% 9.326%, 99.935% 9.88%, 100% 10.459%, 100% 96.142%, 100% 96.142%, 99.925% 96.768%, 99.706% 97.362%, 99.357% 97.915%, 98.889% 98.421%, 98.313% 98.87%, 97.642% 99.256%, 96.887% 99.569%, 96.06% 99.803%, 95.174% 99.95%, 94.239% 100%)';
+  const clipPathRight =
+    'polygon(94.239% 100%, 5.761% 100%, 5.761% 100%, 4.826% 99.95%, 3.94% 99.803%, 3.113% 99.569%, 2.358% 99.256%, 1.687% 98.87%, 1.111% 98.421%, .643% 97.915%, .294% 97.362%, .075% 96.768%, 0 96.142%, 0 3.858%, 0 3.858%, .087% 3.185%, .338% 2.552%, .737% 1.968%, 1.269% 1.442%, 1.92% .984%, 2.672% .602%, 3.512% .306%, 4.423% .105%, 5.391% .008%, 6.4% .024%, 94.879% 6.625%, 94.879% 6.625%, 95.731% 6.732%, 96.532% 6.919%, 97.272% 7.178%, 97.942% 7.503%, 98.533% 7.887%, 99.038% 8.323%, 99.445% 8.805%, 99.747% 9.326%, 99.935% 9.88%, 100% 10.459%, 100% 96.142%, 100% 96.142%, 99.925% 96.768%, 99.706% 97.362%, 99.357% 97.915%, 98.889% 98.421%, 98.313% 98.87%, 97.642% 99.256%, 96.887% 99.569%, 96.06% 99.803%, 95.174% 99.95%, 94.239% 100%)';
 
   const tabs = [
     { id: 'episodes' as TabType, label: t('movie.episodes') },
@@ -227,7 +266,9 @@ const MovieDetails = () => {
 
                 {/* Age Rating */}
                 <div className="bg-white/15 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded-lg">
-                  <span className="text-white font-bold text-sm">{certification}</span>
+                  <span className="text-white font-bold text-sm">
+                    {certification}
+                  </span>
                 </div>
 
                 {/* Year */}
@@ -299,7 +340,9 @@ const MovieDetails = () => {
 
                 {/* Age Rating */}
                 <div className="bg-white/15 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded-lg">
-                  <span className="text-white font-bold text-sm">{certification}</span>
+                  <span className="text-white font-bold text-sm">
+                    {certification}
+                  </span>
                 </div>
 
                 {/* Year */}
@@ -342,7 +385,9 @@ const MovieDetails = () => {
                 onClick={() => setShowMovieInfo(!showMovieInfo)}
                 className="w-full bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-xl p-4 flex items-center justify-between"
               >
-                <h3 className="text-white font-bold text-base">{t('movie.movieInfo')}</h3>
+                <h3 className="text-white font-bold text-base">
+                  {t('movie.movieInfo')}
+                </h3>
                 {showMovieInfo ? (
                   <FiChevronUp className="text-white text-xl" />
                 ) : (
@@ -359,7 +404,9 @@ const MovieDetails = () => {
                 >
                   {/* Overview */}
                   <div className="bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-xl p-5 space-y-3">
-                    <h3 className="text-white font-bold text-base">{t('movie.introduction')}</h3>
+                    <h3 className="text-white font-bold text-base">
+                      {t('movie.introduction')}
+                    </h3>
                     <p className="text-gray-300 text-sm leading-relaxed">
                       {movie.overview || t('movie.noOverview')}
                     </p>
@@ -368,28 +415,44 @@ const MovieDetails = () => {
                   {/* Additional Info Grid */}
                   <div className="bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-xl p-5">
                     <div className="grid grid-cols-1 gap-4 text-sm">
-                      {movie.production_countries && movie.production_countries.length > 0 && (
-                        <div>
-                          <span className="text-gray-400 block mb-1">{t('movie.country')}</span>
-                          <span className="text-white font-medium">{movie.production_countries[0].name}</span>
-                        </div>
-                      )}
+                      {movie.production_countries &&
+                        movie.production_countries.length > 0 && (
+                          <div>
+                            <span className="text-gray-400 block mb-1">
+                              {t('movie.country')}
+                            </span>
+                            <span className="text-white font-medium">
+                              {movie.production_countries[0].name}
+                            </span>
+                          </div>
+                        )}
 
-                      {movie.production_companies && movie.production_companies.length > 0 && (
-                        <div>
-                          <span className="text-gray-400 block mb-1">{t('movie.networks')}</span>
-                          <span className="text-white font-medium">{movie.production_companies[0].name}</span>
-                        </div>
-                      )}
+                      {movie.production_companies &&
+                        movie.production_companies.length > 0 && (
+                          <div>
+                            <span className="text-gray-400 block mb-1">
+                              {t('movie.networks')}
+                            </span>
+                            <span className="text-white font-medium">
+                              {movie.production_companies[0].name}
+                            </span>
+                          </div>
+                        )}
 
-                      {movie.production_companies && movie.production_companies.length > 0 && (
-                        <div>
-                          <span className="text-gray-400 block mb-1">{t('movie.production')}</span>
-                          <span className="text-white font-medium">
-                            {movie.production_companies.slice(0, 3).map(c => c.name).join(', ')}
-                          </span>
-                        </div>
-                      )}
+                      {movie.production_companies &&
+                        movie.production_companies.length > 0 && (
+                          <div>
+                            <span className="text-gray-400 block mb-1">
+                              {t('movie.production')}
+                            </span>
+                            <span className="text-white font-medium">
+                              {movie.production_companies
+                                .slice(0, 3)
+                                .map((c) => c.name)
+                                .join(', ')}
+                            </span>
+                          </div>
+                        )}
                     </div>
                   </div>
                 </motion.div>
@@ -398,7 +461,9 @@ const MovieDetails = () => {
 
             {/* Overview - Desktop only */}
             <div className="hidden md:block bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-xl p-5 space-y-3">
-              <h3 className="text-white font-bold text-base">{t('movie.introduction')}</h3>
+              <h3 className="text-white font-bold text-base">
+                {t('movie.introduction')}
+              </h3>
               <p className="text-gray-300 text-sm leading-relaxed">
                 {movie.overview || t('movie.noOverview')}
               </p>
@@ -407,28 +472,44 @@ const MovieDetails = () => {
             {/* Additional Info Grid - Desktop only */}
             <div className="hidden md:block bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-xl p-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                {movie.production_countries && movie.production_countries.length > 0 && (
-                  <div>
-                    <span className="text-gray-400 block mb-1">{t('movie.country')}</span>
-                    <span className="text-white font-medium">{movie.production_countries[0].name}</span>
-                  </div>
-                )}
+                {movie.production_countries &&
+                  movie.production_countries.length > 0 && (
+                    <div>
+                      <span className="text-gray-400 block mb-1">
+                        {t('movie.country')}
+                      </span>
+                      <span className="text-white font-medium">
+                        {movie.production_countries[0].name}
+                      </span>
+                    </div>
+                  )}
 
-                {movie.production_companies && movie.production_companies.length > 0 && (
-                  <div>
-                    <span className="text-gray-400 block mb-1">{t('movie.networks')}</span>
-                    <span className="text-white font-medium">{movie.production_companies[0].name}</span>
-                  </div>
-                )}
+                {movie.production_companies &&
+                  movie.production_companies.length > 0 && (
+                    <div>
+                      <span className="text-gray-400 block mb-1">
+                        {t('movie.networks')}
+                      </span>
+                      <span className="text-white font-medium">
+                        {movie.production_companies[0].name}
+                      </span>
+                    </div>
+                  )}
 
-                {movie.production_companies && movie.production_companies.length > 0 && (
-                  <div className="md:col-span-2">
-                    <span className="text-gray-400 block mb-1">{t('movie.production')}</span>
-                    <span className="text-white font-medium">
-                      {movie.production_companies.slice(0, 3).map(c => c.name).join(', ')}
-                    </span>
-                  </div>
-                )}
+                {movie.production_companies &&
+                  movie.production_companies.length > 0 && (
+                    <div className="md:col-span-2">
+                      <span className="text-gray-400 block mb-1">
+                        {t('movie.production')}
+                      </span>
+                      <span className="text-white font-medium">
+                        {movie.production_companies
+                          .slice(0, 3)
+                          .map((c) => c.name)
+                          .join(', ')}
+                      </span>
+                    </div>
+                  )}
               </div>
             </div>
 
@@ -439,7 +520,11 @@ const MovieDetails = () => {
                 disabled={!isAuthenticated || movieId <= 0}
                 variant={inWatchlist ? 'danger' : 'outline'}
                 size="sm"
-                className={inWatchlist ? 'bg-red-600 hover:bg-red-700 border-red-600' : ''}
+                className={
+                  inWatchlist
+                    ? 'bg-red-600 hover:bg-red-700 border-red-600'
+                    : ''
+                }
               >
                 {inWatchlist ? (
                   <AiFillHeart className="mr-1" size={16} />
@@ -448,19 +533,11 @@ const MovieDetails = () => {
                 )}
                 {inWatchlist ? t('movie.favorited') : t('movie.favorite')}
               </Button>
-              <Button
-                onClick={handleDownload}
-                variant="outline"
-                size="sm"
-              >
+              <Button onClick={handleDownload} variant="outline" size="sm">
                 <FiDownload className="mr-1" size={16} />
                 {t('movie.download')}
               </Button>
-              <Button
-                onClick={handleShare}
-                variant="outline"
-                size="sm"
-              >
+              <Button onClick={handleShare} variant="outline" size="sm">
                 <FiShare2 className="mr-1" size={16} />
                 {t('movie.share')}
               </Button>
@@ -480,64 +557,69 @@ const MovieDetails = () => {
       {/* Tabs Navigation */}
       {!!extras?.keywords.length && (
         <div className="container mx-auto px-4 md:px-8 mt-8">
-          <h2 className="text-sm font-medium text-gray-400 mb-3">{t('movie.keywords')}</h2>
+          <h2 className="text-sm font-medium text-gray-400 mb-3">
+            {t('movie.keywords')}
+          </h2>
           <div className="flex flex-wrap gap-2">
-            {extras.keywords.map(keyword => <span key={keyword} className="rounded-full border border-gray-700 bg-gray-800 px-3 py-1 text-sm text-gray-300">{keyword}</span>)}
-          </div>
-        </div>
-      )}
-      <div className="border-b border-gray-800 bg-gray-900/95 backdrop-blur-md sticky top-16 md:top-20 z-40 mt-12">
-        <div className="container mx-auto px-4 md:px-8">
-          <div className="flex gap-8">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`relative py-4 text-sm md:text-base font-medium transition-colors ${activeTab === tab.id
-                  ? 'text-red-500'
-                  : 'text-gray-400 hover:text-white'
-                  }`}
-              >
-                {tab.label}
-                {activeTab === tab.id && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute bottom-0 left-0 right-0 h-1 bg-red-500"
-                  />
-                )}
-              </button>
+            {extras.keywords.map((keyword) => (
+              <Badge key={keyword} variant="outline">
+                {keyword}
+              </Badge>
             ))}
           </div>
         </div>
-      </div>
-
-      {/* Tab Content */}
-      <div className="container mx-auto px-4 md:px-8 py-8 md:py-12">
-        {activeTab === 'episodes' && (
-          <EpisodesTab
-            movieId={movieId}
-            movieTitle={displayTitle}
-            mediaType={mediaType}
-            streamingServers={streamingData?.episodes}
-            isStreamingLoading={streamingLoading}
-            slug={streamingData?.movie?.slug}
-          />
-        )}
-        {activeTab === 'gallery' && (
-          <GalleryTab movieId={movieId} images={images} isLoading={!images && (imagesLoading || extrasLoading)} />
-        )}
-        {activeTab === 'cast' && (
-          <CastTab movieId={movieId} cast={cast} isLoading={!cast.length && (creditsLoading || extrasLoading)} />
-        )}
-        {activeTab === 'recommendations' && (
-          <RecommendationsTab
-            mediaType={mediaType}
-            movieId={movieId}
-            slug={streamingData?.movie?.slug || phimSlug}
-            isResolvingSource={streamingLoading}
-          />
-        )}
-      </div>
+      )}
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as TabType)}
+      >
+        <div className="sticky top-16 z-40 mt-10 border-y border-border/70 bg-background/95 backdrop-blur-xl md:top-20">
+          <div className="container mx-auto overflow-x-auto px-4 py-3 md:px-8">
+            <TabsList aria-label={t('movie.movieInfo')}>
+              {tabs.map((tab) => (
+                <TabsTrigger key={tab.id} value={tab.id}>
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
+        </div>
+        {/* Tab Content */}
+        <div className="container mx-auto px-4 md:px-8 py-8 md:py-12">
+          <TabsContent value="episodes" className="mt-0">
+            <EpisodesTab
+              movieId={movieId}
+              movieTitle={displayTitle}
+              mediaType={mediaType}
+              streamingServers={streamingData?.episodes}
+              isStreamingLoading={streamingLoading}
+              slug={streamingData?.movie?.slug}
+            />
+          </TabsContent>
+          <TabsContent value="gallery" className="mt-0">
+            <GalleryTab
+              movieId={movieId}
+              images={images}
+              isLoading={!images && (imagesLoading || extrasLoading)}
+            />
+          </TabsContent>
+          <TabsContent value="cast" className="mt-0">
+            <CastTab
+              movieId={movieId}
+              cast={cast}
+              isLoading={!cast.length && (creditsLoading || extrasLoading)}
+            />
+          </TabsContent>
+          <TabsContent value="recommendations" className="mt-0">
+            <RecommendationsTab
+              mediaType={mediaType}
+              movieId={movieId}
+              slug={streamingData?.movie?.slug || phimSlug}
+              isResolvingSource={streamingLoading}
+            />
+          </TabsContent>
+        </div>
+      </Tabs>
     </div>
   );
 };

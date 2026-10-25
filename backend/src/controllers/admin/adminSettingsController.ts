@@ -287,7 +287,7 @@ export const initializeSettings = asyncHandler(async (req: Request, res: Respons
     { key: 'session_timeout_hours', value: 24, category: 'user', description: 'Session timeout hours', type: 'number', isPublic: false },
     
     // Appearance
-    { key: 'primary_color', value: '#eab308', category: 'appearance', description: 'Primary color', type: 'string', isPublic: true },
+    { key: 'primary_color', value: '#dc2626', category: 'appearance', description: 'Primary color', type: 'string', isPublic: true },
     { key: 'secondary_color', value: '#dc2626', category: 'appearance', description: 'Secondary color', type: 'string', isPublic: true },
     { key: 'dark_mode_default', value: true, category: 'appearance', description: 'Dark mode default', type: 'boolean', isPublic: true },
     { key: 'show_movie_posters', value: true, category: 'appearance', description: 'Show movie posters', type: 'boolean', isPublic: true },

@@ -1,82 +1,72 @@
-import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FiSearch, FiUser, FiMenu, FiX, FiLogOut, FiList, FiSettings, FiChevronDown, FiShield } from 'react-icons/fi';
-import { useAuth } from '@/hooks/useAuth';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, type FormEvent } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import {
+  Search,
+  UserRound,
+  Menu,
+  LogOut,
+  ListVideo,
+  ShieldCheck,
+  ChevronDown,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import LanguageSwitcher from '@/components/common/LanguageSwitcher';
-import { LogoLink } from '@/components/common/Logo';
+import { useAuth } from '@/hooks/useAuth';
 import { usePhim } from '@/hooks/usePhim';
+import { LogoLink } from '@/components/common/Logo';
+import LanguageSwitcher from '@/components/common/LanguageSwitcher';
+import TaxonomyMenu from './TaxonomyMenu';
 import { getTranslatedGenre, getTranslatedCountry } from '@/utils/translations';
+import { cn } from '@/utils/helpers';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import {
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
 
 const Header = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-
-  const userMenuRef = useRef<HTMLDivElement>(null);
-  const genreMenuRef = useRef<HTMLDivElement>(null);
-  const countryMenuRef = useRef<HTMLDivElement>(null);
-  const { user, isAuthenticated, logout } = useAuth();
-  const navigate = useNavigate();
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState('');
   const { t, i18n } = useTranslation();
-  const { useGenres: usePhimGenres, useCountries: usePhimCountries } = usePhim();
-  const { data: phimGenresData, isLoading: isGenresLoading } = usePhimGenres();
-  const { data: phimCountriesData, isLoading: isCountriesLoading } = usePhimCountries();
-  const genres = phimGenresData ?? [];
-  const countries = phimCountriesData ?? [];
-
+  const { user, isAuthenticated, logout } = useAuth();
+  const { useGenres, useCountries } = usePhim();
+  const { data: genreData = [], isLoading: genresLoading } = useGenres();
+  const { data: countryData = [], isLoading: countriesLoading } =
+    useCountries();
+  const genres = genreData.map((item) => ({
+    ...item,
+    name: getTranslatedGenre(item.name, i18n.language),
+  }));
+  const countries = countryData.map((item) => ({
+    ...item,
+    name: getTranslatedCountry(item.name, i18n.language),
+  }));
+  const navigate = useNavigate();
+  const location = useLocation();
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50); // Increased threshold for better transition
-    };
-
-    // Set initial state
-    handleScroll();
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
-
-  // Close user menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
-        setIsUserMenuOpen(false);
-      }
-      if (genreMenuRef.current && !genreMenuRef.current.contains(event.target as Node) &&
-        countryMenuRef.current && !countryMenuRef.current.contains(event.target as Node)) {
-        setActiveDropdown(null);
-      }
-    };
-
-    if (isUserMenuOpen || activeDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isUserMenuOpen, activeDropdown]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/browse?q=${encodeURIComponent(searchQuery)}`);
-      setSearchQuery('');
-      setIsSearchOpen(false);
-    }
-  };
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-    setIsUserMenuOpen(false);
-  };
-
   const navLinks = [
     { name: t('header.home'), path: '/' },
     { name: t('header.singleMovies'), path: '/browse?catalog=phim-le' },
@@ -84,360 +74,283 @@ const Header = () => {
     { name: t('header.hoatHinh'), path: '/browse?catalog=hoat-hinh' },
     { name: t('header.phimChieuRap'), path: '/browse?catalog=phim-chieu-rap' },
   ];
-
-  const isLoadingGenres = isGenresLoading && genres.length === 0;
-  const isLoadingCountries = isCountriesLoading && countries.length === 0;
-
+  const accountLinks = [
+    { name: t('header.myList'), path: '/my-list', icon: ListVideo },
+    { name: t('header.profile'), path: '/profile', icon: UserRound },
+    ...(user &&
+    ['super_admin', 'admin', 'moderator', 'analyst'].includes(user.role)
+      ? [
+          {
+            name: t('header.adminDashboard'),
+            path: '/admin',
+            icon: ShieldCheck,
+          },
+        ]
+      : []),
+  ];
+  const search = (event: FormEvent) => {
+    event.preventDefault();
+    if (query.trim()) {
+      navigate(`/browse?q=${encodeURIComponent(query.trim())}`);
+      setSearchOpen(false);
+      setMobileOpen(false);
+      setQuery('');
+    }
+  };
+  const signOut = () => {
+    logout();
+    setMobileOpen(false);
+    navigate('/');
+  };
   return (
-    <>
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.button
-            key="mobile-menu-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            aria-label="Close menu overlay"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="fixed inset-0 z-40 bg-gray-900/70 backdrop-blur-sm md:hidden"
-          />
-        )}
-      </AnimatePresence>
+    <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled || isMobileMenuOpen
-          ? 'bg-gray-900/95 backdrop-blur-md shadow-lg'
-          : 'bg-gradient-to-b from-gray-900/80 to-transparent'
-          }`}
+        className={cn(
+          'fixed inset-x-0 top-0 z-50 border-b transition-colors duration-200',
+          scrolled
+            ? 'border-border/70 bg-background/95 backdrop-blur-xl'
+            : 'border-transparent bg-gradient-to-b from-background/95 to-background/50'
+        )}
       >
-        <div className="px-4 md:px-6">
-          <div className="flex items-center justify-between gap-3 h-16 md:h-20 relative">
-            {/* Left Side: Logo + Search */}
-            <div className="flex items-center gap-5">
-              {/* Logo */}
-              <LogoLink to="/" size="md" animated={true} />
-
-              {/* Desktop Search - Always visible next to logo */}
-              <form
-                onSubmit={handleSearch}
-                className="hidden md:flex items-center relative"
+        <div className="mx-auto flex h-16 max-w-[1920px] items-center justify-between gap-3 px-4 md:h-20 lg:px-8">
+          <div className="shrink-0">
+            <LogoLink to="/" size="md" animated={false} />
+          </div>
+          <nav
+            aria-label={t('common.mainNavigation')}
+            className="hidden items-center gap-0.5 xl:flex"
+          >
+            {navLinks.map((link) => (
+              <Button
+                key={link.path}
+                asChild
+                variant="ghost"
+                className={cn(
+                  'h-10 px-2.5',
+                  `${location.pathname}${location.search}` === link.path &&
+                    'text-white bg-accent'
+                )}
               >
-                <div className="relative">
-                  <FiSearch size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={t('header.searchPlaceholder')}
-                    className="w-72 pl-10 pr-4 py-2 bg-gray-700/50 text-white rounded-md border border-gray-600/50 focus:outline-none focus:border-gray-500 focus:bg-gray-700 placeholder:text-gray-400 transition-all text-sm"
-                  />
-                </div>
-              </form>
-            </div>
-
-            {/* Desktop Navigation */}
-            <nav
-              className="hidden md:flex items-center gap-6 absolute"
-              style={{ left: '50%', transform: 'translateX(-50%)' }}
-            >
-              {navLinks.map((link) => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className="text-white hover:text-gray-200 transition-colors duration-200 font-medium text-sm"
+                <Link to={link.path}>{link.name}</Link>
+              </Button>
+            ))}
+            <TaxonomyMenu
+              title={t('header.genres')}
+              items={genres}
+              param="phimGenre"
+              loading={genresLoading}
+            />
+            <TaxonomyMenu
+              title={t('header.countries')}
+              items={countries}
+              param="phimCountry"
+              loading={countriesLoading}
+            />
+          </nav>
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+            <Popover open={searchOpen} onOpenChange={setSearchOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t('common.search')}
                 >
-                  {link.name}
-                </Link>
-              ))}
-
-              {/* Thể loại Dropdown */}
-              <div className="relative" ref={genreMenuRef}>
-                <button
-                  onClick={() => setActiveDropdown(activeDropdown === 'genre' ? null : 'genre')}
-                  className="flex items-center gap-1 text-white hover:text-gray-200 transition-colors duration-200 font-medium text-sm"
-                >
-                  {t('header.genres')}
-                  <FiChevronDown className={`transition-transform duration-200 ${activeDropdown === 'genre' ? 'rotate-180' : ''}`} size={14} />
-                </button>
-
-                <AnimatePresence>
-                  {activeDropdown === 'genre' && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute left-0 mt-2 w-[600px] bg-gray-900/95 backdrop-blur-md rounded-lg shadow-2xl py-4 px-6 z-50 border border-gray-800"
-                    >
-                      <div className="grid grid-cols-4 gap-x-6 gap-y-2">
-                        {genres.length > 0 ? (
-                          genres.map((genre) => (
-                            <Link
-                              key={genre.slug}
-                              to={`/browse?phimGenre=${genre.slug}`}
-                              onClick={() => setActiveDropdown(null)}
-                              className="text-gray-300 hover:text-white transition-colors duration-200 text-sm py-1"
-                            >
-                              {getTranslatedGenre(genre.name, i18n.language)}
-                            </Link>
-                          ))
-                        ) : (
-                          <p className="col-span-4 text-gray-400 text-sm py-1">
-                            {isLoadingGenres ? t('common.loading') : t('common.noData')}
-                          </p>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Quốc gia Dropdown */}
-              <div className="relative" ref={countryMenuRef}>
-                <button
-                  onClick={() => setActiveDropdown(activeDropdown === 'country' ? null : 'country')}
-                  className="flex items-center gap-1 text-white hover:text-gray-200 transition-colors duration-200 font-medium text-sm"
-                >
-                  {t('header.countries')}
-                  <FiChevronDown className={`transition-transform duration-200 ${activeDropdown === 'country' ? 'rotate-180' : ''}`} size={14} />
-                </button>
-
-                <AnimatePresence>
-                  {activeDropdown === 'country' && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute left-0 mt-2 w-[600px] bg-gray-900/95 backdrop-blur-md rounded-lg shadow-2xl py-4 px-6 z-50 border border-gray-800"
-                    >
-                      <div className="grid grid-cols-4 gap-x-6 gap-y-2">
-                        {countries.length > 0 ? (
-                          countries.map((country) => (
-                            <Link
-                              key={country.slug}
-                              to={`/browse?phimCountry=${country.slug}`}
-                              onClick={() => setActiveDropdown(null)}
-                              className="text-gray-300 hover:text-white transition-colors duration-200 text-sm py-1"
-                            >
-                              {getTranslatedCountry(country.name, i18n.language)}
-                            </Link>
-                          ))
-                        ) : (
-                          <p className="col-span-4 text-gray-400 text-sm py-1">
-                            {isLoadingCountries ? t('common.loading') : t('common.noData')}
-                          </p>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Xem Chung Link temporarily hidden */}
-            </nav>
-
-            {/* Right Side Actions */}
-            <div className="flex items-center gap-2">
-              {/* Language Switcher */}
-              <LanguageSwitcher />
-
-              {/* Mobile Search - Icon button */}
-              <div className="md:hidden relative w-10 h-10">
-                <AnimatePresence mode="wait">
-                  {isSearchOpen ? (
-                    <motion.form
-                      key="search-form"
-                      initial={{ width: 0, opacity: 0 }}
-                      animate={{ width: 'auto', opacity: 1 }}
-                      exit={{ width: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      onSubmit={handleSearch}
-                      className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center overflow-hidden"
-                    >
-                      <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder={t('header.searchPlaceholder')}
-                        className="w-48 px-4 py-2 pr-12 bg-gray-800 text-white rounded-full border border-gray-600 focus:outline-none focus:border-gray-500 placeholder:text-gray-400"
-                        autoFocus
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsSearchOpen(false);
-                          setSearchQuery('');
-                        }}
-                        className="absolute right-2 p-1.5 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-gray-700"
-                      >
-                        <FiX size={18} />
-                      </button>
-                    </motion.form>
-                  ) : (
-                    <motion.button
-                      key="search-button"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      onClick={() => setIsSearchOpen(true)}
-                      className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-gray-300 hover:text-white transition-colors duration-200"
-                      aria-label="Search"
-                    >
-                      <FiSearch size={22} />
-                    </motion.button>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* User Menu */}
-              {isAuthenticated ? (
-                <div className="relative" ref={userMenuRef}>
-                  <button
-                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-800 transition-colors duration-200"
+                  <Search className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-96 p-4">
+                <form onSubmit={search} className="space-y-3">
+                  <label
+                    htmlFor="header-search"
+                    className="text-sm font-medium"
                   >
-                    <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center">
-                      {user?.avatar ? (
-                        <img
-                          src={user.avatar}
-                          alt={user.name}
-                          className="w-full h-full rounded-full object-cover"
-                        />
-                      ) : (
-                        <FiUser size={18} />
-                      )}
-                    </div>
-                  </button>
-
-                  <AnimatePresence>
-                    {isUserMenuOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="absolute right-0 mt-2 w-64 bg-gray-800 rounded-lg shadow-xl py-2 z-50"
-                      >
-                        <div className="px-4 py-3 border-b border-gray-700">
-                          <p className="text-white font-medium whitespace-nowrap">{user?.name}</p>
-                          <p className="text-gray-400 text-sm whitespace-nowrap">{user?.email}</p>
-                        </div>
-
-                        {/* Admin Dashboard Link - only show for admin roles */}
-                        {user?.role && user.role !== 'user' && (
-                          <Link
-                            to="/admin"
-                            onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center space-x-2 px-4 py-2 text-orange-400 hover:bg-gray-700 hover:text-orange-300 transition-colors"
-                          >
-                            <FiShield size={18} />
-                            <span>{t('header.adminDashboard', 'Admin Dashboard')}</span>
-                          </Link>
-                        )}
-
-                        <Link
-                          to="/profile"
-                          onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-                        >
-                          <FiSettings size={18} />
-                          <span>{t('header.profile')}</span>
-                        </Link>
-
-                        <Link
-                          to="/my-list"
-                          onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-                        >
-                          <FiList size={18} />
-                          <span>{t('header.myList')}</span>
-                        </Link>
-
-                        <button
-                          onClick={handleLogout}
-                          className="flex items-center space-x-2 w-full px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-                        >
-                          <FiLogOut size={18} />
-                          <span>{t('header.logout')}</span>
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ) : (
-                <Link
-                  to="/login"
-                  className="hidden md:block btn-primary text-sm"
-                >
-                  {t('header.signIn')}
-                </Link>
-              )}
-
-              {/* Mobile Menu Button */}
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden p-2 text-gray-300 hover:text-white transition-colors duration-200"
+                    {t('common.search')}
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="header-search"
+                      value={query}
+                      onChange={(event) => setQuery(event.target.value)}
+                      placeholder={t('header.searchPlaceholder')}
+                      autoComplete="off"
+                    />
+                    <Button
+                      type="submit"
+                      size="icon"
+                      aria-label={t('common.search')}
+                      className="h-11 w-11"
+                    >
+                      <Search className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t('header.searchHint')}
+                  </p>
+                </form>
+              </PopoverContent>
+            </Popover>
+            <LanguageSwitcher />
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="h-10 gap-2 px-1.5"
+                    aria-label={t('header.profile')}
+                  >
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-muted text-xs font-semibold text-foreground">
+                      {user?.name?.slice(0, 2).toUpperCase() || 'U'}
+                    </span>
+                    <ChevronDown className="hidden h-3 w-3 sm:block" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-60">
+                  <DropdownMenuLabel>
+                    <span className="block truncate text-sm font-semibold text-foreground">
+                      {user?.name}
+                    </span>
+                    <span className="mt-1 block truncate text-xs">
+                      {user?.email}
+                    </span>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {accountLinks.map((link) => (
+                    <DropdownMenuItem asChild key={link.path}>
+                      <Link to={link.path}>
+                        <link.icon />
+                        {link.name}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onSelect={signOut}
+                    className="text-red-400 focus:text-red-300"
+                  >
+                    <LogOut />
+                    {t('header.logout')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                asChild
+                className="hidden h-10 px-4 text-xs sm:inline-flex"
+              >
+                <Link to="/login">{t('header.signIn')}</Link>
+              </Button>
+            )}
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="xl:hidden"
                 aria-label="Menu"
               >
-                {isMobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-              </button>
-            </div>
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
           </div>
-
-          {/* Mobile Menu */}
-          <AnimatePresence>
-            {isMobileMenuOpen && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="md:hidden py-4 border-t border-gray-800 max-h-[calc(100dvh-4rem)] overflow-y-auto"
-              >
-                <nav className="flex flex-col space-y-4">
-                  {navLinks.map((link) => (
-                    <Link
-                      key={link.path}
-                      to={link.path}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="text-gray-300 hover:text-white transition-colors duration-200 font-medium"
-                    >
-                      {link.name}
-                    </Link>
-                  ))}
-                  {[
-                    { title: t('header.genres'), items: genres, loading: isLoadingGenres, param: 'phimGenre' },
-                    { title: t('header.countries'), items: countries, loading: isLoadingCountries, param: 'phimCountry' },
-                  ].map(section => (
-                    <details key={section.param} className="border-t border-gray-800 pt-3">
-                      <summary className="cursor-pointer text-gray-300 font-medium">{section.title}</summary>
-                      <div className="grid grid-cols-2 gap-3 mt-3 max-h-60 overflow-y-auto">
-                        {section.items.length ? section.items.map(item => (
-                          <Link key={item.slug} to={`/browse?${section.param}=${encodeURIComponent(item.slug)}`}
-                            onClick={() => setIsMobileMenuOpen(false)} className="text-gray-400 hover:text-white text-sm">
-                            {section.param === 'phimGenre' ? getTranslatedGenre(item.name, i18n.language) : getTranslatedCountry(item.name, i18n.language)}
-                          </Link>
-                        )) : <p className="col-span-2 text-gray-400 text-sm">{section.loading ? t('common.loading') : t('common.noData')}</p>}
-                      </div>
-                    </details>
-                  ))}
-                  {!isAuthenticated && (
-                    <Link
-                      to="/login"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="text-primary-600 hover:text-primary-500 transition-colors duration-200 font-medium"
-                    >
-                      {t('header.signIn')}
-                    </Link>
-                  )}
-                </nav>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
+        <SheetContent closeLabel={t('common.close')} className="max-w-sm">
+          <div className="border-b border-border px-6 py-6">
+            <SheetTitle>{t('common.mainNavigation')}</SheetTitle>
+            <SheetDescription className="mt-2">
+              {t('header.navigationHint')}
+            </SheetDescription>
+          </div>
+          <nav
+            aria-label={t('common.mainNavigation')}
+            className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4"
+          >
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                onClick={() => setMobileOpen(false)}
+                className="block rounded-xl px-3 py-3 text-sm font-medium text-foreground hover:bg-accent"
+              >
+                {link.name}
+              </Link>
+            ))}
+            {[
+              {
+                title: t('header.genres'),
+                items: genres,
+                param: 'phimGenre',
+                loading: genresLoading,
+              },
+              {
+                title: t('header.countries'),
+                items: countries,
+                param: 'phimCountry',
+                loading: countriesLoading,
+              },
+            ].map((section) => (
+              <details
+                key={section.param}
+                className="group rounded-xl border border-border bg-background/40"
+              >
+                <summary className="cursor-pointer px-3 py-3 text-sm font-medium">
+                  {section.title}
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    {section.items.length}
+                  </span>
+                </summary>
+                <div className="grid max-h-64 grid-cols-2 gap-1 overflow-y-auto p-2 pt-0">
+                  {section.items.map((item) => (
+                    <Link
+                      key={item.slug}
+                      to={`/browse?${section.param}=${encodeURIComponent(item.slug)}`}
+                      onClick={() => setMobileOpen(false)}
+                      className="rounded-lg px-2 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-white"
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                  {!section.items.length && (
+                    <p className="col-span-2 p-3 text-sm text-muted-foreground">
+                      {section.loading
+                        ? t('common.loading')
+                        : t('common.noData')}
+                    </p>
+                  )}
+                </div>
+              </details>
+            ))}
+            {isAuthenticated && (
+              <div className="space-y-1 border-t border-border pt-3">
+                {accountLinks.map((link) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-muted-foreground hover:bg-accent"
+                  >
+                    <link.icon className="h-4 w-4" />
+                    {link.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </nav>
+          <div className="border-t border-border p-4">
+            {isAuthenticated ? (
+              <Button variant="outline" className="w-full" onClick={signOut}>
+                <LogOut className="h-4 w-4" />
+                {t('header.logout')}
+              </Button>
+            ) : (
+              <Button asChild className="w-full">
+                <Link to="/login" onClick={() => setMobileOpen(false)}>
+                  {t('header.signIn')}
+                </Link>
+              </Button>
+            )}
+          </div>
+        </SheetContent>
       </header>
-    </>
+    </Sheet>
   );
 };
-
 export default Header;
-

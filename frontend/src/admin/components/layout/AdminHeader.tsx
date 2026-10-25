@@ -1,115 +1,28 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Menu,
-  ChevronLeft,
-  ChevronRight,
-  Bell,
-  Search,
-  LogOut,
-} from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Menu, PanelLeftClose, PanelLeftOpen, ArrowUpRight, LogOut, UserRound, ChevronDown } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-
-interface AdminHeaderProps {
-  onMenuClick: () => void;
-  onToggleSidebar: () => void;
-  sidebarOpen: boolean;
-}
-
-const AdminHeader: React.FC<AdminHeaderProps> = ({
-  onMenuClick,
-  onToggleSidebar,
-  sidebarOpen,
-}) => {
-  const navigate = useNavigate();
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
+interface Props { onMenuClick: () => void; onToggleSidebar: () => void; sidebarOpen: boolean }
+const AdminHeader = ({ onMenuClick, onToggleSidebar, sidebarOpen }: Props) => {
   const { user, logout } = useAuthStore();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
-  return (
-    <header className="sticky top-0 z-30 h-16 bg-[#1a1a1a] border-b border-gray-700">
-      <div className="flex h-full items-center justify-between px-4">
-        {/* Left section */}
-        <div className="flex items-center space-x-4">
-          {/* Mobile menu button */}
-          <button
-            onClick={onMenuClick}
-            className="lg:hidden p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700"
-          >
-            <Menu className="h-6 w-6" />
-          </button>
-
-          {/* Desktop sidebar toggle */}
-          <button
-            onClick={onToggleSidebar}
-            className="hidden lg:flex p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700"
-          >
-            {sidebarOpen ? (
-              <ChevronLeft className="h-5 w-5" />
-            ) : (
-              <ChevronRight className="h-5 w-5" />
-            )}
-          </button>
-
-          {/* Search (desktop) */}
-          <div className="hidden md:flex items-center">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="w-64 pl-10 pr-4 py-2 bg-[#2a2a2a] border border-gray-600 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-red-500"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Right section */}
-        <div className="flex items-center space-x-4">
-          {/* Notifications */}
-          <button className="relative p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700">
-            <Bell className="h-6 w-6" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
-
-          {/* User menu */}
-          <div className="flex items-center space-x-3">
-            <div className="hidden sm:block text-right">
-              <p className="text-sm font-medium text-white">{user?.name || 'Admin'}</p>
-              <p className="text-xs text-gray-400 capitalize">{user?.role || 'admin'}</p>
-            </div>
-            <div className="relative">
-              <button className="flex items-center">
-                {user?.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt={user.name}
-                    className="h-9 w-9 rounded-full object-cover border-2 border-gray-600"
-                  />
-                ) : (
-                  <div className="h-9 w-9 rounded-full bg-red-600 flex items-center justify-center text-white font-medium">
-                    {user?.name?.charAt(0).toUpperCase() || 'A'}
-                  </div>
-                )}
-              </button>
-            </div>
-
-            {/* Logout button */}
-            <button
-              onClick={handleLogout}
-              className="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700"
-              title="Logout"
-            >
-              <LogOut className="h-6 w-6" />
-            </button>
-          </div>
-        </div>
-      </div>
-    </header>
-  );
+  const navigate = useNavigate();
+  return <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-border bg-background/90 px-4 backdrop-blur-xl md:px-6">
+    <div className="flex items-center gap-3">
+      <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open admin navigation" onClick={onMenuClick}><Menu className="h-5 w-5" /></Button>
+      <Button variant="ghost" size="icon" className="hidden lg:inline-flex" aria-label="Toggle admin sidebar" onClick={onToggleSidebar}>{sidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}</Button>
+      <span className="text-xs font-semibold uppercase tracking-[.18em] text-muted-foreground">RitoMovie <span className="ml-1 text-foreground">Admin</span></span>
+    </div>
+    <div className="flex items-center gap-3">
+      <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex"><Link to="/">Website<ArrowUpRight className="h-3.5 w-3.5" /></Link></Button>
+      <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" className="h-10 gap-2 px-2" aria-label="Admin account"><span className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-muted text-xs">{user?.name?.charAt(0).toUpperCase() || 'A'}</span><ChevronDown className="h-3 w-3" /></Button></DropdownMenuTrigger>
+        <DropdownMenuContent align="end"><DropdownMenuLabel>{user?.name || 'Admin'}<span className="mt-1 block text-xs capitalize">{user?.role?.replace('_', ' ')}</span></DropdownMenuLabel><DropdownMenuSeparator />
+          <DropdownMenuItem asChild><Link to="/profile"><UserRound />Profile</Link></DropdownMenuItem>
+          <DropdownMenuItem asChild><Link to="/"><ArrowUpRight />Website</Link></DropdownMenuItem><DropdownMenuSeparator />
+          <DropdownMenuItem className="text-red-400 focus:text-red-300" onSelect={() => { logout(); navigate('/login'); }}><LogOut />Log out</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  </header>;
 };
-
 export default AdminHeader;

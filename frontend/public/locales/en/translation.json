@@ -1,5 +1,9 @@
 {
   "common": {
+    "selectOption": "Select an option",
+    "language": "Language",
+    "actions": "Actions",
+    "mainNavigation": "Explore movies",
     "loading": "Loading...",
     "noData": "No data available",
     "save": "Save",
@@ -18,6 +22,8 @@
     "swipeUp": "Swipe up"
   },
   "header": {
+    "searchHint": "Enter a movie title and press Enter to search.",
+    "navigationHint": "Find your next favorite movie.",
     "home": "Home",
     "movies": "Movies",
     "singleMovies": "Movies",
@@ -244,6 +250,24 @@
     "viewSourceCode": "View Source Code"
   },
   "browse": {
+    "filterDescription": "Narrow your choices and find your next movie.",
+    "catalogLabel": "Collection",
+    "allCountries": "All countries",
+    "allYears": "All years",
+    "allRatings": "All age ratings",
+    "yearLabel": "Release year",
+    "certificationLabel": "Age rating",
+    "sortLabel": "Sort by",
+    "sortDirection": "Order",
+    "sortUpdated": "Recently updated",
+    "sortAdded": "Recently added",
+    "sortPopular": "Most popular",
+    "sortRating": "Highest rated",
+    "sortNewest": "Newest releases",
+    "ascending": "Ascending",
+    "descending": "Descending",
+    "clearFilters": "Reset",
+    "applyFilters": "Apply filters",
     "audioLanguage": "Audio and subtitles",
     "allLanguages": "All languages",
     "narrated": "Vietnamese narration",

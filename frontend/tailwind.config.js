@@ -7,7 +7,22 @@ export default {
   theme: {
     extend: {
       colors: {
+        background: 'rgb(var(--ui-background) / <alpha-value>)',
+        foreground: 'rgb(var(--ui-foreground) / <alpha-value>)',
+        'card-foreground': 'rgb(var(--ui-foreground) / <alpha-value>)',
+        'popover-foreground': 'rgb(var(--ui-foreground) / <alpha-value>)',
+        'accent-foreground': 'rgb(var(--ui-foreground) / <alpha-value>)',
+        destructive: { DEFAULT: '#dc2626', foreground: '#ffffff' },
+        card: 'rgb(var(--ui-card) / <alpha-value>)',
+        popover: 'rgb(var(--ui-popover) / <alpha-value>)',
+        muted: { DEFAULT: 'rgb(var(--ui-muted) / <alpha-value>)', foreground: 'rgb(var(--ui-muted-foreground) / <alpha-value>)' },
+        accent: 'rgb(var(--ui-accent) / <alpha-value>)',
+        border: 'rgb(var(--ui-border) / <alpha-value>)',
+        input: 'rgb(var(--ui-border) / <alpha-value>)',
+        ring: 'rgb(var(--ui-primary) / <alpha-value>)',
+        brand: 'rgb(var(--ui-primary) / <alpha-value>)',
         primary: {
+          foreground: '#ffffff',
           DEFAULT: 'var(--color-primary)',
           50: '#fef2f2',
           100: '#fee2e2',
@@ -21,10 +36,14 @@ export default {
           900: '#7f1d1d',
         },
         secondary: {
+          foreground: '#ffffff',
           DEFAULT: 'var(--color-secondary)',
           600: 'var(--color-secondary)',
         },
         gray: {
+          50: '#fafafa', 100: '#f1f3f7', 200: '#e1e4eb', 300: '#cbd0da',
+          400: '#a0a8b7', 500: '#727a89', 600: '#444b59', 700: '#2b303b',
+          800: '#181b23', 900: '#0b0d12', 950: '#07090d',
           750: '#2d3748',
         },
       },

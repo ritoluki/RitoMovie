@@ -1,5 +1,7 @@
 import React from 'react';
 import { Search, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { useTranslation } from 'react-i18next';
 
 interface SearchInputProps {
   value: string;
@@ -16,6 +18,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
   className = '',
   onClear,
 }) => {
+  const { t } = useTranslation();
   const handleClear = () => {
     onChange('');
     onClear?.();
@@ -24,15 +27,18 @@ const SearchInput: React.FC<SearchInputProps> = ({
   return (
     <div className={`relative ${className}`}>
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-      <input
+      <Input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full pl-10 pr-10 py-2 bg-[#2a2a2a] border border-gray-600 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-red-500 transition-colors"
+        aria-label={placeholder}
+        className="pl-10 pr-10"
       />
       {value && (
         <button
+          type="button"
+          aria-label={t('common.close')}
           onClick={handleClear}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
         >

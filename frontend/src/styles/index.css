@@ -2,11 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes ui-popup-in { from { opacity: 0; scale: .98; } to { opacity: 1; scale: 1; } }
+@keyframes ui-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ui-sheet-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
 @layer base {
   :root {
     /* Default color values - will be overridden by settings */
-    --color-primary: #eab308;
+    --color-primary: #dc2626;
     --color-secondary: #dc2626;
+    --ui-background: 11 13 18;
+    --ui-foreground: 241 243 247;
+    --ui-card: 19 22 30;
+    --ui-popover: 22 25 33;
+    --ui-muted: 30 34 44;
+    --ui-muted-foreground: 160 168 183;
+    --ui-accent: 39 44 57;
+    --ui-border: 47 53 66;
+    --ui-primary: 220 38 38;
+    color-scheme: dark;
   }
 
   * {
@@ -14,11 +28,18 @@
   }
   
   body {
-    @apply bg-gray-900 text-gray-100 font-sans;
+    @apply bg-background text-foreground font-sans antialiased;
   }
 
   html {
     scroll-behavior: smooth;
+  }
+
+  :focus-visible { outline: 2px solid rgb(var(--ui-primary)); outline-offset: 3px; }
+  ::selection { background: rgb(var(--ui-primary) / .3); color: #fff; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
   }
 
   /* Custom scrollbar */
@@ -57,6 +78,10 @@
 }
 
 @layer components {
+  .ui-panel { border: 1px solid rgb(var(--ui-border)); border-radius: 1rem; background: rgb(var(--ui-card)); }
+  .ui-popup { animation: ui-popup-in 130ms ease-out; transform-origin: var(--radix-popover-content-transform-origin, center); }
+  .ui-overlay { animation: ui-fade-in 150ms ease-out; }
+  .ui-sheet { animation: ui-sheet-in 200ms ease-out; }
   /* Glass morphism effect */
   .glass {
     @apply bg-white/10 backdrop-blur-md border border-white/20;
@@ -64,7 +89,7 @@
 
   /* Button variants */
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-6 rounded-md transition-colors duration-200;
+    @apply bg-brand hover:bg-brand/90 text-white font-semibold py-2.5 px-5 rounded-xl transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
 
   .btn-secondary {

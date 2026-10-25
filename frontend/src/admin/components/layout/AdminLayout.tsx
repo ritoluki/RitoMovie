@@ -11,7 +11,7 @@ const AdminLayout: React.FC = () => {
   const toggleMobileSidebar = () => setMobileSidebarOpen(!mobileSidebarOpen);
 
   return (
-    <div className="min-h-screen bg-[#141414] text-white">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Mobile sidebar backdrop */}
       {mobileSidebarOpen && (
         <div

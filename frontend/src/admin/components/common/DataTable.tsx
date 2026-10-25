@@ -106,12 +106,12 @@ function DataTable<T extends object>({
   );
 
   return (
-    <div className={`bg-[#1a1a1a] rounded-xl border border-gray-700 overflow-hidden ${className}`}>
+    <div className={`ui-panel overflow-hidden ${className}`}>
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full text-sm">
           <thead>
-            <tr className="bg-[#2a2a2a] border-b border-gray-700">
+            <tr className="bg-muted/60 border-b border-border">
               {selectable && (
                 <th className="px-4 py-3 w-12">
                   <input
@@ -146,7 +146,7 @@ function DataTable<T extends object>({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-700">
+          <tbody className="divide-y divide-border/60">
             {loading ? (
               Array.from({ length: 5 }).map((_, idx) => <SkeletonRow key={idx} />)
             ) : data.length === 0 ? (
