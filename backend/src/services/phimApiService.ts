@@ -2,7 +2,7 @@ import axios from 'axios';
 import ApiError from '../utils/ApiError';
 import { apiCache, CACHE_TTL } from '../utils/cache';
 import { addExternalApiRetries, describeExternalApiError } from '../utils/externalApi';
-import { ensurePhimSuccess, normalizePhimExtras } from '../utils/phimPayload';
+import { ensurePhimSuccess, normalizePhimExtras, normalizePhimTaxonomy } from '../utils/phimPayload';
 
 const PHIM_API_BASE_URL = process.env.PHIM_API_BASE_URL || 'https://phimapi.com';
 
@@ -303,7 +303,7 @@ export const getGenres = async () => {
     
     return apiCache.getOrSet(cacheKey, async () => {
         const response = await phimAxios.get('/the-loai');
-        return ensureSuccess(response.data);
+        return normalizePhimTaxonomy(response.data);
     }, CACHE_TTL.DAY); // Genres rarely change
 };
 
@@ -342,7 +342,7 @@ export const getCountries = async () => {
     
     return apiCache.getOrSet(cacheKey, async () => {
         const response = await phimAxios.get('/quoc-gia');
-        return ensureSuccess(response.data);
+        return normalizePhimTaxonomy(response.data);
     }, CACHE_TTL.DAY); // Countries rarely change
 };
 

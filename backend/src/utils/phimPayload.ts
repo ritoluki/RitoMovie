@@ -17,6 +17,15 @@ export const unwrapPhimData = (payload: unknown): Record<string, unknown> => {
   return record.data && typeof record.data === 'object' ? asRecord(record.data) : record;
 };
 
+// These endpoints have returned both plain arrays and catalog-style envelopes.
+export const normalizePhimTaxonomy = (payload: unknown) => {
+  ensurePhimSuccess(payload);
+  const items = Array.isArray(payload) ? payload : unwrapPhimData(payload).items;
+  if (!Array.isArray(items)) throw new ApiError(502, 'Invalid category or country list from PhimAPI');
+  return items.map(asRecord).filter(item => typeof item.name === 'string' && typeof item.slug === 'string')
+    .map(item => ({ ...item, name: item.name as string, slug: item.slug as string }));
+};
+
 export const parsePhimYear = (value?: string): string | undefined => {
   if (!value) return undefined;
   if (!/^\d{4}(,\d{4})?$/.test(value)) throw new ApiError(400, 'Year must be YYYY or YYYY,YYYY');

@@ -391,7 +391,7 @@ const Header = () => {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="md:hidden py-4 border-t border-gray-800"
+                className="md:hidden py-4 border-t border-gray-800 max-h-[calc(100dvh-4rem)] overflow-y-auto"
               >
                 <nav className="flex flex-col space-y-4">
                   {navLinks.map((link) => (
@@ -403,6 +403,22 @@ const Header = () => {
                     >
                       {link.name}
                     </Link>
+                  ))}
+                  {[
+                    { title: t('header.genres'), items: genres, loading: isLoadingGenres, param: 'phimGenre' },
+                    { title: t('header.countries'), items: countries, loading: isLoadingCountries, param: 'phimCountry' },
+                  ].map(section => (
+                    <details key={section.param} className="border-t border-gray-800 pt-3">
+                      <summary className="cursor-pointer text-gray-300 font-medium">{section.title}</summary>
+                      <div className="grid grid-cols-2 gap-3 mt-3 max-h-60 overflow-y-auto">
+                        {section.items.length ? section.items.map(item => (
+                          <Link key={item.slug} to={`/browse?${section.param}=${encodeURIComponent(item.slug)}`}
+                            onClick={() => setIsMobileMenuOpen(false)} className="text-gray-400 hover:text-white text-sm">
+                            {section.param === 'phimGenre' ? getTranslatedGenre(item.name, i18n.language) : getTranslatedCountry(item.name, i18n.language)}
+                          </Link>
+                        )) : <p className="col-span-2 text-gray-400 text-sm">{section.loading ? t('common.loading') : t('common.noData')}</p>}
+                      </div>
+                    </details>
                   ))}
                   {!isAuthenticated && (
                     <Link

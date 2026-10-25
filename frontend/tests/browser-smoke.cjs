@@ -57,6 +57,7 @@ let socket;
   };
   await send('Runtime.enable');
   await send('Page.enable');
+  await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
   await send('Page.addScriptToEvaluateOnNewDocument', { source: "localStorage.setItem('i18nextLng', 'vi')" });
   // Force TMDB requests to fail while the real PhimAPI backend remains available.
   await send('Fetch.enable', { patterns: [{ urlPattern: '*/api/movies/*', requestStage: 'Request' }] });
@@ -81,6 +82,24 @@ let socket;
 
   await send('Page.navigate', { url: 'http://localhost:5173/' });
   await waitFor("document.body.textContent.includes('Vừa cập nhật')");
+  await evaluate("[...document.querySelectorAll('header button')].find(b => b.textContent.trim() === 'Thể loại').click()");
+  await waitFor("document.querySelectorAll('header a[href^=\"/browse?phimGenre=\"]').length > 10");
+  await evaluate("document.querySelector('header a[href=\"/browse?phimGenre=hanh-dong\"]').click()");
+  await waitFor("location.search.includes('phimGenre=hanh-dong') && document.querySelectorAll('a[href^=\"/movie/\"]').length > 0");
+  await evaluate("[...document.querySelectorAll('header button')].find(b => b.textContent.trim() === 'Quốc gia').click()");
+  await waitFor("document.querySelectorAll('header a[href^=\"/browse?phimCountry=\"]').length > 10");
+  await evaluate("document.querySelector('header a[href=\"/browse?phimCountry=han-quoc\"]').click()");
+  await waitFor("location.search.includes('phimCountry=han-quoc') && document.querySelectorAll('a[href^=\"/movie/\"]').length > 0");
+  console.log('PASS: desktop genre and country menus contain links and navigate to movie lists');
+  await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+  await evaluate("document.querySelector('header button[aria-label=\"Menu\"]').click()");
+  await waitFor("document.querySelectorAll('header details').length === 2");
+  await evaluate("document.querySelectorAll('header details').forEach(section => section.open = true)");
+  assert.ok(await evaluate("document.querySelectorAll('header details a[href^=\"/browse?phimGenre=\"]').length > 10"));
+  assert.ok(await evaluate("document.querySelectorAll('header details a[href^=\"/browse?phimCountry=\"]').length > 10"));
+  await evaluate("document.querySelector('header details a[href=\"/browse?phimGenre=hai-huoc\"]').click()");
+  await waitFor("location.search.includes('phimGenre=hai-huoc') && !document.querySelector('header details')");
+  console.log('PASS: mobile genre and country menus display and close after selection');
   assert.deepEqual(runtimeErrors, []);
   console.log('PASS: recently updated section renders; no uncaught browser errors');
 })().catch(error => { console.error(error.message); process.exitCode = 1; }).finally(async () => {

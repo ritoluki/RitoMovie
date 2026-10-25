@@ -1,6 +1,16 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { ensurePhimSuccess, unwrapPhimData, normalizePhimExtras, parsePhimYear } = require('../dist/utils/phimPayload');
+const { ensurePhimSuccess, unwrapPhimData, normalizePhimExtras, normalizePhimTaxonomy, parsePhimYear } = require('../dist/utils/phimPayload');
+
+test('category and country lists support both legacy arrays and actual nested API responses', () => {
+  const items = [{ _id: '123', name: 'Hành Động', slug: 'hanh-dong' }];
+  for (const response of [items, { items }, { status: 'success', data: { items } }]) {
+    assert.deepEqual(normalizePhimTaxonomy(response), items);
+  }
+  assert.deepEqual(normalizePhimTaxonomy({ status: 'success', data: { items: [] } }), []);
+  assert.throws(() => normalizePhimTaxonomy({ status: 'success', data: {} }), { statusCode: 502 });
+  assert.throws(() => normalizePhimTaxonomy({ status: 'error', message: 'Unavailable' }), { statusCode: 502 });
+});
 
 test('accepts classic, catalog and supplemental API response envelopes', () => {
   assert.deepEqual(unwrapPhimData({ status: true, items: [1] }).items, [1]);
