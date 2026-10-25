@@ -7,6 +7,7 @@
 import nodemailer from 'nodemailer';
 import settingsService from './settingsService';
 import ApiError from '../utils/ApiError';
+import { sendWithResend } from '../utils/resendTransport';
 import {
   smtpOptions,
   smtpErrorMessage,
@@ -34,6 +35,13 @@ const createTransporter = async () => {
  * Send email
  */
 export const sendEmail = async (options: EmailOptions): Promise<void> => {
+  const provider = process.env.EMAIL_PROVIDER || 'smtp';
+  if (provider === 'resend') {
+    const messageId = await sendWithResend(options);
+    console.log('[EmailService] Resend accepted email:', { messageId });
+    return;
+  }
+  if (provider !== 'smtp') throw new ApiError(400, 'EMAIL_PROVIDER must be smtp or resend.');
   try {
     const transporter = await createTransporter();
     const emailConfig = await settingsService.getEmailConfig();

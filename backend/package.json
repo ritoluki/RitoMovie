@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon src/server.ts",
-    "build": "tsc --skipLibCheck",
+    "build": "tsc --skipLibCheck && node scripts/copy-locales.cjs",
     "test": "npm run build && node --test tests/*.test.cjs",
     "start": "node dist/server.js",
     "lint": "eslint . --ext .ts",

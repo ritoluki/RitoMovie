@@ -10,6 +10,7 @@ import {
   deleteVideo,
 } from '../controllers/videoController';
 import { protect, authorize } from '../middleware/auth';
+import ApiError from '../utils/ApiError';
 
 const router = express.Router();
 
@@ -24,7 +25,11 @@ const storage = multer.diskStorage({
   },
 });
 
-const fileFilter = (_req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (
+  _req: Express.Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
   // Accept video files only
   if (file.mimetype.startsWith('video/')) {
     cb(null, true);
@@ -47,9 +52,25 @@ router.get('/:id', getVideoDetails);
 router.get('/:id/stream', streamVideo);
 
 // Private routes (Admin only)
-router.post('/upload', protect, authorize('admin'), upload.single('video'), uploadVideo);
+router.post(
+  '/upload',
+  protect,
+  authorize('admin'),
+  (_req, _res, next) => {
+    if (process.env.ENABLE_LOCAL_VIDEO_UPLOADS === 'false') {
+      return next(
+        new ApiError(
+          403,
+          'Local video uploads are disabled on this deployment.'
+        )
+      );
+    }
+    next();
+  },
+  upload.single('video'),
+  uploadVideo
+);
 router.put('/:id', protect, authorize('admin'), updateVideo);
 router.delete('/:id', protect, authorize('admin'), deleteVideo);
 
 export default router;
-

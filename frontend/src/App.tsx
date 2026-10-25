@@ -4,6 +4,7 @@ import AppRoutes from './routes';
 import ScrollToTop from './components/common/ScrollToTop';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import DocumentHead from './components/common/DocumentHead';
+import ApiStatus from './components/common/ApiStatus';
 import './i18n/config';
 
 const queryClient = new QueryClient({
@@ -26,6 +27,7 @@ function App() {
         <DocumentHead />
         <ScrollToTop />
         <AppRoutes />
+        <ApiStatus />
         <Toaster
           position="top-right"
           toastOptions={{

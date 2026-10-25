@@ -32,6 +32,7 @@ let socket;
   const blockedWrites = [];
   const testEmails = [];
   let verificationRequests = 0;
+  let delaySettingsOnce = true;
   const adminUser = { _id: 'ui-admin', name: 'UI Admin', email: 'ui-admin@example.test', role: 'super_admin' };
   const member = { _id: 'ui-member', name: 'Demo Member', email: 'member@example.test', role: 'user', isBanned: false, createdAt: '2026-01-01T00:00:00Z' };
   const send = (method, params = {}) => new Promise((resolve, reject) => {
@@ -60,9 +61,13 @@ let socket;
         }
         if (pathname === '/api/admin/settings') payload.data = { email: [{ key: 'smtp_password', value: '********', type: 'string', isSecret: true }] };
         if (pathname === '/api/admin/users') payload = { success: true, data: [member], pagination: { page: 1, limit: 20, total: 1, pages: 1 } };
-        send('Fetch.fulfillRequest', { requestId: message.params.requestId, responseCode: request.method === 'OPTIONS' ? 204 : request.method === 'GET' || testEmail ? 200 : 500,
+        const fulfill = () => send('Fetch.fulfillRequest', { requestId: message.params.requestId, responseCode: request.method === 'OPTIONS' ? 204 : request.method === 'GET' || testEmail ? 200 : 500,
           responseHeaders: [{ name: 'Content-Type', value: 'application/json' }, { name: 'Access-Control-Allow-Origin', value: 'http://localhost:5173' }, { name: 'Access-Control-Allow-Headers', value: 'Authorization, Content-Type, Accept-Language' }, { name: 'Access-Control-Allow-Methods', value: 'GET, POST, OPTIONS' }],
           body: Buffer.from(JSON.stringify(payload)).toString('base64') }).catch(() => {});
+        if (pathname === '/api/admin/settings' && request.method === 'GET' && delaySettingsOnce) {
+          delaySettingsOnce = false;
+          setTimeout(fulfill, 12000);
+        } else fulfill();
       } else send('Fetch.failRequest', { requestId: message.params.requestId, errorReason: 'ConnectionFailed' }).catch(() => {});
     }
     const callback = pending.get(message.id);
@@ -243,7 +248,10 @@ let socket;
   await key('Escape');
   await waitFor("!document.querySelector('[role=dialog]')");
   await send('Page.navigate', { url: 'http://localhost:5173/admin/settings' });
+  await waitFor("document.body.textContent.includes('Máy chủ đang phản hồi chậm') || document.body.textContent.includes('The server is taking longer to respond')");
   await waitFor("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Appearance')");
+  await waitFor("!document.body.textContent.includes('Máy chủ đang phản hồi chậm') && !document.body.textContent.includes('The server is taking longer to respond')");
+  console.log('PASS: slow backend status appears during a delayed response and clears on success');
   await click("[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Appearance')");
   await waitFor("document.querySelector('input[type=color]')");
   await screenshot('admin-appearance');
@@ -254,7 +262,7 @@ let socket;
   await click("document.querySelector('#smtp-test-recipient')");
   await send('Input.insertText', { text: 'receiver@example.test' });
   await click("[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Gửi email thử')");
-  await waitFor("document.body.textContent.includes('SMTP accepted the test email')");
+  await waitFor("document.body.textContent.includes('The email provider accepted the test email')");
   assert.deepEqual(testEmails, [{ email: 'receiver@example.test' }]);
   await click("[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Điền cấu hình Resend')");
   assert.equal(await evaluate("document.querySelector('input[aria-label=\"SMTP Host\"]').value"), 'smtp.resend.com');

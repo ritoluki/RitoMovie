@@ -258,9 +258,9 @@ export const testEmail = asyncHandler(async (req: Request, res: Response) => {
   }
   await sendEmail({
     to: email.trim(),
-    subject: 'RitoMovie — SMTP test',
-    text: 'SMTP is configured successfully for RitoMovie. This is a test email requested from the admin panel.',
-    html: '<h2>RitoMovie</h2><p>SMTP is configured successfully. This test email was requested from the admin panel.</p>',
+    subject: 'RitoMovie — Email test',
+    text: 'This test email was requested from the RitoMovie admin panel.',
+    html: '<h2>RitoMovie</h2><p>This test email was requested from the admin panel.</p>',
   });
   await logAdminAction(req, 'TEST_EMAIL', 'SETTING', 'email', {
     testEmail: email,
@@ -268,7 +268,7 @@ export const testEmail = asyncHandler(async (req: Request, res: Response) => {
 
   res.status(200).json({
     success: true,
-    message: `SMTP accepted the test email for ${email.trim()}. Check the inbox and spam folder.`,
+    message: `The email provider accepted the test email for ${email.trim()}. Check the inbox and spam folder.`,
   });
 });
 

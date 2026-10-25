@@ -7,6 +7,7 @@ const timerMock = mock.method(global, 'setInterval', (...args) =>
 );
 const settings = require('../dist/services/settingsService').default;
 const { sendEmail } = require('../dist/services/emailService');
+const { getAllowedOrigins } = require('../dist/utils/corsOrigins');
 const {
   smtpOptions,
   smtpErrorMessage,
@@ -18,6 +19,112 @@ const {
   keepSavedSecret,
 } = require('../dist/utils/secretSettings');
 timerMock.mock.restore();
+
+function configureResend(t) {
+  const values = {
+    EMAIL_PROVIDER: 'resend',
+    RESEND_API_KEY: 'fixture-resend-secret',
+    EMAIL_FROM: 'noreply@ritomovie.live',
+    EMAIL_FROM_NAME: 'RitoMovie',
+  };
+  const previous = Object.fromEntries(
+    Object.keys(values).map((key) => [key, process.env[key]])
+  );
+  Object.assign(process.env, values);
+  t.after(() => {
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  });
+}
+
+test('deployed frontend origins accept exact URLs and omit the retired VPS', () => {
+  const allowed = getAllowedOrigins({
+    FRONTEND_URL: 'https://movie.pages.dev/',
+    CORS_ORIGINS: ' https://ritomovie.live/, https://www.ritomovie.live ',
+  });
+  assert.ok(allowed.includes('https://movie.pages.dev'));
+  assert.equal(
+    allowed.filter((value) => value === 'https://ritomovie.live').length,
+    1
+  );
+  assert.ok(!allowed.includes('https://untrusted.pages.dev'));
+  assert.ok(!allowed.some((value) => value.includes('152.42.172.52')));
+});
+
+test('Resend production transport uses HTTPS and never reads SMTP credentials', async (t) => {
+  configureResend(t);
+  t.mock.method(settings, 'getEmailConfig', async () => {
+    throw new Error('SMTP must not be used');
+  });
+  t.mock.method(global, 'fetch', async (url, options) => {
+    assert.equal(url, 'https://api.resend.com/emails');
+    assert.equal(options.method, 'POST');
+    assert.equal(options.headers.Authorization, 'Bearer fixture-resend-secret');
+    const body = JSON.parse(options.body);
+    assert.equal(body.from, 'RitoMovie <noreply@ritomovie.live>');
+    assert.deepEqual(body.to, ['receiver@example.test']);
+    return new Response(JSON.stringify({ id: 'fixture-id' }), { status: 200 });
+  });
+  await sendEmail({
+    to: 'receiver@example.test',
+    subject: 'Test',
+    html: 'Test',
+  });
+});
+
+test('Resend rejects invalid configuration before sending and never exposes provider errors', async (t) => {
+  configureResend(t);
+  const fetchMock = t.mock.method(
+    global,
+    'fetch',
+    async () => new Response('fixture-resend-secret', { status: 403 })
+  );
+  const message = {
+    to: 'receiver@example.test',
+    subject: 'Test',
+    html: 'Test',
+  };
+  delete process.env.RESEND_API_KEY;
+  await assert.rejects(sendEmail(message), (error) => error.statusCode === 400);
+  assert.equal(fetchMock.mock.callCount(), 0);
+  process.env.RESEND_API_KEY = 'fixture-resend-secret';
+  await assert.rejects(
+    sendEmail(message),
+    (error) =>
+      error.statusCode === 502 &&
+      !error.message.includes('fixture-resend-secret')
+  );
+});
+
+test('Resend quota, network errors and missing acceptance are reported as failures', async (t) => {
+  configureResend(t);
+  const message = {
+    to: 'receiver@example.test',
+    subject: 'Test',
+    html: 'Test',
+  };
+  const fetchMock = t.mock.method(
+    global,
+    'fetch',
+    async () => new Response('{}', { status: 429 })
+  );
+  await assert.rejects(sendEmail(message), (error) => error.statusCode === 429);
+  fetchMock.mock.mockImplementation(async () => {
+    throw new Error('fixture-resend-secret');
+  });
+  await assert.rejects(
+    sendEmail(message),
+    (error) =>
+      error.statusCode === 502 &&
+      !error.message.includes('fixture-resend-secret')
+  );
+  fetchMock.mock.mockImplementation(
+    async () => new Response('{}', { status: 200 })
+  );
+  await assert.rejects(sendEmail(message), (error) => error.statusCode === 502);
+});
 
 const config = {
   host: 'smtp.resend.com',

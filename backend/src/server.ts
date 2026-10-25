@@ -7,6 +7,7 @@ import middleware from 'i18next-http-middleware';
 import connectDB from './config/database';
 import errorHandler from './middleware/errorHandler';
 import i18next from './config/i18n';
+import { getAllowedOrigins } from './utils/corsOrigins';
 
 // Load environment variables
 dotenv.config();
@@ -21,16 +22,7 @@ connectDB();
 app.use(helmet()); // Security headers
 
 // CORS configuration - support multiple origins
-const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:5173',
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://152.42.172.52',
-  'http://152.42.172.52:5173',
-  'http://152.42.172.52:5174',
-  'https://ritomovie.live',
-  'https://www.ritomovie.live',
-].filter(Boolean); // Remove any undefined/null values
+const allowedOrigins = getAllowedOrigins();
 
 app.use(cors({
   origin: (origin, callback) => {

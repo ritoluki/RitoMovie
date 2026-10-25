@@ -582,7 +582,7 @@ const AdminSettings: React.FC = () => {
     mutationFn: () => adminService.testEmailSettings(testRecipient.trim()),
     onSuccess: () =>
       toast.success(
-        'SMTP accepted the test email. Check the inbox and spam folder.'
+        'The email provider accepted the test email. Check the inbox and spam folder.'
       ),
     onError: (error: unknown) =>
       toast.error(
@@ -960,7 +960,7 @@ const AdminSettings: React.FC = () => {
                 <p className="text-xs text-muted-foreground">
                   {hasChanges
                     ? 'Hãy Save Changes trước khi gửi thử.'
-                    : 'Gửi bằng cấu hình đã lưu. Sau khi SMTP chấp nhận, kiểm tra Inbox và Spam.'}
+                    : 'Gửi bằng cấu hình của máy chủ. Sau khi dịch vụ chấp nhận, kiểm tra Inbox và Spam.'}
                 </p>
               </div>
             )}
