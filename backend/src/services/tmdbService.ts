@@ -1,5 +1,7 @@
 import axios from 'axios';
+import https from 'https';
 import { apiCache, CACHE_TTL } from '../utils/cache';
+import { addExternalApiRetries } from '../utils/externalApi';
 
 const TMDB_BASE_URL = process.env.TMDB_BASE_URL || 'https://api.themoviedb.org/3';
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
@@ -7,10 +9,14 @@ const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const tmdbAxios = axios.create({
   baseURL: TMDB_BASE_URL,
   timeout: 10000, // 10 second timeout
+  // Reuse connections and limit bursts during cache warm-up and home page loads.
+  httpsAgent: new https.Agent({ keepAlive: true, maxSockets: 4 }),
   params: {
     api_key: TMDB_API_KEY,
   },
 });
+
+addExternalApiRetries(tmdbAxios, 'TMDB');
 
 // Helper to generate cache key
 const getCacheKey = (endpoint: string, params?: Record<string, unknown>): string => {

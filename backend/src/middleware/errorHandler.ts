@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import i18next from '../config/i18n';
+import axios from 'axios';
+import { describeExternalApiError } from '../utils/externalApi';
 
 interface CustomError extends Error {
   statusCode?: number;
@@ -22,7 +24,7 @@ const errorHandler = (
   error.message = err.message;
 
   // Log error for debugging
-  console.error('Error:', err);
+  console.error('Error:', axios.isAxiosError(err) ? describeExternalApiError(err) : err);
 
   // Get translation function from request
   // i18next-http-middleware attaches 't' to req object

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import ApiError from '../utils/ApiError';
 import { apiCache, CACHE_TTL } from '../utils/cache';
+import { addExternalApiRetries, describeExternalApiError } from '../utils/externalApi';
 
 const PHIM_API_BASE_URL = process.env.PHIM_API_BASE_URL || 'https://phimapi.com';
 
@@ -100,6 +101,8 @@ const phimAxios = axios.create({
     },
 });
 
+addExternalApiRetries(phimAxios, 'PhimAPI');
+
 // Add response interceptor for better error handling
 phimAxios.interceptors.response.use(
     (response) => response,
@@ -109,7 +112,7 @@ phimAxios.interceptors.response.use(
         } else if (error.response?.status === 404) {
             console.warn(`[PhimAPI] Resource not found: ${error.config?.url}`);
         } else {
-            console.error(`[PhimAPI] Request failed: ${error.message}`);
+            console.error(`[PhimAPI] Request failed: ${describeExternalApiError(error)}`);
         }
         throw error;
     }
@@ -213,7 +216,7 @@ export const getMovieByTmdb = async (type: 'movie' | 'tv', tmdbId: number) => {
 
             // Other errors: cache with medium TTL
             cacheManager.addToCache(cacheKey, 'ERROR');
-            console.error(`[PhimAPI] Request failed: ${cacheKey}`, error);
+            console.error(`[PhimAPI] Request failed: ${cacheKey}`, describeExternalApiError(error));
             return null;
         }
     })();

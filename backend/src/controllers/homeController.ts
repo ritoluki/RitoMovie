@@ -3,6 +3,7 @@ import asyncHandler from '../utils/asyncHandler';
 import * as tmdbService from '../services/tmdbService';
 import * as phimApiService from '../services/phimApiService';
 import { homeCache, CACHE_TTL } from '../utils/cache';
+import { describeExternalApiError } from '../utils/externalApi';
 
 // Helper to get language from i18n middleware
 const getLanguage = (req: Request): string => {
@@ -88,7 +89,7 @@ export const getHomePageBatch = asyncHandler(
                 if (result.status === 'fulfilled') {
                     return result.value;
                 }
-                console.error('Batch request failed:', result.reason);
+                console.error('Batch request failed:', describeExternalApiError(result.reason));
                 return null;
             };
 
@@ -106,7 +107,7 @@ export const getHomePageBatch = asyncHandler(
                     }
                     return value;
                 }
-                console.error('Phim batch request failed:', result.reason);
+                console.error('Phim batch request failed:', describeExternalApiError(result.reason));
                 return null;
             };
 
@@ -133,8 +134,12 @@ export const getHomePageBatch = asyncHandler(
                 },
             };
 
-            // Cache the batch response for 2 minutes
-            homeCache.set(cacheKey, responseData, CACHE_TTL.SHORT);
+            // Cache only complete batches so temporary failures can recover on the next request.
+            const results = [trending, popular, topRated, actionMovies, comedyMovies,
+                horrorMovies, romanceMovies, phimBo, anime, tvShows, actionTv, comedyTv];
+            if (results.every(result => result.status === 'fulfilled')) {
+                homeCache.set(cacheKey, responseData, CACHE_TTL.SHORT);
+            }
 
             const duration = Date.now() - startTime;
             console.log(`[HomeController] Batch request completed in ${duration}ms`);
@@ -147,7 +152,7 @@ export const getHomePageBatch = asyncHandler(
                 timestamp: new Date().toISOString(),
             });
         } catch (error) {
-            console.error('Home page batch error:', error);
+            console.error('Home page batch error:', describeExternalApiError(error));
             throw error;
         }
     }

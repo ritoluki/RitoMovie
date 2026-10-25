@@ -6,6 +6,7 @@
 import * as tmdbService from './tmdbService';
 import * as phimApiService from './phimApiService';
 import { apiCache, homeCache } from '../utils/cache';
+import { describeExternalApiError } from '../utils/externalApi';
 
 interface WarmupResult {
     success: boolean;
@@ -56,7 +57,7 @@ export const warmHomeCache = async (languages: string[] = ['en', 'vi']): Promise
                 if (result.status === 'fulfilled') {
                     warmedKeys++;
                 } else {
-                    errors.push(result.reason?.message || 'Unknown error');
+                    errors.push(`[${language}] ${describeExternalApiError(result.reason)}`);
                 }
             }
 
