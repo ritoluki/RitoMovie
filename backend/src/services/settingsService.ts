@@ -186,7 +186,7 @@ export const getPublicSettings = async (): Promise<Record<string, unknown>> => {
         return cached;
     }
 
-    const settings = await SystemSetting.find({ isPublic: true, isSecret: false });
+    const settings = await SystemSetting.find({ isPublic: true, isSecret: false, key: { $not: /^smtp_/ } });
 
     const publicSettings: Record<string, unknown> = {};
     for (const setting of settings) {
@@ -222,7 +222,7 @@ export const getEmailConfig = async () => {
         port: parseInt(await getSetting<string>('smtp_port', '587'), 10),
         user: await getSetting<string>('smtp_user', ''),
         password: await getSetting<string>('smtp_password', ''),
-        from: await getSetting<string>('email_from', 'noreply@ritomovie.com'),
+        from: await getSetting<string>('smtp_from_email', '') || await getSetting<string>('email_from', '') || await getSetting<string>('smtp_user', ''),
     };
 };
 

@@ -30,6 +30,8 @@ let socket;
   const failedRequests = [];
   let adminFixture = false;
   const blockedWrites = [];
+  const testEmails = [];
+  let verificationRequests = 0;
   const adminUser = { _id: 'ui-admin', name: 'UI Admin', email: 'ui-admin@example.test', role: 'super_admin' };
   const member = { _id: 'ui-member', name: 'Demo Member', email: 'member@example.test', role: 'user', isBanned: false, createdAt: '2026-01-01T00:00:00Z' };
   const send = (method, params = {}) => new Promise((resolve, reject) => {
@@ -48,11 +50,18 @@ let socket;
         const request = message.params.request;
         const pathname = new URL(request.url).pathname;
         let payload = { success: true, data: {} };
-        if (!['GET', 'OPTIONS'].includes(request.method)) blockedWrites.push(request.url);
+        const testEmail = pathname === '/api/admin/settings/test-email' && request.method === 'POST';
+        if (testEmail) testEmails.push(JSON.parse(request.postData));
+        if (!['GET', 'OPTIONS'].includes(request.method) && !testEmail) blockedWrites.push(request.url);
         if (pathname === '/api/auth/me') payload.data = adminUser;
+        if (pathname === '/api/auth/verify-email/ui-test-token') {
+          if (request.method === 'GET') verificationRequests++;
+          payload.data = { user: { ...adminUser, isEmailVerified: true }, token: 'verified-ui-token' };
+        }
+        if (pathname === '/api/admin/settings') payload.data = { email: [{ key: 'smtp_password', value: '********', type: 'string', isSecret: true }] };
         if (pathname === '/api/admin/users') payload = { success: true, data: [member], pagination: { page: 1, limit: 20, total: 1, pages: 1 } };
-        send('Fetch.fulfillRequest', { requestId: message.params.requestId, responseCode: request.method === 'OPTIONS' ? 204 : request.method === 'GET' ? 200 : 500,
-          responseHeaders: [{ name: 'Content-Type', value: 'application/json' }, { name: 'Access-Control-Allow-Origin', value: 'http://localhost:5173' }, { name: 'Access-Control-Allow-Headers', value: 'Authorization, Content-Type, Accept-Language' }, { name: 'Access-Control-Allow-Methods', value: 'GET, OPTIONS' }],
+        send('Fetch.fulfillRequest', { requestId: message.params.requestId, responseCode: request.method === 'OPTIONS' ? 204 : request.method === 'GET' || testEmail ? 200 : 500,
+          responseHeaders: [{ name: 'Content-Type', value: 'application/json' }, { name: 'Access-Control-Allow-Origin', value: 'http://localhost:5173' }, { name: 'Access-Control-Allow-Headers', value: 'Authorization, Content-Type, Accept-Language' }, { name: 'Access-Control-Allow-Methods', value: 'GET, POST, OPTIONS' }],
           body: Buffer.from(JSON.stringify(payload)).toString('base64') }).catch(() => {});
       } else send('Fetch.failRequest', { requestId: message.params.requestId, errorReason: 'ConnectionFailed' }).catch(() => {});
     }
@@ -238,8 +247,29 @@ let socket;
   await click("[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Appearance')");
   await waitFor("document.querySelector('input[type=color]')");
   await screenshot('admin-appearance');
+  await click("[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Email')");
+  await waitFor("document.querySelector('#smtp-test-recipient')");
+  assert.equal(await evaluate("document.querySelector('input[type=password]').value"), '');
+  assert.ok(await evaluate("document.querySelector('input[type=password]').placeholder.includes('Saved')"));
+  await click("document.querySelector('#smtp-test-recipient')");
+  await send('Input.insertText', { text: 'receiver@example.test' });
+  await click("[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Gửi email thử')");
+  await waitFor("document.body.textContent.includes('SMTP accepted the test email')");
+  assert.deepEqual(testEmails, [{ email: 'receiver@example.test' }]);
+  await click("[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Điền cấu hình Resend')");
+  assert.equal(await evaluate("document.querySelector('input[aria-label=\"SMTP Host\"]').value"), 'smtp.resend.com');
+  assert.ok(await evaluate("[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Gửi email thử').disabled"));
+  await screenshot('admin-email');
+  console.log('PASS: SMTP preset, masked password and test recipient flow (intercepted; no external email sent)');
   assert.deepEqual(blockedWrites, []);
   console.log('PASS: admin menus, safe confirmation focus, edit dialogs and color pickers (read-only fixtures)');
+  await send('Fetch.enable', { patterns: [{ urlPattern: '*/api/admin/*' }, { urlPattern: '*/api/auth/*' }] });
+  await send('Page.navigate', { url: 'http://localhost:5173/verify-email/ui-test-token' });
+  await waitFor("document.body.textContent.includes('Email Verified Successfully!')");
+  assert.equal(await evaluate("JSON.parse(localStorage.getItem('auth-storage')).state.token"), 'verified-ui-token');
+  assert.equal(verificationRequests, 1);
+  assert.ok(!requests.some(url => url.includes('/api/auth/login')));
+  console.log('PASS: verification link consumes token once and stores the returned session without a login request');
   assert.deepEqual(runtimeErrors, []);
   console.log('PASS: recently updated section renders; no uncaught browser errors');
 })().catch(error => { console.error(error.message); process.exitCode = 1; }).finally(async () => {

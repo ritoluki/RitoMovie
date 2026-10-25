@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Mail, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
 import Logo from '../components/common/Logo';
@@ -8,7 +8,9 @@ import { useAuthStore } from '../store/authStore';
 const VerifyEmail: React.FC = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
-  const { login, user } = useAuthStore();
+  const { user } = useAuthStore();
+  const requestedToken = useRef<string>();
+  const redirectTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -16,31 +18,55 @@ const VerifyEmail: React.FC = () => {
   const [isResending, setIsResending] = useState(false);
 
   useEffect(() => {
-    if (token) {
+    if (token && requestedToken.current !== token) {
+      requestedToken.current = token;
       verifyEmail(token);
-    } else {
+    } else if (!token) {
       setIsLoading(false);
       setError('Verification token is missing.');
     }
+    return () => clearTimeout(redirectTimer.current);
   }, [token]);
 
   const verifyEmail = async (verificationToken: string) => {
     try {
-      const response = await api.get<{ success: boolean; data?: { token: string; user: any }; message: string }>(`/auth/verify-email/${verificationToken}`);
+      const response = await api.get<{
+        success: boolean;
+        data?: { token: string; user: any };
+        message: string;
+      }>(`/auth/verify-email/${verificationToken}`);
 
       if (response.success) {
         setIsSuccess(true);
 
         // Auto-login after successful verification
         if (response.data?.token && response.data?.user) {
-          login(response.data.user, response.data.token);          // Redirect after 3 seconds
-          setTimeout(() => {
+          const session = response.data;
+          const rememberMe = useAuthStore.getState().rememberMe;
+          if (!rememberMe) {
+            sessionStorage.setItem('auth-token', session.token);
+            sessionStorage.setItem('auth-user', JSON.stringify(session.user));
+          } else {
+            sessionStorage.removeItem('auth-token');
+            sessionStorage.removeItem('auth-user');
+          }
+          useAuthStore.setState({
+            user: session.user,
+            token: session.token,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+          redirectTimer.current = setTimeout(() => {
             navigate('/');
           }, 3000);
         }
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to verify email. The link may have expired.');
+      setError(
+        typeof err === 'string'
+          ? err
+          : err.message || 'Failed to verify email. The link may have expired.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -51,13 +77,17 @@ const VerifyEmail: React.FC = () => {
     setError('');
 
     try {
-      const response = await api.post<{ success: boolean; message: string }>('/auth/resend-verification');
+      const response = await api.post<{ success: boolean; message: string }>(
+        '/auth/resend-verification'
+      );
 
       if (response.success) {
         alert('Verification email sent! Please check your inbox.');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to resend verification email.');
+      setError(
+        err.response?.data?.message || 'Failed to resend verification email.'
+      );
     } finally {
       setIsResending(false);
     }
@@ -72,8 +102,12 @@ const VerifyEmail: React.FC = () => {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/20 rounded-full mb-4">
                 <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Verifying Your Email</h2>
-              <p className="text-gray-400">Please wait while we verify your email address...</p>
+              <h2 className="text-2xl font-bold text-white mb-2">
+                Verifying Your Email
+              </h2>
+              <p className="text-gray-400">
+                Please wait while we verify your email address...
+              </p>
             </div>
           </div>
         </div>
@@ -90,14 +124,17 @@ const VerifyEmail: React.FC = () => {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-green-500/20 rounded-full mb-4">
                 <CheckCircle className="w-8 h-8 text-green-500" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Email Verified Successfully!</h2>
+              <h2 className="text-2xl font-bold text-white mb-2">
+                Email Verified Successfully!
+              </h2>
               <p className="text-gray-400 mb-6">
                 Your email has been verified. Welcome to RitoMovie!
               </p>
 
               <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-6">
                 <p className="text-sm text-green-300">
-                  ✨ You can now enjoy all features of RitoMovie, including personalized recommendations and watchlist!
+                  ✨ You can now enjoy all features of RitoMovie, including
+                  personalized recommendations and watchlist!
                 </p>
               </div>
 
@@ -125,7 +162,9 @@ const VerifyEmail: React.FC = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Logo className="justify-center mb-4" />
-          <h1 className="text-3xl font-bold text-white mb-2">Email Verification</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Email Verification
+          </h1>
         </div>
 
         <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-8 shadow-2xl border border-gray-700">
@@ -133,7 +172,9 @@ const VerifyEmail: React.FC = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mb-4">
               <AlertCircle className="w-8 h-8 text-red-500" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">Verification Failed</h2>
+            <h2 className="text-xl font-bold text-white mb-2">
+              Verification Failed
+            </h2>
 
             {error && (
               <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
@@ -142,7 +183,8 @@ const VerifyEmail: React.FC = () => {
             )}
 
             <p className="text-gray-400 mb-6">
-              The verification link may have expired or is invalid. You can request a new verification email.
+              The verification link may have expired or is invalid. You can
+              request a new verification email.
             </p>
 
             {user && !user.isEmailVerified ? (

@@ -218,7 +218,7 @@ export const adminService = {
     api.delete(`/admin/settings/${key}`),
   
   testEmailSettings: (email: string) =>
-    api.post('/admin/settings/test-email', { email }),
+    api.post('/admin/settings/test-email', { email }, { timeout: 45000 }),
   
   initializeSettings: () =>
     api.post('/admin/settings/initialize'),

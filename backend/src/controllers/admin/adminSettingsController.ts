@@ -4,6 +4,12 @@ import ApiError from '../../utils/ApiError';
 import SystemSetting from '../../models/SystemSetting';
 import { logAdminAction } from '../../middleware/adminAuth';
 import settingsService from '../../services/settingsService';
+import { sendEmail } from '../../services/emailService';
+import {
+  isSecretSetting,
+  maskSetting,
+  keepSavedSecret,
+} from '../../utils/secretSettings';
 
 /**
  * @desc    Get all settings
@@ -14,14 +20,12 @@ export const getSettings = asyncHandler(async (req: Request, res: Response) => {
   const settings = await SystemSetting.find().sort('category key');
 
   // Group by category
-  const groupedSettings = settings.reduce((acc: Record<string, typeof settings>, setting) => {
-    const category = setting.category;
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(setting);
-    return acc;
-  }, {});
+  const groupedSettings: Record<string, unknown[]> = {};
+  for (const setting of settings) {
+    (groupedSettings[setting.category] ||= []).push(
+      maskSetting(setting.toObject())
+    );
+  }
 
   res.status(200).json({
     success: true,
@@ -34,154 +38,209 @@ export const getSettings = asyncHandler(async (req: Request, res: Response) => {
  * @route   GET /api/admin/settings/:category
  * @access  Admin
  */
-export const getCategorySettings = asyncHandler(async (req: Request, res: Response) => {
-  const { category } = req.params;
+export const getCategorySettings = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { category } = req.params;
 
-  const settings = await SystemSetting.find({ category }).sort('key');
+    const settings = await SystemSetting.find({ category }).sort('key');
 
-  // Convert to key-value object
-  const settingsObject = settings.reduce((acc: Record<string, unknown>, setting) => {
-    // Mask secret values
-    if (setting.isSecret) {
-      acc[setting.key] = setting.value ? '********' : null;
-    } else {
-      acc[setting.key] = setting.value;
-    }
-    return acc;
-  }, {});
+    // Convert to key-value object
+    const settingsObject = settings.reduce(
+      (acc: Record<string, unknown>, setting) => {
+        // Mask secret values
+        if (isSecretSetting(setting)) {
+          acc[setting.key] = setting.value ? '********' : null;
+        } else {
+          acc[setting.key] = setting.value;
+        }
+        return acc;
+      },
+      {}
+    );
 
-  res.status(200).json({
-    success: true,
-    data: {
-      category,
-      settings: settingsObject,
-      rawSettings: settings,
-    },
-  });
-});
+    res.status(200).json({
+      success: true,
+      data: {
+        category,
+        settings: settingsObject,
+        rawSettings: settings.map((setting) => maskSetting(setting.toObject())),
+      },
+    });
+  }
+);
 
 /**
  * @desc    Update settings
  * @route   PUT /api/admin/settings
  * @access  Super Admin
  */
-export const updateSettings = asyncHandler(async (req: Request, res: Response) => {
-  const { settings } = req.body;
+export const updateSettings = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { settings } = req.body;
 
-  console.log('[Admin Settings Controller] Received settings update request:', {
-    settingsCount: settings?.length,
-    settingsKeys: settings?.map((s: any) => s.key)
-  });
-
-  if (!settings || !Array.isArray(settings)) {
-    throw new ApiError(400, 'Settings array is required');
-  }
-
-  const updatedSettings = [];
-  const errors = [];
-
-  for (const item of settings) {
-    try {
-      const { key, value, category, description, type, isSecret, isPublic } = item;
-
-      if (!key) {
-        errors.push({ key, error: 'Key is required' });
-        continue;
+    console.log(
+      '[Admin Settings Controller] Received settings update request:',
+      {
+        settingsCount: settings?.length,
+        settingsKeys: settings?.map((s: any) => s.key),
       }
+    );
 
-      // Find or create setting
-      let setting = await SystemSetting.findOne({ key });
-
-      if (setting) {
-        // Update existing
-        const oldValue = setting.value;
-        setting.value = value;
-        if (description) setting.description = description;
-        if (type) setting.type = type;
-        if (category) setting.category = category; // Update category if provided
-        if (typeof isSecret === 'boolean') setting.isSecret = isSecret;
-        if (typeof isPublic === 'boolean') setting.isPublic = isPublic;
-        setting.updatedBy = req.user?._id;
-
-        await setting.save();
-
-        console.log(`[Admin Settings Controller] Updated setting: ${key}`, {
-          oldValue: setting.isSecret ? '[HIDDEN]' : oldValue,
-          newValue: setting.isSecret ? '[HIDDEN]' : value
-        });
-
-        await logAdminAction(req, 'UPDATE', 'SETTING', setting._id.toString(), {
-          key,
-          oldValue: setting.isSecret ? '[HIDDEN]' : oldValue,
-          newValue: setting.isSecret ? '[HIDDEN]' : value,
-        });
-
-        updatedSettings.push(setting);
-      } else {
-        // Create new
-        setting = await SystemSetting.create({
-          key,
-          value,
-          category: category || 'general',
-          description: description || '',
-          type: type || 'string',
-          isSecret: isSecret || false,
-          isPublic: isPublic || false,
-          updatedBy: req.user?._id,
-        });
-
-        await logAdminAction(req, 'CREATE', 'SETTING', setting._id.toString(), {
-          key,
-          value: setting.isSecret ? '[HIDDEN]' : value,
-        });
-
-        updatedSettings.push(setting);
-      }
-    } catch (error) {
-      console.error(`[Admin Settings Controller] Error updating setting ${item.key}:`, error);
-      errors.push({ key: item.key, error: (error as Error).message });
+    if (!settings || !Array.isArray(settings)) {
+      throw new ApiError(400, 'Settings array is required');
     }
+
+    const updatedSettings = [];
+    const errors = [];
+
+    for (const item of settings) {
+      try {
+        const { key, value, category, description } = item;
+        const type = item.type === 'password' ? 'string' : item.type;
+        const isSecret =
+          key === 'smtp_password' || item.type === 'password'
+            ? true
+            : item.isSecret;
+        const isPublic =
+          typeof key === 'string' && key.startsWith('smtp_')
+            ? false
+            : item.isPublic;
+
+        if (!key) {
+          errors.push({ key, error: 'Key is required' });
+          continue;
+        }
+
+        // Find or create setting
+        let setting = await SystemSetting.findOne({ key });
+        if (
+          keepSavedSecret({
+            key,
+            value,
+            isSecret: isSecret || setting?.isSecret,
+          })
+        ) {
+          if (!setting)
+            errors.push({
+              key,
+              error: 'Enter the actual secret value before saving.',
+            });
+          continue;
+        }
+
+        if (setting) {
+          // Update existing
+          const oldValue = setting.value;
+          setting.value = value;
+          if (description) setting.description = description;
+          if (type) setting.type = type;
+          if (category) setting.category = category; // Update category if provided
+          if (typeof isSecret === 'boolean') setting.isSecret = isSecret;
+          if (typeof isPublic === 'boolean') setting.isPublic = isPublic;
+          setting.updatedBy = req.user?._id;
+
+          await setting.save();
+
+          console.log(`[Admin Settings Controller] Updated setting: ${key}`, {
+            oldValue: setting.isSecret ? '[HIDDEN]' : oldValue,
+            newValue: setting.isSecret ? '[HIDDEN]' : value,
+          });
+
+          await logAdminAction(
+            req,
+            'UPDATE',
+            'SETTING',
+            setting._id.toString(),
+            {
+              key,
+              oldValue: setting.isSecret ? '[HIDDEN]' : oldValue,
+              newValue: setting.isSecret ? '[HIDDEN]' : value,
+            }
+          );
+
+          updatedSettings.push(maskSetting(setting.toObject()));
+        } else {
+          // Create new
+          setting = await SystemSetting.create({
+            key,
+            value,
+            category: category || 'general',
+            description: description || '',
+            type: type || 'string',
+            isSecret: isSecret || false,
+            isPublic: isPublic || false,
+            updatedBy: req.user?._id,
+          });
+
+          await logAdminAction(
+            req,
+            'CREATE',
+            'SETTING',
+            setting._id.toString(),
+            {
+              key,
+              value: setting.isSecret ? '[HIDDEN]' : value,
+            }
+          );
+
+          updatedSettings.push(maskSetting(setting.toObject()));
+        }
+      } catch (error) {
+        console.error(
+          `[Admin Settings Controller] Could not update setting ${item.key}:`,
+          (error as Error).name
+        );
+        errors.push({
+          key: item.key,
+          error: isSecretSetting(item)
+            ? 'Could not save secret setting.'
+            : (error as Error).message,
+        });
+      }
+    }
+
+    // Refresh settings cache so changes take effect immediately
+    await settingsService.refreshSettings();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        updated: updatedSettings.length,
+        errors: errors.length > 0 ? errors : undefined,
+        settings: updatedSettings,
+      },
+    });
   }
-
-  // Refresh settings cache so changes take effect immediately
-  await settingsService.refreshSettings();
-
-  res.status(200).json({
-    success: true,
-    data: {
-      updated: updatedSettings.length,
-      errors: errors.length > 0 ? errors : undefined,
-      settings: updatedSettings,
-    },
-  });
-});
+);
 
 /**
  * @desc    Delete a setting
  * @route   DELETE /api/admin/settings/:key
  * @access  Super Admin
  */
-export const deleteSetting = asyncHandler(async (req: Request, res: Response) => {
-  const { key } = req.params;
+export const deleteSetting = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { key } = req.params;
 
-  const setting = await SystemSetting.findOne({ key });
+    const setting = await SystemSetting.findOne({ key });
 
-  if (!setting) {
-    throw new ApiError(404, 'Setting not found');
+    if (!setting) {
+      throw new ApiError(404, 'Setting not found');
+    }
+
+    await logAdminAction(req, 'DELETE', 'SETTING', setting._id.toString(), {
+      key: setting.key,
+      category: setting.category,
+    });
+
+    await SystemSetting.findByIdAndDelete(setting._id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Setting deleted successfully',
+    });
   }
-
-  await logAdminAction(req, 'DELETE', 'SETTING', setting._id.toString(), {
-    key: setting.key,
-    category: setting.category,
-  });
-
-  await SystemSetting.findByIdAndDelete(setting._id);
-
-  res.status(200).json({
-    success: true,
-    message: 'Setting deleted successfully',
-  });
-});
+);
 
 /**
  * @desc    Test email settings
@@ -191,35 +250,25 @@ export const deleteSetting = asyncHandler(async (req: Request, res: Response) =>
 export const testEmail = asyncHandler(async (req: Request, res: Response) => {
   const { email } = req.body;
 
-  if (!email) {
-    throw new ApiError(400, 'Email address is required');
+  if (
+    typeof email !== 'string' ||
+    !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email.trim())
+  ) {
+    throw new ApiError(400, 'A valid recipient email address is required');
   }
-
-  // Get email settings
-  const smtpHost = await SystemSetting.findOne({ key: 'smtp_host' });
-  const smtpPort = await SystemSetting.findOne({ key: 'smtp_port' });
-  const smtpUser = await SystemSetting.findOne({ key: 'smtp_user' });
-  const smtpPass = await SystemSetting.findOne({ key: 'smtp_password' });
-
-  if (!smtpHost?.value || !smtpPort?.value) {
-    throw new ApiError(400, 'Email settings are not configured');
-  }
-
-  // In a real implementation, you would send a test email here
-  // For now, just simulate success
+  await sendEmail({
+    to: email.trim(),
+    subject: 'RitoMovie — SMTP test',
+    text: 'SMTP is configured successfully for RitoMovie. This is a test email requested from the admin panel.',
+    html: '<h2>RitoMovie</h2><p>SMTP is configured successfully. This test email was requested from the admin panel.</p>',
+  });
   await logAdminAction(req, 'TEST_EMAIL', 'SETTING', 'email', {
     testEmail: email,
   });
 
   res.status(200).json({
     success: true,
-    message: `Test email would be sent to ${email} (email sending not implemented)`,
-    config: {
-      host: smtpHost.value,
-      port: smtpPort.value,
-      user: smtpUser?.value ? '***configured***' : 'not configured',
-      password: smtpPass?.value ? '***configured***' : 'not configured',
-    },
+    message: `SMTP accepted the test email for ${email.trim()}. Check the inbox and spam folder.`,
   });
 });
 
@@ -228,27 +277,36 @@ export const testEmail = asyncHandler(async (req: Request, res: Response) => {
  * @route   GET /api/settings/public
  * @access  Public
  */
-export const getPublicSettings = asyncHandler(async (req: Request, res: Response) => {
-  const settings = await SystemSetting.find({ isPublic: true, isSecret: false });
+export const getPublicSettings = asyncHandler(
+  async (req: Request, res: Response) => {
+    const settings = await SystemSetting.find({
+      isPublic: true,
+      isSecret: false,
+      key: { $not: /^smtp_/ },
+    });
 
-  const publicSettings = settings.reduce((acc: Record<string, unknown>, setting) => {
-    acc[setting.key] = setting.value;
-    return acc;
-  }, {});
+    const publicSettings = settings.reduce(
+      (acc: Record<string, unknown>, setting) => {
+        acc[setting.key] = setting.value;
+        return acc;
+      },
+      {}
+    );
 
-  console.log('[Admin Settings Controller] Public settings fetched:', {
-    footer_copyright: publicSettings.footer_copyright,
-    footer_text: publicSettings.footer_text,
-    meta_title: publicSettings.meta_title,
-    site_name: publicSettings.site_name,
-    totalSettings: Object.keys(publicSettings).length
-  });
+    console.log('[Admin Settings Controller] Public settings fetched:', {
+      footer_copyright: publicSettings.footer_copyright,
+      footer_text: publicSettings.footer_text,
+      meta_title: publicSettings.meta_title,
+      site_name: publicSettings.site_name,
+      totalSettings: Object.keys(publicSettings).length,
+    });
 
-  res.status(200).json({
-    success: true,
-    data: publicSettings,
-  });
-});
+    res.status(200).json({
+      success: true,
+      data: publicSettings,
+    });
+  }
+);
 
 /**
  * @desc    Initialize default settings

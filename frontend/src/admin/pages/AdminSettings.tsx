@@ -525,6 +525,7 @@ const AdminSettings: React.FC = () => {
     useState<SettingCategory>('general');
   const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [hasChanges, setHasChanges] = useState(false);
+  const [testRecipient, setTestRecipient] = useState('');
   const queryClient = useQueryClient();
   const { fetchSettings, clearCache } = useSettingsStore();
 
@@ -542,9 +543,20 @@ const AdminSettings: React.FC = () => {
 
   // Update settings mutation
   const updateMutation = useMutation({
-    mutationFn: (
+    mutationFn: async (
       settings: Array<{ key: string; value: unknown; category: string }>
-    ) => adminService.updateSettings(settings),
+    ) => {
+      const response = (await adminService.updateSettings(settings)) as {
+        data?: { errors?: { key: string; error: string }[] };
+      };
+      if (response.data?.errors?.length)
+        throw new Error(
+          response.data.errors
+            .map((item) => `${item.key}: ${item.error}`)
+            .join('; ')
+        );
+      return response;
+    },
     onSuccess: () => {
       toast.success('Settings saved successfully');
       queryClient.invalidateQueries({ queryKey: ['admin', 'settings'] });
@@ -558,8 +570,26 @@ const AdminSettings: React.FC = () => {
       setHasChanges(false);
     },
     onError: (error: any) => {
-      toast.error(error || 'Failed to save settings');
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : String(error || 'Failed to save settings')
+      );
     },
+  });
+
+  const testEmailMutation = useMutation({
+    mutationFn: () => adminService.testEmailSettings(testRecipient.trim()),
+    onSuccess: () =>
+      toast.success(
+        'SMTP accepted the test email. Check the inbox and spam folder.'
+      ),
+    onError: (error: unknown) =>
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : String(error || 'Test email failed')
+      ),
   });
 
   // Initialize settings mutation
@@ -617,20 +647,27 @@ const AdminSettings: React.FC = () => {
       toast.error('Enter a color in #RRGGBB format');
       return;
     }
-    const settingsToUpdate = defaultSettings[activeCategory].map((setting) => {
-      const value =
-        formData[setting.key] ??
-        getSettingValue(setting.key, setting.defaultValue);
+    const settingsToUpdate = defaultSettings[activeCategory]
+      .filter(
+        (setting) =>
+          setting.type !== 'password' ||
+          Object.prototype.hasOwnProperty.call(formData, setting.key)
+      )
+      .map((setting) => {
+        const value =
+          formData[setting.key] ??
+          getSettingValue(setting.key, setting.defaultValue);
 
-      return {
-        key: setting.key,
-        value,
-        category: activeCategory,
-        description: setting.description,
-        type: setting.type,
-        isPublic: setting.isPublic ?? false,
-      };
-    });
+        return {
+          key: setting.key,
+          value,
+          category: activeCategory,
+          description: setting.description,
+          type: setting.type === 'password' ? 'string' : setting.type,
+          ...(setting.type === 'password' ? { isSecret: true } : {}),
+          isPublic: setting.isPublic ?? false,
+        };
+      });
 
     updateMutation.mutate(settingsToUpdate);
   };
@@ -696,10 +733,16 @@ const AdminSettings: React.FC = () => {
       return (
         <Input
           type="password"
+          id={`setting-${setting.key}`}
           aria-label={setting.label}
-          value={String(value || '')}
+          value={value === '********' ? '' : String(value || '')}
           onChange={(e) => handleChange(setting.key, e.target.value)}
-          placeholder="••••••••"
+          placeholder={
+            value === '********'
+              ? 'Saved — leave blank to keep the current password'
+              : 'App password or SMTP API key'
+          }
+          autoComplete="new-password"
         />
       );
     }
@@ -805,6 +848,49 @@ const AdminSettings: React.FC = () => {
           </div>
 
           <div className="space-y-6">
+            {activeCategory === 'email' && (
+              <div className="rounded-xl border border-border bg-background/60 p-4 space-y-3">
+                <h3 className="font-medium text-foreground">
+                  Gửi từ noreply@ritomovie.live
+                </h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  Xác minh ritomovie.live trong Resend, tạo API key có quyền gửi
+                  email, rồi nhập key vào SMTP Password. Không dùng mật khẩu
+                  đăng nhập Resend.
+                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        smtp_host: 'smtp.resend.com',
+                        smtp_port: 465,
+                        smtp_user: 'resend',
+                        smtp_from_email: 'noreply@ritomovie.live',
+                        smtp_from_name: 'RitoMovie',
+                      }));
+                      setHasChanges(true);
+                    }}
+                  >
+                    Điền cấu hình Resend
+                  </Button>
+                  <a
+                    href="https://resend.com/domains"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-brand hover:underline"
+                  >
+                    Xác minh tên miền ↗
+                  </a>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Cổng 465 dùng TLS trực tiếp; cổng 587 dùng STARTTLS. Lưu cấu
+                  hình trước khi gửi thử.
+                </p>
+              </div>
+            )}
             {currentSettings.map((setting) => (
               <div
                 key={setting.key}
@@ -841,6 +927,43 @@ const AdminSettings: React.FC = () => {
               </div>
             ))}
 
+            {activeCategory === 'email' && (
+              <div className="rounded-xl border border-border p-4 space-y-3">
+                <h3 className="font-medium">Gửi email kiểm tra</h3>
+                <label
+                  htmlFor="smtp-test-recipient"
+                  className="block text-sm text-muted-foreground"
+                >
+                  Địa chỉ nhận thử — dùng hộp thư thật bạn có thể kiểm tra
+                </label>
+                <Input
+                  id="smtp-test-recipient"
+                  type="email"
+                  placeholder="ban@gmail.com"
+                  value={testRecipient}
+                  onChange={(event) => setTestRecipient(event.target.value)}
+                />
+                <Button
+                  variant="outline"
+                  isLoading={testEmailMutation.isPending}
+                  disabled={
+                    hasChanges ||
+                    updateMutation.isPending ||
+                    !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(
+                      testRecipient.trim()
+                    )
+                  }
+                  onClick={() => testEmailMutation.mutate()}
+                >
+                  Gửi email thử
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  {hasChanges
+                    ? 'Hãy Save Changes trước khi gửi thử.'
+                    : 'Gửi bằng cấu hình đã lưu. Sau khi SMTP chấp nhận, kiểm tra Inbox và Spam.'}
+                </p>
+              </div>
+            )}
             {/* Save Button */}
             <div className="pt-6 border-t border-gray-700 flex items-center justify-between">
               <div>

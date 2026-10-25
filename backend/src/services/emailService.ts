@@ -1,11 +1,18 @@
 /**
  * Email Service
- * 
+ *
  * Handles sending emails using SMTP configuration from system settings
  */
 
 import nodemailer from 'nodemailer';
 import settingsService from './settingsService';
+import ApiError from '../utils/ApiError';
+import {
+  smtpOptions,
+  smtpErrorMessage,
+  verificationLink,
+  resetPasswordLink,
+} from '../utils/smtpConfig';
 
 interface EmailOptions {
   to: string;
@@ -19,20 +26,8 @@ interface EmailOptions {
  */
 const createTransporter = async () => {
   const emailConfig = await settingsService.getEmailConfig();
-  
-  if (!emailConfig.host || !emailConfig.user) {
-    throw new Error('Email settings not configured. Please configure SMTP settings in admin panel.');
-  }
 
-  return nodemailer.createTransport({
-    host: emailConfig.host,
-    port: emailConfig.port,
-    secure: emailConfig.port === 465, // true for 465, false for other ports
-    auth: {
-      user: emailConfig.user,
-      pass: emailConfig.password,
-    },
-  });
+  return nodemailer.createTransport(smtpOptions(emailConfig));
 };
 
 /**
@@ -42,14 +37,24 @@ export const sendEmail = async (options: EmailOptions): Promise<void> => {
   try {
     const transporter = await createTransporter();
     const emailConfig = await settingsService.getEmailConfig();
-    
+
     const info = await transporter.sendMail({
-      from: `"${await settingsService.getSetting('smtp_from_name', 'RitoMovie')}" <${emailConfig.from}>`,
+      from: {
+        name: await settingsService.getSetting<string>(
+          'smtp_from_name',
+          'RitoMovie'
+        ),
+        address: emailConfig.from,
+      },
       to: options.to,
       subject: options.subject,
       text: options.text,
       html: options.html,
     });
+
+    if (!info.accepted?.length || info.rejected?.length) {
+      throw new ApiError(502, 'SMTP rejected the recipient address.');
+    }
 
     console.log('[EmailService] Email sent successfully:', {
       messageId: info.messageId,
@@ -57,8 +62,11 @@ export const sendEmail = async (options: EmailOptions): Promise<void> => {
       subject: options.subject,
     });
   } catch (error) {
-    console.error('[EmailService] Failed to send email:', error);
-    throw new Error('Failed to send email. Please check SMTP settings.');
+    if (error instanceof ApiError) throw error;
+    console.error('[EmailService] SMTP failure:', {
+      code: (error as { code?: string })?.code || 'UNKNOWN',
+    });
+    throw new ApiError(502, smtpErrorMessage(error));
   }
 };
 
@@ -70,8 +78,14 @@ export const sendPasswordResetEmail = async (
   resetToken: string,
   userName: string
 ): Promise<void> => {
-  const siteName = await settingsService.getSetting<string>('site_name', 'RitoMovie');
-  const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
+  const siteName = await settingsService.getSetting<string>(
+    'site_name',
+    'RitoMovie'
+  );
+  const resetUrl = resetPasswordLink(
+    process.env.FRONTEND_URL || 'http://localhost:5173',
+    resetToken
+  );
 
   const html = `
     <!DOCTYPE html>
@@ -157,8 +171,14 @@ export const sendVerificationEmail = async (
   verificationToken: string,
   userName: string
 ): Promise<void> => {
-  const siteName = await settingsService.getSetting<string>('site_name', 'RitoMovie');
-  const verifyUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${verificationToken}`;
+  const siteName = await settingsService.getSetting<string>(
+    'site_name',
+    'RitoMovie'
+  );
+  const verifyUrl = verificationLink(
+    process.env.FRONTEND_URL || 'http://localhost:5173',
+    verificationToken
+  );
 
   const html = `
     <!DOCTYPE html>
@@ -246,7 +266,10 @@ export const sendWelcomeEmail = async (
   email: string,
   userName: string
 ): Promise<void> => {
-  const siteName = await settingsService.getSetting<string>('site_name', 'RitoMovie');
+  const siteName = await settingsService.getSetting<string>(
+    'site_name',
+    'RitoMovie'
+  );
 
   const html = `
     <!DOCTYPE html>
