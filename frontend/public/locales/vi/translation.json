@@ -123,6 +123,15 @@
     "noActorsFound": "Không tìm thấy diễn viên nào"
   },
   "movie": {
+    "recommendationsUnavailable": "Chưa tải được phim đề xuất. Vui lòng thử lại.",
+    "retryRecommendations": "Thử lại",
+    "recommendationReasons": {
+      "similar": "Phim tương tự",
+      "genre": "Cùng thể loại",
+      "country": "Cùng quốc gia",
+      "keywords": "Cùng chủ đề",
+      "related": "Có thể bạn thích"
+    },
     "keywords": "Từ khóa nội dung",
     "watchNow": "Xem ngay",
     "play": "Phát",

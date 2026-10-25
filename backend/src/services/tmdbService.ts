@@ -177,11 +177,12 @@ export const getSimilarMovies = async (movieId: number, page: number = 1, langua
 };
 
 // Get movie recommendations
-export const getMovieRecommendations = async (movieId: number, page: number = 1, language?: string) => {
+export const getMovieRecommendations = async (movieId: number, page: number = 1, language?: string, signal?: AbortSignal) => {
   const cacheKey = getCacheKey(`movie/${movieId}/recommendations`, { page, language });
   
   return apiCache.getOrSet(cacheKey, async () => {
     const response = await tmdbAxios.get(`/movie/${movieId}/recommendations`, {
+      signal,
       params: { page, language: formatLanguage(language) },
     });
     return response.data;
@@ -399,11 +400,12 @@ export const getSimilarTvShows = async (tvId: number, page: number = 1, language
   }, CACHE_TTL.MEDIUM);
 };
 
-export const getTvRecommendations = async (tvId: number, page: number = 1, language?: string) => {
+export const getTvRecommendations = async (tvId: number, page: number = 1, language?: string, signal?: AbortSignal) => {
   const cacheKey = getCacheKey(`tv/${tvId}/recommendations`, { page, language });
   
   return apiCache.getOrSet(cacheKey, async () => {
     const response = await tmdbAxios.get(`/tv/${tvId}/recommendations`, {
+      signal,
       params: { page, language: formatLanguage(language) },
     });
     return response.data;

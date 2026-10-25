@@ -123,6 +123,15 @@
     "noActorsFound": "No actors found"
   },
   "movie": {
+    "recommendationsUnavailable": "Recommendations could not be loaded. Please try again.",
+    "retryRecommendations": "Try again",
+    "recommendationReasons": {
+      "similar": "Similar movie",
+      "genre": "Shared genre",
+      "country": "Same country",
+      "keywords": "Shared themes",
+      "related": "You might like"
+    },
     "keywords": "Content keywords",
     "watchNow": "Watch Now",
     "play": "Play",

@@ -121,6 +121,13 @@ phimAxios.interceptors.response.use(
 
 const ensureSuccess = ensurePhimSuccess;
 
+// Internal read-only requests for recommendations share a bounded caller deadline.
+export const getRecommendationResource = (path: string, signal: AbortSignal) =>
+    apiCache.getOrSet(`phim:recommendation-resource:${path}`, async () => {
+        const response = await phimAxios.get(path, { signal });
+        return ensurePhimSuccess(response.data);
+    }, CACHE_TTL.MEDIUM);
+
 export const getHomeUpdates = (page = 1) => apiCache.getOrSet(`phim:home:${page}`, async () => {
     const response = await phimAxios.get('/v1/api/home', { params: { page } });
     return ensurePhimSuccess(response.data);

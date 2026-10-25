@@ -339,6 +339,16 @@ export interface PhimMovieExtras {
   unavailable: string[];
 }
 
+export interface PlayableRecommendation extends PhimMovieSummary {
+  available: true;
+  reason: 'similar' | 'genre' | 'country' | 'keywords' | 'related';
+}
+
+export interface PlayableRecommendations {
+  items: PlayableRecommendation[];
+  partial: boolean;
+}
+
 export interface PhimCatalogParams {
   type_slug?: string;
   filterCategory?: string[];

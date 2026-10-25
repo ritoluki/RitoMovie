@@ -26,6 +26,7 @@ let socket;
   let nextId = 0;
   const pending = new Map();
   const runtimeErrors = [];
+  const requests = [];
   const send = (method, params = {}) => new Promise((resolve, reject) => {
     const id = ++nextId;
     pending.set(id, { resolve, reject });
@@ -34,6 +35,7 @@ let socket;
   socket.onmessage = event => {
     const message = JSON.parse(event.data);
     if (message.method === 'Runtime.exceptionThrown') runtimeErrors.push(message.params.exceptionDetails.text);
+    if (message.method === 'Network.requestWillBeSent') requests.push(message.params.request.url);
     if (message.method === 'Fetch.requestPaused') {
       send('Fetch.failRequest', { requestId: message.params.requestId, errorReason: 'ConnectionFailed' }).catch(() => {});
     }
@@ -56,6 +58,7 @@ let socket;
     throw new Error(`Browser condition timed out: ${expression}`);
   };
   await send('Runtime.enable');
+  await send('Network.enable');
   await send('Page.enable');
   await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
   await send('Page.addScriptToEvaluateOnNewDocument', { source: "localStorage.setItem('i18nextLng', 'vi')" });
@@ -69,6 +72,21 @@ let socket;
   await waitFor("document.querySelectorAll('img[alt^=\"Gallery image\"]').length > 0");
   assert.equal(await evaluate('document.documentElement.scrollWidth > window.innerWidth'), false);
   console.log('PASS: TMDB outage still renders details, keywords, watch link and image gallery');
+  assert.equal(requests.filter(url => url.includes('/api/phim/recommendations')).length, 0);
+  assert.equal(requests.filter(url => /\/api\/movies\/\d+\/similar/.test(url)).length, 0);
+  await evaluate("[...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Đề xuất').click()");
+  await waitFor("document.querySelectorAll('[data-recommendation]').length > 0");
+  const slugs = await evaluate("[...document.querySelectorAll('[data-recommendation]')].map(item => item.dataset.recommendation)");
+  assert.equal(new Set(slugs).size, slugs.length);
+  assert.ok(!slugs.includes('lightyear-canh-sat-vu-tru'));
+  assert.equal(await evaluate("document.querySelector('[data-recommendations]').textContent.includes('TM. 6')"), false);
+  const recommendationRequests = requests.filter(url => url.includes('/api/phim/recommendations')).length;
+  await evaluate("[...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Thư viện ảnh').click()");
+  await waitFor("document.querySelectorAll('img[alt^=\"Gallery image\"]').length > 0");
+  await evaluate("[...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Đề xuất').click()");
+  await waitFor("document.querySelectorAll('[data-recommendation]').length > 0");
+  assert.equal(requests.filter(url => url.includes('/api/phim/recommendations')).length, recommendationRequests);
+  console.log('PASS: recommendations load on demand, exclude duplicates/current movie and reuse cached results');
 
   await send('Fetch.disable');
   await send('Page.navigate', { url: 'http://localhost:5173/browse?catalog=phim-le&phimYear=2020,2024&phimLang=vietsub' });

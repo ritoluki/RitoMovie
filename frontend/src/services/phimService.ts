@@ -7,6 +7,7 @@ import {
     PhimLatestResponse,
     PhimMovieDetailResponse,
     PhimMovieExtras,
+    PlayableRecommendations,
 } from '@/types';
 
 type PhimType = 'movie' | 'tv' | 'auto';
@@ -40,6 +41,8 @@ type DetailQuery = Omit<CatalogQuery, 'category' | 'country'> & {
 };
 
 export const phimService = {
+    getRecommendations: async (params: { slug?: string; tmdbId?: number; type: 'movie' | 'tv' }) =>
+        (await axios.get<ApiResponse<PlayableRecommendations>>('/phim/recommendations', { params })).data,
     getHome: async (page = 1) => axios.get<ApiResponse<PhimCatalogResponse>>('/phim/home', { params: { page } }),
     getExtras: async (slug: string) => axios.get<ApiResponse<PhimMovieExtras>>(`/phim/movie/${encodeURIComponent(slug)}/extras`),
     getLatest: async (options?: { page?: number; version?: Version }): Promise<ApiResponse<PhimLatestResponse>> => {
