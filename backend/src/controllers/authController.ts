@@ -522,23 +522,12 @@ export const verifyEmail = asyncHandler(
       // Don't fail verification if welcome email fails
     }
 
-    // Generate JWT token
-    const jwtToken = user.getSignedJwtToken();
-
     res.status(200).json({
       success: true,
       message: getTranslation(t, 'auth.emailVerified', 'Email verified successfully'),
       data: {
-        user: {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          avatar: user.avatar,
-          watchlist: user.watchlist,
-          isEmailVerified: user.isEmailVerified,
-        },
-        token: jwtToken,
+        email: user.email,
+        isEmailVerified: user.isEmailVerified,
       },
     });
   }

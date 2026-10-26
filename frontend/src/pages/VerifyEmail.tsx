@@ -9,7 +9,6 @@ const VerifyEmail: React.FC = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const requestedToken = useRef<string>();
-  const redirectTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -23,40 +22,42 @@ const VerifyEmail: React.FC = () => {
       setIsLoading(false);
       setError('Verification token is missing.');
     }
-    return () => clearTimeout(redirectTimer.current);
   }, [token]);
 
   const verifyEmail = async (verificationToken: string) => {
     try {
       const response = await api.get<{
         success: boolean;
-        data?: { token: string; user: any };
+        data?: { email: string; isEmailVerified: boolean };
         message: string;
       }>(`/auth/verify-email/${verificationToken}`);
 
       if (response.success) {
         setIsSuccess(true);
 
-        // Auto-login after successful verification
-        if (response.data?.token && response.data?.user) {
-          const session = response.data;
-          const rememberMe = useAuthStore.getState().rememberMe;
-          if (!rememberMe) {
-            sessionStorage.setItem('auth-token', session.token);
-            sessionStorage.setItem('auth-user', JSON.stringify(session.user));
-          } else {
-            sessionStorage.removeItem('auth-token');
-            sessionStorage.removeItem('auth-user');
-          }
+        // Verification must never create or replace the current session.
+        // Update the local flag only if the current session belongs to this email.
+        const currentUser = useAuthStore.getState().user;
+        if (
+          currentUser &&
+          response.data?.email &&
+          currentUser.email.toLowerCase() === response.data.email.toLowerCase()
+        ) {
+          const updatedUser = { ...currentUser, isEmailVerified: response.data.isEmailVerified };
           useAuthStore.setState({
-            user: session.user,
-            token: session.token,
-            isAuthenticated: true,
-            isLoading: false,
+            user: updatedUser,
           });
-          redirectTimer.current = setTimeout(() => {
-            navigate('/');
-          }, 3000);
+          const storedSessionUser = sessionStorage.getItem('auth-user');
+          if (storedSessionUser) {
+            try {
+              const sessionUser = JSON.parse(storedSessionUser);
+              if (sessionUser.email?.toLowerCase() === response.data.email.toLowerCase()) {
+                sessionStorage.setItem('auth-user', JSON.stringify(updatedUser));
+              }
+            } catch {
+              sessionStorage.removeItem('auth-user');
+            }
+          }
         }
       }
     } catch (err: any) {
@@ -105,7 +106,7 @@ const VerifyEmail: React.FC = () => {
                 Email Verified Successfully!
               </h2>
               <p className="text-gray-400 mb-6">
-                Your email has been verified. Welcome to RitoMovie!
+                Your email has been verified. Your current signed-in account has not been changed.
               </p>
 
               <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-6">
@@ -115,16 +116,11 @@ const VerifyEmail: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                Redirecting to home in 3 seconds...
-              </div>
-
               <button
                 onClick={() => navigate('/')}
                 className="mt-4 inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
               >
-                Skip waiting
+                Go to home
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
