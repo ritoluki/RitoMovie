@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -12,10 +12,22 @@ const VerifyEmailPending = () => {
   const [turnstileToken, setTurnstileToken] = useState('');
   const [resetKey, setResetKey] = useState(0);
   const [isSending, setIsSending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(() => {
+    const wait = Number(searchParams.get('wait') || 0);
+    return Number.isFinite(wait) ? Math.max(0, wait) : 0;
+  });
   const [hasSent, setHasSent] = useState(searchParams.get('sent') === '1');
   const [initialSendFailed] = useState(searchParams.get('sent') === '0');
   const [error, setError] = useState('');
   const { t } = useTranslation();
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = window.setTimeout(() => {
+      setResendCooldown((seconds) => Math.max(0, seconds - 1));
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [resendCooldown]);
 
   const handleResend = async (event: FormEvent) => {
     event.preventDefault();
@@ -28,8 +40,12 @@ const VerifyEmailPending = () => {
 
     setIsSending(true);
     try {
-      await api.post('/auth/resend-verification', { email, turnstileToken });
+      const response = await api.post<{
+        success: boolean;
+        data?: { retryAfterSeconds?: number };
+      }>('/auth/resend-verification', { email, turnstileToken });
       setHasSent(true);
+      setResendCooldown(Math.max(0, response.data?.retryAfterSeconds || 60));
     } catch (requestError: any) {
       setError(requestError?.response?.data?.message || String(requestError));
     } finally {
@@ -86,10 +102,14 @@ const VerifyEmailPending = () => {
 
             <button
               type="submit"
-              disabled={isSending}
+              disabled={isSending || resendCooldown > 0}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-semibold text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSending ? t('common.loading') : t('auth.resendVerificationEmail')}
+              {isSending
+                ? t('common.loading')
+                : resendCooldown > 0
+                  ? t('auth.resendVerificationCountdown', { seconds: resendCooldown })
+                  : t('auth.resendVerificationEmail')}
             </button>
           </form>
 

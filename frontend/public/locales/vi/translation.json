@@ -78,6 +78,7 @@
     "verificationEmailSentHint": "Nếu tài khoản cần xác minh, email sẽ được gửi trong ít phút. Hãy kiểm tra cả thư mục Spam.",
     "verificationInitialEmailFailed": "Tài khoản đã được tạo nhưng email xác minh chưa gửi được. Hãy nhập email và gửi lại bên dưới.",
     "resendVerificationEmail": "Gửi lại email xác minh",
+    "resendVerificationCountdown": "Gửi lại sau {{seconds}} giây",
     "completeRobotVerification": "Vui lòng hoàn tất xác minh chống robot.",
     "emailNotVerified": "Vui lòng xác minh email trước khi đăng nhập.",
     "emailError": "Lỗi khi gửi email. Vui lòng thử lại sau",

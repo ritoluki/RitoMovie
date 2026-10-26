@@ -24,6 +24,7 @@ export interface EmailVerificationRequiredResponse {
   requiresEmailVerification: true;
   verificationEmailSent: boolean;
   email: string;
+  resendCooldownSeconds?: number;
 }
 
 export type RegisterResponse = AuthResponse | EmailVerificationRequiredResponse;

@@ -78,6 +78,7 @@
     "verificationEmailSentHint": "If this account needs verification, an email will arrive shortly. Check your inbox and spam folder.",
     "verificationInitialEmailFailed": "Your account was created, but the verification email could not be sent. Enter your email below to request another one.",
     "resendVerificationEmail": "Resend verification email",
+    "resendVerificationCountdown": "Resend in {{seconds}}s",
     "completeRobotVerification": "Please complete the robot verification.",
     "emailNotVerified": "Please verify your email before signing in.",
     "emailError": "Error sending email. Please try again later",

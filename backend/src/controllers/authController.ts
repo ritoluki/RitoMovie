@@ -67,6 +67,7 @@ export const register = asyncHandler(
           requiresEmailVerification: true,
           verificationEmailSent,
           email: user.email,
+          resendCooldownSeconds: verificationEmailSent ? 60 : 0,
         },
       });
       return;
@@ -577,9 +578,10 @@ export const resendVerification = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
     const t: TFunction = (req as unknown as { t: TFunction }).t || ((key: string) => key);
     const { email } = req.body;
-    const genericResponse = () => res.status(200).json({
+    const genericResponse = (retryAfterSeconds = 60) => res.status(200).json({
       success: true,
       message: getTranslation(t, 'auth.verificationEmailResendGeneric', 'If this account needs verification, an email will be sent shortly.'),
+      data: { retryAfterSeconds },
     });
 
     const user = await User.findOne({ email });
@@ -591,7 +593,10 @@ export const resendVerification = asyncHandler(
 
     const resendCooldownMs = 60 * 1000;
     if (user.emailVerificationSentAt && Date.now() - user.emailVerificationSentAt.getTime() < resendCooldownMs) {
-      genericResponse();
+      const retryAfterSeconds = Math.ceil(
+        (resendCooldownMs - (Date.now() - user.emailVerificationSentAt.getTime())) / 1000
+      );
+      genericResponse(retryAfterSeconds);
       return;
     }
 
