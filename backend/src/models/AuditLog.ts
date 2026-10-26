@@ -28,6 +28,8 @@ export interface IAuditLog extends Document {
     | 'ROLE_CHANGE'
     | 'BAN_USER'
     | 'UNBAN_USER'
+    | 'RESTRICT_COMMENTS'
+    | 'LIFT_COMMENT_RESTRICTION'
     | 'TEST_EMAIL'
     | 'INITIALIZE_SETTINGS';
   resource: 'USER' | 'MOVIE' | 'COMMENT' | 'RATING' | 'SETTINGS' | 'SETTING' | 'ADMIN_PANEL';
@@ -63,6 +65,8 @@ const AuditLogSchema = new Schema<IAuditLog>(
         'ROLE_CHANGE',
         'BAN_USER',
         'UNBAN_USER',
+        'RESTRICT_COMMENTS',
+        'LIFT_COMMENT_RESTRICTION',
         'TEST_EMAIL',
         'INITIALIZE_SETTINGS',
       ],

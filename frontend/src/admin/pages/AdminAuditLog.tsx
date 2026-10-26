@@ -52,6 +52,8 @@ const actionColors: Record<string, string> = {
   LOGOUT: 'bg-gray-500/20 text-gray-400',
   BAN: 'bg-orange-500/20 text-orange-400',
   UNBAN: 'bg-teal-500/20 text-teal-400',
+  RESTRICT_COMMENTS: 'bg-amber-500/20 text-amber-300',
+  LIFT_COMMENT_RESTRICTION: 'bg-teal-500/20 text-teal-300',
   APPROVE: 'bg-green-500/20 text-green-400',
   REJECT: 'bg-red-500/20 text-red-400',
   UNAUTHORIZED_ACCESS: 'bg-red-500/20 text-red-400',
@@ -315,6 +317,8 @@ const AdminAuditLog: React.FC = () => {
                 <option value="DELETE">Delete</option>
                 <option value="BAN">Ban</option>
                 <option value="UNBAN">Unban</option>
+                <option value="RESTRICT_COMMENTS">Restrict comments</option>
+                <option value="LIFT_COMMENT_RESTRICTION">Lift comment restriction</option>
                 <option value="APPROVE">Approve</option>
                 <option value="REJECT">Reject</option>
                 <option value="LOGIN">Login</option>

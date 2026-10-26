@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { userService } from '@/services/userService';
 import { WatchHistory } from '@/types';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 interface MovieState {
   watchlist: number[];
@@ -45,7 +46,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
       set({ watchlist });
       toast.success('Added to watchlist');
     } catch (error: any) {
-      toast.error(error || 'Failed to add to watchlist');
+      toast.error(getErrorMessage(error, 'Failed to add to watchlist'));
       throw error;
     }
   },
@@ -56,7 +57,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
       set({ watchlist });
       toast.success('Removed from watchlist');
     } catch (error: any) {
-      toast.error(error || 'Failed to remove from watchlist');
+      toast.error(getErrorMessage(error, 'Failed to remove from watchlist'));
       throw error;
     }
   },

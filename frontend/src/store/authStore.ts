@@ -3,7 +3,8 @@ import { persist } from 'zustand/middleware';
 import { User } from '@/types';
 import { authService } from '@/services/authService';
 import type { RegisterResponse } from '@/services/authService';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 interface AuthState {
   user: User | null;
@@ -53,7 +54,7 @@ export const useAuthStore = create<AuthState>()(
           toast.success('Login successful!');
         } catch (error: any) {
           set({ isLoading: false });
-          toast.error(error || 'Login failed');
+          toast.error(getErrorMessage(error, 'Login failed'));
           throw error;
         }
       },
@@ -81,7 +82,7 @@ export const useAuthStore = create<AuthState>()(
           return registration;
         } catch (error: any) {
           set({ isLoading: false });
-          toast.error(error || 'Registration failed');
+          toast.error(getErrorMessage(error, 'Registration failed'));
           throw error;
         }
       },
@@ -103,7 +104,7 @@ export const useAuthStore = create<AuthState>()(
           toast.success('Google login successful!');
         } catch (error: any) {
           set({ isLoading: false });
-          toast.error(error || 'Google login failed');
+          toast.error(getErrorMessage(error, 'Google login failed'));
           throw error;
         }
       },
@@ -128,7 +129,7 @@ export const useAuthStore = create<AuthState>()(
           set({ user });
           toast.success('Profile updated successfully');
         } catch (error: any) {
-          toast.error(error || 'Failed to update profile');
+          toast.error(getErrorMessage(error, 'Failed to update profile'));
           throw error;
         }
       },

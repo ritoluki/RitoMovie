@@ -41,6 +41,15 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
     query.isBanned = true;
   } else if (status === 'active') {
     query.isBanned = { $ne: true };
+  } else if (status === 'comment_restricted') {
+    query.isCommentRestricted = true;
+    query.$and = [{
+      $or: [
+        { commentRestrictionExpiresAt: { $exists: false } },
+        { commentRestrictionExpiresAt: null },
+        { commentRestrictionExpiresAt: { $gt: new Date() } },
+      ],
+    }];
   }
 
   // Build sort
@@ -239,6 +248,66 @@ export const unbanUser = asyncHandler(async (req: Request, res: Response) => {
     success: true,
     message: 'User unbanned successfully',
   });
+});
+
+/** Restrict a user's ability to create and edit comments. */
+export const restrictUserComments = asyncHandler(async (req: Request, res: Response) => {
+  const { reason, duration } = req.body as { reason: string; duration: string };
+  const user = await User.findById(req.params.id);
+
+  if (!user) throw new ApiError(404, 'User not found');
+  if (['super_admin', 'admin', 'moderator'].includes(user.role)) {
+    throw new ApiError(400, 'Cannot restrict comments for staff accounts');
+  }
+  if (user._id.toString() === req.user._id.toString()) {
+    throw new ApiError(400, 'Cannot restrict your own comments');
+  }
+
+  const durationMs: Record<string, number | null> = {
+    '1h': 60 * 60 * 1000,
+    '24h': 24 * 60 * 60 * 1000,
+    '7d': 7 * 24 * 60 * 60 * 1000,
+    '30d': 30 * 24 * 60 * 60 * 1000,
+    permanent: null,
+  };
+  if (!(duration in durationMs)) throw new ApiError(400, 'Invalid restriction duration');
+
+  user.isCommentRestricted = true;
+  user.commentRestrictionReason = reason.trim();
+  user.commentRestrictedAt = new Date();
+  user.commentRestrictedBy = req.user._id;
+  user.commentRestrictionExpiresAt = durationMs[duration] === null
+    ? undefined
+    : new Date(Date.now() + durationMs[duration]!);
+  await user.save();
+
+  await logAdminAction(req, 'RESTRICT_COMMENTS', 'USER', user._id.toString(), {
+    reason: user.commentRestrictionReason,
+    duration,
+    expiresAt: user.commentRestrictionExpiresAt,
+    targetEmail: user.email,
+  });
+
+  res.status(200).json({ success: true, message: 'Commenting restricted successfully' });
+});
+
+/** Remove an active or expired comment restriction. */
+export const liftUserCommentRestriction = asyncHandler(async (req: Request, res: Response) => {
+  const user = await User.findById(req.params.id);
+  if (!user) throw new ApiError(404, 'User not found');
+
+  user.isCommentRestricted = false;
+  user.commentRestrictionReason = undefined;
+  user.commentRestrictionExpiresAt = undefined;
+  user.commentRestrictedAt = undefined;
+  user.commentRestrictedBy = undefined;
+  await user.save();
+
+  await logAdminAction(req, 'LIFT_COMMENT_RESTRICTION', 'USER', user._id.toString(), {
+    targetEmail: user.email,
+  });
+
+  res.status(200).json({ success: true, message: 'Comment restriction lifted' });
 });
 
 /**

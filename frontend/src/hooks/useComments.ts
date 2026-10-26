@@ -10,7 +10,8 @@ import {
     CreateCommentData,
     UpdateCommentData,
 } from '../services/commentService';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 // Get comments for a movie
 export const useMovieComments = (
@@ -38,6 +39,7 @@ export const useCommentReplies = (commentId: string | null) => {
 // Create comment mutation
 export const useCreateComment = (movieId?: number) => {
     const queryClient = useQueryClient();
+    const { t } = useTranslation();
 
     return useMutation({
         mutationFn: (data: CreateCommentData) => createComment(data),
@@ -67,6 +69,17 @@ export const useCreateComment = (movieId?: number) => {
         },
         onError: (error: any) => {
             if (error?.code === 'EMAIL_VERIFICATION_REQUIRED') return;
+            if (error?.code === 'COMMENTING_RESTRICTED') {
+                const { reason, expiresAt } = error.response?.data || {};
+                const until = expiresAt ? new Date(expiresAt).toLocaleString() : undefined;
+                const message = [
+                    t('comments.restricted'),
+                    reason ? t('comments.restrictionReason', { reason }) : '',
+                    until ? t('comments.restrictionUntil', { until }) : '',
+                ].filter(Boolean).join(' ');
+                toast.error(message);
+                return;
+            }
             const message = error.response?.data?.message || 'Không thể đăng bình luận';
             toast.error(message);
         },
@@ -76,6 +89,7 @@ export const useCreateComment = (movieId?: number) => {
 // Update comment mutation
 export const useUpdateComment = () => {
     const queryClient = useQueryClient();
+    const { t } = useTranslation();
 
     return useMutation({
         mutationFn: ({
@@ -94,6 +108,17 @@ export const useUpdateComment = () => {
         },
         onError: (error: any) => {
             if (error?.code === 'EMAIL_VERIFICATION_REQUIRED') return;
+            if (error?.code === 'COMMENTING_RESTRICTED') {
+                const { reason, expiresAt } = error.response?.data || {};
+                const until = expiresAt ? new Date(expiresAt).toLocaleString() : undefined;
+                const message = [
+                    t('comments.restricted'),
+                    reason ? t('comments.restrictionReason', { reason }) : '',
+                    until ? t('comments.restrictionUntil', { until }) : '',
+                ].filter(Boolean).join(' ');
+                toast.error(message);
+                return;
+            }
             const message =
                 error.response?.data?.message || 'Không thể cập nhật bình luận';
             toast.error(message);

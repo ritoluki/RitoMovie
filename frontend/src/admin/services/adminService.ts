@@ -60,6 +60,12 @@ export const adminService = {
   
   unbanUser: (id: string) =>
     api.put<ApiResponse<void>>(`/admin/users/${id}/unban`),
+
+  restrictUserComments: (id: string, reason: string, duration: string) =>
+    api.put<ApiResponse<void>>(`/admin/users/${id}/comment-restriction`, { reason, duration }),
+
+  liftUserCommentRestriction: (id: string) =>
+    api.delete<ApiResponse<void>>(`/admin/users/${id}/comment-restriction`),
   
   deleteUser: (id: string) =>
     api.delete<ApiResponse<void>>(`/admin/users/${id}`),

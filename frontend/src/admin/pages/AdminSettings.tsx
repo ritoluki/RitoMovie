@@ -14,7 +14,8 @@ import {
   Zap,
   ExternalLink,
 } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
+import { getErrorMessage } from '@/utils/errorMessage';
 import AdminBreadcrumb from '../components/layout/AdminBreadcrumb';
 import { adminService } from '../services/adminService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -603,7 +604,7 @@ const AdminSettings: React.FC = () => {
       fetchSettings();
     },
     onError: (error: any) => {
-      toast.error(error || 'Failed to initialize settings');
+      toast.error(getErrorMessage(error, 'Failed to initialize settings'));
     },
   });
 

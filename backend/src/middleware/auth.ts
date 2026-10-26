@@ -109,6 +109,34 @@ export const requireVerifiedEmail = async (
   }
 };
 
+export const requireCanComment = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const user = req.user;
+  const expiresAt = user?.commentRestrictionExpiresAt
+    ? new Date(user.commentRestrictionExpiresAt)
+    : undefined;
+  const restrictionIsActive = user?.isCommentRestricted &&
+    (!expiresAt || expiresAt.getTime() > Date.now());
+
+  if (!restrictionIsActive) {
+    next();
+    return;
+  }
+
+  res.status(403).json({
+    success: false,
+    code: 'COMMENTING_RESTRICTED',
+    reason: user.commentRestrictionReason,
+    expiresAt: expiresAt?.toISOString(),
+    message: user.commentRestrictionReason
+      ? `Commenting is restricted: ${user.commentRestrictionReason}`
+      : 'Commenting is currently restricted for this account.',
+  });
+};
+
 // Grant access to specific roles
 export const authorize = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {

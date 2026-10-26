@@ -83,15 +83,20 @@ axiosInstance.interceptors.response.use(
       let errorMessage = data?.message || error.message || 'An error occurred';
 
       if (data?.code === 'MOVIE_UNAVAILABLE') {
-        return Promise.reject(Object.assign(new Error(errorMessage), { code: 'MOVIE_UNAVAILABLE' }));
+        return Promise.reject(Object.assign(new Error(errorMessage), {
+          code: 'MOVIE_UNAVAILABLE',
+          response: error.response,
+        }));
       }
 
       if (status === 403 && data?.code === 'EMAIL_VERIFICATION_REQUIRED') {
         window.dispatchEvent(new CustomEvent('email-verification-required', {
           detail: { email: data.email },
         }));
-        const verificationError = new Error(errorMessage) as Error & { code: string };
-        verificationError.code = 'EMAIL_VERIFICATION_REQUIRED';
+        const verificationError = Object.assign(new Error(errorMessage), {
+          code: 'EMAIL_VERIFICATION_REQUIRED',
+          response: error.response,
+        });
         return Promise.reject(verificationError);
       }
 
@@ -109,7 +114,10 @@ axiosInstance.interceptors.response.use(
         }
       }
 
-      return Promise.reject(errorMessage);
+      return Promise.reject(Object.assign(new Error(errorMessage), {
+        code: data?.code,
+        response: error.response,
+      }));
     } else if (error.request) {
       // Request made but no response (network error, server down, etc.)
       return Promise.reject('Network error. Please check your connection.');

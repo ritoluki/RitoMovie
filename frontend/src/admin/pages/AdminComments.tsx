@@ -16,7 +16,7 @@ import ActionDropdown from '../components/common/ActionDropdown';
 import AdminBreadcrumb from '../components/layout/AdminBreadcrumb';
 import type { AdminComment, CommentQueryParams } from '../types/admin';
 import { useEffect } from 'react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useAuthStore } from '@/store/authStore';
 
 interface ModerationRules {

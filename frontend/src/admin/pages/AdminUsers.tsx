@@ -1,6 +1,7 @@
 import { SelectField } from '@/components/ui/select-field';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   Pencil,
   Trash2,
@@ -8,6 +9,7 @@ import {
   CheckCircle,
   Eye,
   ShieldCheck,
+  MessageSquareOff,
 } from 'lucide-react';
 import adminService from '../services/adminService';
 import DataTable, { Column } from '../components/common/DataTable';
@@ -16,6 +18,7 @@ import ConfirmDialog from '../components/common/ConfirmDialog';
 import ActionDropdown from '../components/common/ActionDropdown';
 import AdminBreadcrumb from '../components/layout/AdminBreadcrumb';
 import { UserDetailsModal, EditUserModal, ChangeRoleModal } from '../components/modals';
+import CommentRestrictionModal from '../components/modals/CommentRestrictionModal';
 import type { AdminUser, UserQueryParams } from '../types/admin';
 
 const AdminUsers: React.FC = () => {
@@ -35,6 +38,7 @@ const AdminUsers: React.FC = () => {
   const [viewUserId, setViewUserId] = useState<string | null>(null);
   const [editUser, setEditUser] = useState<AdminUser | null>(null);
   const [changeRoleUser, setChangeRoleUser] = useState<AdminUser | null>(null);
+  const [restrictCommentsUser, setRestrictCommentsUser] = useState<AdminUser | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     title: string;
@@ -78,9 +82,20 @@ const AdminUsers: React.FC = () => {
     },
   });
 
+  const liftCommentRestrictionMutation = useMutation({
+    mutationFn: (id: string) => adminService.liftUserCommentRestriction(id),
+    onSuccess: () => {
+      toast.success('Comment restriction lifted');
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+    },
+    onError: (error: any) => toast.error(error?.response?.data?.message || 'Could not lift restriction'),
+  });
+
   // axios interceptor returns response.data directly, so structure is {success, data, pagination}
   const users = data?.data || [];
   const pagination = data?.pagination;
+  const hasActiveCommentRestriction = (user: AdminUser) =>
+    Boolean(user.isCommentRestricted && (!user.commentRestrictionExpiresAt || new Date(user.commentRestrictionExpiresAt).getTime() > Date.now()));
 
   // Handle actions
   const handleBanUser = (user: AdminUser) => {
@@ -163,15 +178,16 @@ const AdminUsers: React.FC = () => {
       key: 'status',
       header: 'Status',
       render: (user) => (
-        <span
-          className={`px-2 py-1 text-xs font-medium rounded-full ${
-            user.isBanned
-              ? 'bg-red-900/50 text-red-300'
-              : 'bg-green-900/50 text-green-300'
-          }`}
-        >
-          {user.isBanned ? 'Banned' : 'Active'}
-        </span>
+        <div className="flex flex-col items-start gap-1.5">
+          <span className={`px-2 py-1 text-xs font-medium rounded-full ${user.isBanned ? 'bg-red-900/50 text-red-300' : 'bg-green-900/50 text-green-300'}`}>
+            {user.isBanned ? 'Banned' : 'Active'}
+          </span>
+          {hasActiveCommentRestriction(user) && (
+            <span title={user.commentRestrictionReason || 'Commenting restricted'} className="px-2 py-1 text-xs font-medium rounded-full bg-amber-900/50 text-amber-200">
+              Comments restricted
+            </span>
+          )}
+        </div>
       ),
     },
     {
@@ -206,6 +222,19 @@ const AdminUsers: React.FC = () => {
               icon: <ShieldCheck className="h-5 w-5" />,
               onClick: () => setChangeRoleUser(user),
             },
+            ...(hasActiveCommentRestriction(user)
+              ? [{
+                  label: 'Allow comments',
+                  icon: <CheckCircle className="h-5 w-5" />,
+                  onClick: () => liftCommentRestrictionMutation.mutate(user._id),
+                  disabled: liftCommentRestrictionMutation.isPending,
+                }]
+              : [{
+                  label: 'Restrict comments',
+                  icon: <MessageSquareOff className="h-5 w-5" />,
+                  onClick: () => setRestrictCommentsUser(user),
+                  disabled: user.isBanned || ['super_admin', 'admin', 'moderator'].includes(user.role),
+                }]),
             ...(user.isBanned
               ? [
                   {
@@ -270,12 +299,13 @@ const AdminUsers: React.FC = () => {
 
         <SelectField
           value={queryParams.status || ''}
-          onValueChange={value => setQueryParams({ ...queryParams, status: value as 'active' | 'banned' | undefined, page: 1 })}
+          onValueChange={value => setQueryParams({ ...queryParams, status: value as UserQueryParams['status'], page: 1 })}
           className="w-full sm:w-44"
         >
           <option value="">All Status</option>
           <option value="active">Active</option>
           <option value="banned">Banned</option>
+          <option value="comment_restricted">Comments restricted</option>
         </SelectField>
       </div>
 
@@ -352,6 +382,11 @@ const AdminUsers: React.FC = () => {
         isOpen={!!changeRoleUser}
         onClose={() => setChangeRoleUser(null)}
         user={changeRoleUser}
+      />
+
+      <CommentRestrictionModal
+        user={restrictCommentsUser}
+        onClose={() => setRestrictCommentsUser(null)}
       />
     </div>
   );

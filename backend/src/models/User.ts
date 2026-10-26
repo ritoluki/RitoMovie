@@ -25,6 +25,12 @@ export interface IUser extends Document {
   banReason?: string;
   bannedAt?: Date;
   bannedBy?: mongoose.Types.ObjectId;
+  // Comment moderation restriction (does not block watching or account access)
+  isCommentRestricted: boolean;
+  commentRestrictionReason?: string;
+  commentRestrictionExpiresAt?: Date;
+  commentRestrictedAt?: Date;
+  commentRestrictedBy?: mongoose.Types.ObjectId;
   // Stats
   lastLoginAt?: Date;
   loginCount: number;
@@ -98,6 +104,24 @@ const UserSchema: Schema = new Schema(
       type: Date,
     },
     bannedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    isCommentRestricted: {
+      type: Boolean,
+      default: false,
+    },
+    commentRestrictionReason: {
+      type: String,
+      maxlength: 300,
+    },
+    commentRestrictionExpiresAt: {
+      type: Date,
+    },
+    commentRestrictedAt: {
+      type: Date,
+    },
+    commentRestrictedBy: {
       type: Schema.Types.ObjectId,
       ref: 'User',
     },

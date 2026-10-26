@@ -8,6 +8,10 @@ export interface AdminUser {
   isBanned?: boolean;
   banReason?: string;
   bannedAt?: string;
+  isCommentRestricted?: boolean;
+  commentRestrictionReason?: string;
+  commentRestrictionExpiresAt?: string;
+  commentRestrictedAt?: string;
   lastLoginAt?: string;
   loginCount?: number;
   createdAt: string;
@@ -241,7 +245,7 @@ export interface UserQueryParams {
   limit?: number;
   search?: string;
   role?: string;
-  status?: 'active' | 'banned';
+  status?: 'active' | 'banned' | 'comment_restricted';
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }

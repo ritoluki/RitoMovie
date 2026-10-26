@@ -1,7 +1,7 @@
 import { useGoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '@/store/authStore';
 import { useTranslation } from 'react-i18next';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { FcGoogle } from 'react-icons/fc';
 
 interface GoogleLoginButtonProps {

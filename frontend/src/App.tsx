@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster, toast } from 'react-hot-toast';
+import { Toaster, toast } from 'sonner';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -43,7 +43,7 @@ function EmailVerificationPromptListener() {
             type="button"
             className="mt-3 text-sm font-semibold text-primary-300 transition hover:text-primary-200"
             onClick={() => {
-              toast.dismiss(toastItem.id);
+              toast.dismiss(toastItem);
               const query = email ? `?email=${encodeURIComponent(email)}` : '';
               navigate(`/verify-email-pending${query}`);
             }}
@@ -72,11 +72,14 @@ function App() {
         <ApiStatus />
         <Toaster
           position="top-right"
+          theme="dark"
+          richColors
+          closeButton
+          visibleToasts={4}
+          duration={3500}
           toastOptions={{
-            duration: 3000,
             style: {
-              background: '#1f2937',
-              color: '#fff',
+              borderRadius: '14px',
             },
           }}
         />

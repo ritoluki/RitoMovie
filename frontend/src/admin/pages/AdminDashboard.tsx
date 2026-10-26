@@ -145,6 +145,7 @@ const AdminDashboard: React.FC = () => {
           data={charts?.topGenres?.slice(0, 8) || []}
           dataKey="count"
           xAxisKey="_id"
+          horizontal
           title="Top Genres"
           loading={chartsLoading}
         />

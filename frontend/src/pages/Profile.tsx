@@ -7,7 +7,7 @@ import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import AvatarSelector from '@/components/profile/AvatarSelector';
 import { FiUser, FiMail, FiLock, FiList, FiClock, FiStar, FiCamera } from 'react-icons/fi';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 
 const Profile = () => {

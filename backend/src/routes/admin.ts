@@ -1,5 +1,7 @@
 import { Router } from 'express';
+import { body } from 'express-validator';
 import { protect } from '../middleware/auth';
+import { validate } from '../middleware/validate';
 import {
   requireAdmin,
   requireAdminLevel,
@@ -43,6 +45,11 @@ router.put('/users/:id', requireAdminLevel, userController.updateUser);
 router.put('/users/:id/role', requireSuperAdmin, userController.changeUserRole); // Super admin only
 router.put('/users/:id/ban', requireAdminLevel, userController.banUser);
 router.put('/users/:id/unban', requireAdminLevel, userController.unbanUser);
+router.put('/users/:id/comment-restriction', requireAdminLevel, validate([
+  body('reason').trim().notEmpty().isLength({ max: 300 }),
+  body('duration').isIn(['1h', '24h', '7d', '30d', 'permanent']),
+]), userController.restrictUserComments);
+router.delete('/users/:id/comment-restriction', requireAdminLevel, userController.liftUserCommentRestriction);
 router.delete('/users/:id', requireSuperAdmin, userController.deleteUser); // Super admin only
 router.post('/users/bulk-action', requireAdminLevel, userController.bulkAction);
 
