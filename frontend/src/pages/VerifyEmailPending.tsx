@@ -120,9 +120,9 @@ const VerifyEmailPending = () => {
             </button>
           </form>
 
-          <Link to="/login" className="mt-6 flex items-center justify-center gap-2 text-sm text-gray-400 transition hover:text-white">
+          <Link to="/" className="mt-6 flex items-center justify-center gap-2 text-sm text-gray-400 transition hover:text-white">
             <ArrowLeft className="size-4" />
-            {t('auth.signIn')}
+            {t('header.home')}
           </Link>
         </div>
       </div>
