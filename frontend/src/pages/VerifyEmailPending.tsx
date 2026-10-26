@@ -19,7 +19,7 @@ const VerifyEmailPending = () => {
   const [hasSent, setHasSent] = useState(searchParams.get('sent') === '1');
   const [initialSendFailed] = useState(searchParams.get('sent') === '0');
   const [error, setError] = useState('');
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -76,6 +76,13 @@ const VerifyEmailPending = () => {
                 : initialSendFailed
                   ? t('auth.verificationInitialEmailFailed')
                   : t('auth.verifyEmailDescription')}
+            </p>
+            <p className="mt-3 text-xs leading-5 text-gray-500">
+              {t('auth.verifyEmailFeatureHint', {
+                defaultValue: i18n.language.startsWith('vi')
+                  ? 'Bạn chỉ cần xác minh email để bình luận và đánh giá phim. Bạn vẫn có thể xem phim bình thường.'
+                  : 'Email verification is only needed for commenting and rating. You can watch movies without it.',
+              })}
             </p>
           </div>
 

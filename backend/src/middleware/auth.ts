@@ -59,20 +59,6 @@ export const protect = async (
         return;
       }
 
-      const requireEmailVerification = await settingsService.getSetting<boolean>(
-        'require_email_verification',
-        false
-      );
-      if (requireEmailVerification && !req.user.isEmailVerified) {
-        res.status(403).json({
-          success: false,
-          code: 'EMAIL_NOT_VERIFIED',
-          email: req.user.email,
-          message: 'Please verify your email before using account features.',
-        });
-        return;
-      }
-
       next();
     } catch (error) {
       res.status(401).json({
@@ -81,6 +67,32 @@ export const protect = async (
       });
       return;
     }
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Apply only to actions that should be limited until the user verifies their email.
+export const requireVerifiedEmail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const requireEmailVerification = await settingsService.getSetting<boolean>(
+      'require_email_verification',
+      false
+    );
+    if (requireEmailVerification && !req.user?.isEmailVerified) {
+      res.status(403).json({
+        success: false,
+        code: 'EMAIL_VERIFICATION_REQUIRED',
+        email: req.user?.email,
+        message: 'Verify your email to comment or rate movies.',
+      });
+      return;
+    }
+    next();
   } catch (error) {
     next(error);
   }

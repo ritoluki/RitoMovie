@@ -68,17 +68,6 @@ export const useAuthStore = create<AuthState>()(
             turnstileToken,
           });
 
-          if ('requiresEmailVerification' in registration) {
-            sessionStorage.removeItem('auth-token');
-            sessionStorage.removeItem('auth-user');
-            set({ user: null, token: null, isAuthenticated: false, isLoading: false });
-            localStorage.removeItem('auth-storage');
-            toast.success(registration.verificationEmailSent
-              ? 'Check your email to verify your account.'
-              : 'Account created. Request a new verification email to continue.');
-            return registration;
-          }
-
           set({
             user: registration.user,
             token: registration.token,
@@ -86,7 +75,9 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
           });
 
-          toast.success('Registration successful!');
+          toast.success(registration.emailVerificationRequired
+            ? 'Account created. You can watch movies now; verify your email to comment or rate.'
+            : 'Registration successful!');
           return registration;
         } catch (error: any) {
           set({ isLoading: false });

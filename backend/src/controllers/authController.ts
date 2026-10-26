@@ -40,6 +40,7 @@ export const register = asyncHandler(
 
     // Check if email verification is required
     const requireVerification = await settingsService.getSetting<boolean>('require_email_verification', false);
+    let verificationEmailSent = false;
     
     if (requireVerification === true) {
       // Generate verification token
@@ -47,7 +48,7 @@ export const register = asyncHandler(
       user.emailVerificationSentAt = new Date();
       await user.save({ validateBeforeSave: false });
 
-      let verificationEmailSent = true;
+      verificationEmailSent = true;
       try {
         // Send verification email
         await emailService.sendVerificationEmail(user.email, verificationToken, user.name);
@@ -57,20 +58,6 @@ export const register = asyncHandler(
         user.emailVerificationSentAt = undefined;
         await user.save({ validateBeforeSave: false });
       }
-
-      res.status(201).json({
-        success: true,
-        message: verificationEmailSent
-          ? getTranslation(t, 'auth.verificationEmailSent', 'Verification email sent successfully')
-          : getTranslation(t, 'auth.emailError', 'Account created, but we could not send the verification email. Please request another one.'),
-        data: {
-          requiresEmailVerification: true,
-          verificationEmailSent,
-          email: user.email,
-          resendCooldownSeconds: verificationEmailSent ? 60 : 0,
-        },
-      });
-      return;
     }
 
     // Generate token
@@ -91,6 +78,10 @@ export const register = asyncHandler(
           createdAt: user.createdAt,
         },
         token,
+        ...(requireVerification && {
+          emailVerificationRequired: true,
+          verificationEmailSent,
+        }),
       },
     });
   }
@@ -123,16 +114,6 @@ export const login = asyncHandler(
       throw new ApiError(401, getTranslation(t, 'auth.invalidCredentials', 'Invalid email or password'));
     }
 
-    const requireVerification = await settingsService.getSetting<boolean>('require_email_verification', false);
-    if (requireVerification && !user.isEmailVerified) {
-      throw new ApiError(
-        403,
-        getTranslation(t, 'auth.emailNotVerified', 'Please verify your email before signing in.'),
-        'EMAIL_NOT_VERIFIED',
-        user.email
-      );
-    }
-
     // Check if user is banned
     if (user.isBanned) {
       const banReason = user.banReason || 'Violation of terms';
@@ -158,6 +139,7 @@ export const login = asyncHandler(
           role: user.role,
           avatar: user.avatar,
           watchlist: user.watchlist,
+          isEmailVerified: user.isEmailVerified,
           createdAt: user.createdAt,
         },
         token,
@@ -203,19 +185,9 @@ export const googleLogin = asyncHandler(
 
       const { email, name, picture } = googleUser;
       const googleEmailVerified = googleUser.email_verified === true;
-      const requireVerification = await settingsService.getSetting<boolean>('require_email_verification', false);
 
       // Check if user exists
       let user = await User.findOne({ email });
-
-      if (requireVerification && !googleEmailVerified && (!user || !user.isEmailVerified)) {
-        throw new ApiError(
-          403,
-          getTranslation(t, 'auth.emailNotVerified', 'Please verify your email before signing in.'),
-          'EMAIL_NOT_VERIFIED',
-          email
-        );
-      }
 
       if (!user) {
         // Create new user with Google info
@@ -259,6 +231,7 @@ export const googleLogin = asyncHandler(
             role: user.role,
             avatar: user.avatar,
             watchlist: user.watchlist,
+            isEmailVerified: user.isEmailVerified,
             createdAt: user.createdAt,
           },
           token,

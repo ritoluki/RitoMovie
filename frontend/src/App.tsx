@@ -1,5 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import AppRoutes from './routes';
 import ScrollToTop from './components/common/ScrollToTop';
 import ErrorBoundary from './components/common/ErrorBoundary';
@@ -20,12 +23,51 @@ const queryClient = new QueryClient({
   },
 });
 
+function EmailVerificationPromptListener() {
+  const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+
+  useEffect(() => {
+    const handleVerificationRequired = (event: Event) => {
+      const email = (event as CustomEvent<{ email?: string }>).detail?.email;
+      toast.custom((toastItem) => (
+        <div className="w-full max-w-sm rounded-xl border border-amber-500/30 bg-gray-900 p-4 text-white shadow-xl">
+          <p className="text-sm leading-5">
+            {t('auth.verifyToInteractPrompt', {
+              defaultValue: i18n.language.startsWith('vi')
+                ? 'Hãy xác minh email để bình luận hoặc đánh giá phim. Bạn vẫn có thể tiếp tục xem phim.'
+                : 'Verify your email to comment or rate movies. You can keep watching while you do.',
+            })}
+          </p>
+          <button
+            type="button"
+            className="mt-3 text-sm font-semibold text-primary-300 transition hover:text-primary-200"
+            onClick={() => {
+              toast.dismiss(toastItem.id);
+              const query = email ? `?email=${encodeURIComponent(email)}` : '';
+              navigate(`/verify-email-pending${query}`);
+            }}
+          >
+            {t('auth.verifyEmailAction', { defaultValue: i18n.language.startsWith('vi') ? 'Xác minh email' : 'Verify email' })}
+          </button>
+        </div>
+      ), { duration: 8000 });
+    };
+
+    window.addEventListener('email-verification-required', handleVerificationRequired);
+    return () => window.removeEventListener('email-verification-required', handleVerificationRequired);
+  }, [navigate, t]);
+
+  return null;
+}
+
 function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <DocumentHead />
         <ScrollToTop />
+        <EmailVerificationPromptListener />
         <AppRoutes />
         <ApiStatus />
         <Toaster

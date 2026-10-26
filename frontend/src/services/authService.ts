@@ -18,16 +18,10 @@ interface RegisterCredentials {
 interface AuthResponse {
   user: User;
   token: string;
+  emailVerificationRequired?: boolean;
+  verificationEmailSent?: boolean;
 }
-
-export interface EmailVerificationRequiredResponse {
-  requiresEmailVerification: true;
-  verificationEmailSent: boolean;
-  email: string;
-  resendCooldownSeconds?: number;
-}
-
-export type RegisterResponse = AuthResponse | EmailVerificationRequiredResponse;
+export type RegisterResponse = AuthResponse;
 
 export const authService = {
   // Register new user

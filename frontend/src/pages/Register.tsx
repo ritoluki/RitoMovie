@@ -76,14 +76,8 @@ const Register = () => {
 
     setIsLoading(true);
     try {
-      const result = await register(name, email, password, turnstileToken || undefined);
-      if ('requiresEmailVerification' in result) {
-        const sent = result.verificationEmailSent ? '1' : '0';
-        const wait = result.resendCooldownSeconds || 0;
-        navigate(`/verify-email-pending?email=${encodeURIComponent(result.email)}&sent=${sent}&wait=${wait}`, { replace: true });
-      } else {
-        navigate('/', { replace: true });
-      }
+      await register(name, email, password, turnstileToken || undefined);
+      navigate('/', { replace: true });
     } catch (error) {
       console.error('Registration error:', error);
     } finally {

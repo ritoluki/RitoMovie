@@ -80,12 +80,13 @@ axiosInstance.interceptors.response.use(
       // API error response structure: { success: false, message: '...', errors: [...] }
       let errorMessage = data?.message || error.message || 'An error occurred';
 
-      if (status === 403 && data?.code === 'EMAIL_NOT_VERIFIED') {
-        localStorage.removeItem('auth-storage');
-        sessionStorage.removeItem('auth-token');
-        sessionStorage.removeItem('auth-user');
-        const email = data.email ? `?email=${encodeURIComponent(data.email)}` : '';
-        window.location.href = `/verify-email-pending${email}`;
+      if (status === 403 && data?.code === 'EMAIL_VERIFICATION_REQUIRED') {
+        window.dispatchEvent(new CustomEvent('email-verification-required', {
+          detail: { email: data.email },
+        }));
+        const verificationError = new Error(errorMessage) as Error & { code: string };
+        verificationError.code = 'EMAIL_VERIFICATION_REQUIRED';
+        return Promise.reject(verificationError);
       }
 
       // If validation errors exist, append the first error detail

@@ -220,7 +220,7 @@ const defaultSettings: Record<
     {
       key: 'require_email_verification',
       label: 'Require Email Verification',
-      description: 'New accounts must verify email before signing in or using account-only features',
+      description: 'Unverified users can browse and watch, but must verify before commenting or rating',
       type: 'boolean',
       defaultValue: false,
     },
@@ -465,7 +465,7 @@ const defaultSettings: Record<
     {
       key: 'require_email_verification',
       label: 'Require Email Verification',
-      description: 'New accounts must verify email before signing in or using account-only features',
+      description: 'Unverified users can browse and watch, but must verify before commenting or rating',
       type: 'boolean',
       defaultValue: false,
     },

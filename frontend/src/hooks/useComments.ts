@@ -66,6 +66,7 @@ export const useCreateComment = (movieId?: number) => {
             toast.success('Bình luận đã được đăng!');
         },
         onError: (error: any) => {
+            if (error?.code === 'EMAIL_VERIFICATION_REQUIRED') return;
             const message = error.response?.data?.message || 'Không thể đăng bình luận';
             toast.error(message);
         },
@@ -92,6 +93,7 @@ export const useUpdateComment = () => {
             toast.success('Bình luận đã được cập nhật!');
         },
         onError: (error: any) => {
+            if (error?.code === 'EMAIL_VERIFICATION_REQUIRED') return;
             const message =
                 error.response?.data?.message || 'Không thể cập nhật bình luận';
             toast.error(message);
@@ -132,6 +134,7 @@ export const useLikeComment = () => {
             });
         },
         onError: (error: any) => {
+            if (error?.code === 'EMAIL_VERIFICATION_REQUIRED') return;
             const message = error.response?.data?.message || 'Không thể thích bình luận';
             toast.error(message);
         },
@@ -151,6 +154,7 @@ export const useDislikeComment = () => {
             });
         },
         onError: (error: any) => {
+            if (error?.code === 'EMAIL_VERIFICATION_REQUIRED') return;
             const message =
                 error.response?.data?.message || 'Không thể dislike bình luận';
             toast.error(message);

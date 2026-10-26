@@ -8,7 +8,7 @@ import {
     likeComment,
     dislikeComment,
 } from '../controllers/commentController';
-import { protect } from '../middleware/auth';
+import { protect, requireVerifiedEmail } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -17,10 +17,10 @@ router.get('/movie/:movieId', getMovieComments);
 router.get('/:commentId/replies', getCommentReplies);
 
 // Protected routes
-router.post('/', protect, createComment);
-router.put('/:id', protect, updateComment);
+router.post('/', protect, requireVerifiedEmail, createComment);
+router.put('/:id', protect, requireVerifiedEmail, updateComment);
 router.delete('/:id', protect, deleteComment);
-router.post('/:id/like', protect, likeComment);
-router.post('/:id/dislike', protect, dislikeComment);
+router.post('/:id/like', protect, requireVerifiedEmail, likeComment);
+router.post('/:id/dislike', protect, requireVerifiedEmail, dislikeComment);
 
 export default router;

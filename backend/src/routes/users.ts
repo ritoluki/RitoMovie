@@ -15,7 +15,7 @@ import {
   deleteRating,
   getAverageRating,
 } from '../controllers/userController';
-import { protect } from '../middleware/auth';
+import { protect, requireVerifiedEmail } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 
 const router = express.Router();
@@ -48,6 +48,7 @@ router.get('/ratings/:movieId/average', getAverageRating); // Public
 router.post(
   '/ratings',
   protect,
+  requireVerifiedEmail,
   validate([
     body('movieId').isInt().withMessage('Movie ID must be a number'),
     body('rating')
