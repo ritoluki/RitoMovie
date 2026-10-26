@@ -14,6 +14,7 @@ import {
 } from '../controllers/authController';
 import { protect } from '../middleware/auth';
 import { validate } from '../middleware/validate';
+import { verifyTurnstile } from '../middleware/turnstile';
 
 const router = express.Router();
 
@@ -94,15 +95,15 @@ const resetPasswordValidation = [
 ];
 
 // Routes
-router.post('/register', validate(registerValidation), register);
-router.post('/login', validate(loginValidation), login);
+router.post('/register', validate(registerValidation), verifyTurnstile, register);
+router.post('/login', validate(loginValidation), verifyTurnstile, login);
 router.post('/google', googleLogin);
 router.get('/me', protect, getMe);
 router.put('/profile', protect, validate(updateProfileValidation), updateProfile);
 router.put('/password', protect, validate(updatePasswordValidation), updatePassword);
 
 // Email verification and password reset
-router.post('/forgot-password', validate(forgotPasswordValidation), forgotPassword);
+router.post('/forgot-password', validate(forgotPasswordValidation), verifyTurnstile, forgotPassword);
 router.post('/reset-password', validate(resetPasswordValidation), resetPassword);
 router.get('/verify-email/:token', verifyEmail);
 router.post('/resend-verification', protect, resendVerification);

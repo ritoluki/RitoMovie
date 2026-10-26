@@ -10,9 +10,9 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   rememberMe: boolean;
-  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
+  login: (email: string, password: string, rememberMe?: boolean, turnstileToken?: string) => Promise<void>;
   loginWithGoogle: (credential: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, turnstileToken?: string) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
   setUser: (user: User) => void;
@@ -28,10 +28,10 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       rememberMe: true,
 
-      login: async (email: string, password: string, rememberMe: boolean = true) => {
+      login: async (email: string, password: string, rememberMe: boolean = true, turnstileToken?: string) => {
         try {
           set({ isLoading: true });
-          const { user, token } = await authService.login({ email, password, rememberMe });
+          const { user, token } = await authService.login({ email, password, rememberMe, turnstileToken });
 
           // Store based on rememberMe preference
           if (!rememberMe) {
@@ -57,13 +57,14 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      register: async (name: string, email: string, password: string) => {
+      register: async (name: string, email: string, password: string, turnstileToken?: string) => {
         try {
           set({ isLoading: true });
           const { user, token } = await authService.register({
             name,
             email,
             password,
+            turnstileToken,
           });
 
           set({
@@ -167,9 +168,9 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       partialize: (state) => ({
-        token: state.token,
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
+        token: state.rememberMe ? state.token : null,
+        user: state.rememberMe ? state.user : null,
+        isAuthenticated: state.rememberMe && state.isAuthenticated,
         rememberMe: state.rememberMe,
       }),
     }

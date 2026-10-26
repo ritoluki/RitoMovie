@@ -66,6 +66,7 @@
     "password": "Mật khẩu",
     "passwordPlaceholder": "••••••••",
     "rememberMe": "Ghi nhớ đăng nhập",
+    "rememberMeDescription": "Giữ trạng thái đăng nhập trên thiết bị này",
     "forgotPassword": "Quên mật khẩu?",
     "resetEmailSent": "Nếu email tồn tại, liên kết đặt lại mật khẩu đã được gửi",
     "passwordReset": "Đặt lại mật khẩu thành công",

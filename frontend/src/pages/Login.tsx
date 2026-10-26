@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Check } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
@@ -7,11 +8,15 @@ import GoogleLoginButton from '@/components/common/GoogleLoginButton';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { LogoLink } from '@/components/common/Logo';
+import TurnstileWidget from '@/components/common/TurnstileWidget';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true); // Default to true
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+  const [captchaError, setCaptchaError] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [isLoading, setIsLoading] = useState(false);
 
@@ -46,14 +51,20 @@ const Login = () => {
 
     if (!validate()) return;
 
+    if ((import.meta.env.PROD || import.meta.env.VITE_TURNSTILE_SITE_KEY?.trim()) && !turnstileToken) {
+      setCaptchaError('Please complete the robot verification.');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await login(email, password, rememberMe);
+      await login(email, password, rememberMe, turnstileToken || undefined);
       navigate(from, { replace: true });
     } catch (error) {
       console.error('Login error:', error);
     } finally {
       setIsLoading(false);
+      setTurnstileResetKey((key) => key + 1);
     }
   };
 
@@ -96,15 +107,22 @@ const Login = () => {
               autoComplete="current-password"
             />
 
-            <div className="flex items-center justify-between">
-              <label className="flex items-center">
+            <div className="flex items-start justify-between gap-4">
+              <label className="group flex cursor-pointer items-start gap-3">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 text-primary-600 bg-gray-700 border-gray-600 rounded focus:ring-primary-600"
+                  className="peer sr-only"
+                  aria-describedby="remember-me-description"
                 />
-                <span className="ml-2 text-sm text-gray-300">{t('auth.rememberMe')}</span>
+                <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-md border border-gray-500 bg-gray-900/70 text-white shadow-sm transition-all group-hover:border-primary-500 peer-checked:border-primary-500 peer-checked:bg-primary-600 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-primary-400 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-gray-800">
+                  {rememberMe && <Check className="size-3.5" strokeWidth={3} />}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-gray-200">{t('auth.rememberMe')}</span>
+                  <span id="remember-me-description" className="mt-0.5 block text-xs text-gray-500">{t('auth.rememberMeDescription')}</span>
+                </span>
               </label>
 
               <Link
@@ -113,6 +131,13 @@ const Login = () => {
               >
                 {t('auth.forgotPassword')}
               </Link>
+            </div>
+
+            <div>
+              <TurnstileWidget onTokenChange={setTurnstileToken} resetKey={turnstileResetKey} />
+              {captchaError && !turnstileToken && (
+                <p className="mt-1 text-xs text-red-300" role="alert">{captchaError}</p>
+              )}
             </div>
 
             <Button

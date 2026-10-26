@@ -66,6 +66,7 @@
     "password": "Password",
     "passwordPlaceholder": "••••••••",
     "rememberMe": "Remember me",
+    "rememberMeDescription": "Stay signed in on this device",
     "forgotPassword": "Forgot password?",
     "resetEmailSent": "If that email exists, a password reset link has been sent",
     "passwordReset": "Password reset successfully",

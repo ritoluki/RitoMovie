@@ -6,12 +6,16 @@ import Button from '@/components/common/Button';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { LogoLink } from '@/components/common/Logo';
+import TurnstileWidget from '@/components/common/TurnstileWidget';
 
 const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+  const [captchaError, setCaptchaError] = useState('');
   const [errors, setErrors] = useState<{
     name?: string;
     email?: string;
@@ -65,14 +69,20 @@ const Register = () => {
 
     if (!validate()) return;
 
+    if ((import.meta.env.PROD || import.meta.env.VITE_TURNSTILE_SITE_KEY?.trim()) && !turnstileToken) {
+      setCaptchaError('Please complete the robot verification.');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await register(name, email, password);
+      await register(name, email, password, turnstileToken || undefined);
       navigate('/', { replace: true });
     } catch (error) {
       console.error('Registration error:', error);
     } finally {
       setIsLoading(false);
+      setTurnstileResetKey((key) => key + 1);
     }
   };
 
@@ -151,6 +161,13 @@ const Register = () => {
                   {t('auth.privacyPolicy')}
                 </Link>
               </label>
+            </div>
+
+            <div>
+              <TurnstileWidget onTokenChange={setTurnstileToken} resetKey={turnstileResetKey} />
+              {captchaError && !turnstileToken && (
+                <p className="mt-1 text-xs text-red-300" role="alert">{captchaError}</p>
+              )}
             </div>
 
             <Button

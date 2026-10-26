@@ -5,12 +5,14 @@ interface LoginCredentials {
   email: string;
   password: string;
   rememberMe?: boolean;
+  turnstileToken?: string;
 }
 
 interface RegisterCredentials {
   name: string;
   email: string;
   password: string;
+  turnstileToken?: string;
 }
 
 interface AuthResponse {

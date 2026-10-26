@@ -3,20 +3,27 @@ import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 import Logo from '../components/common/Logo';
 import api from '../lib/axios';
+import TurnstileWidget from '../components/common/TurnstileWidget';
 
 const ForgotPassword: React.FC = () => {
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [error, setError] = useState('');
+    const [turnstileToken, setTurnstileToken] = useState('');
+    const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        if ((import.meta.env.PROD || import.meta.env.VITE_TURNSTILE_SITE_KEY?.trim()) && !turnstileToken) {
+            setError('Please complete the robot verification.');
+            return;
+        }
         setIsLoading(true);
 
         try {
-            const response = await api.post<{ success: boolean; message: string }>('/auth/forgot-password', { email });
+            const response = await api.post<{ success: boolean; message: string }>('/auth/forgot-password', { email, turnstileToken });
 
             if (response.success) {
                 setIsSuccess(true);
@@ -25,6 +32,7 @@ const ForgotPassword: React.FC = () => {
             setError(err.response?.data?.message || 'Failed to send reset email. Please try again.');
         } finally {
             setIsLoading(false);
+            setTurnstileResetKey((key) => key + 1);
         }
     }; if (isSuccess) {
         return (
@@ -99,6 +107,8 @@ const ForgotPassword: React.FC = () => {
                                 />
                             </div>
                         </div>
+
+                        <TurnstileWidget onTokenChange={setTurnstileToken} resetKey={turnstileResetKey} />
 
                         <button
                             type="submit"
