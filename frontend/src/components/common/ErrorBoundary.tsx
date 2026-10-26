@@ -1,5 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { isChunkLoadError } from '../../lib/chunkRecovery';
 import { LogoLink } from './Logo';
 
 interface Props {
@@ -41,6 +41,11 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   handleReset = () => {
+    // React.lazy caches rejected imports; retrying the render cannot reload them.
+    if (isChunkLoadError(this.state.error)) {
+      window.location.reload();
+      return;
+    }
     this.setState({
       hasError: false,
       error: null,
@@ -120,12 +125,12 @@ class ErrorBoundary extends Component<Props, State> {
               >
                 Thử lại
               </button>
-              <Link
-                to="/"
+              <a
+                href="/"
                 className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-full transition-colors"
               >
                 Về trang chủ
-              </Link>
+              </a>
             </div>
           </div>
         </div>

@@ -1,0 +1,4 @@
+# Revalidate HTML at every SPA URL, including /watch/... deep links.
+# Revalidation also avoids keeping HTML fallbacks cached at missing asset URLs.
+/*
+  Cache-Control: no-cache
