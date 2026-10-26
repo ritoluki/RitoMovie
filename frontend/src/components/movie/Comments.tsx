@@ -1,5 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
-import { AiOutlineLike, AiFillLike, AiOutlineDislike, AiFillDislike } from 'react-icons/ai';
+import { lazy, Suspense, useState, useRef, useEffect } from 'react';
+import { Clapperboard, ChevronDown, MessageCircle, Send, SmilePlus, Sparkles, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { useAuthStore } from '../../store/authStore';
 import Dropdown from '../common/Dropdown';
 import Pagination from '../common/Pagination';
@@ -13,6 +15,43 @@ import {
 import LoadingSpinner from '../common/LoadingSpinner';
 import { Comment } from '../../services/commentService';
 import { useTranslation } from 'react-i18next';
+
+const insertEmoji = (
+  value: string,
+  setValue: (value: string) => void,
+  textarea: React.RefObject<HTMLTextAreaElement>,
+  emoji: string,
+) => {
+  const element = textarea.current;
+  const start = element?.selectionStart ?? value.length;
+  const end = element?.selectionEnd ?? value.length;
+  setValue(`${value.slice(0, start)}${emoji}${value.slice(end)}`);
+  requestAnimationFrame(() => {
+    element?.focus();
+    element?.setSelectionRange(start + emoji.length, start + emoji.length);
+  });
+};
+
+const LazyEmojiPicker = lazy(() => import('emoji-picker-react'));
+
+const EmojiPickerButton = ({ onSelect, t }: { onSelect: (emoji: string) => void; t: any }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button type="button" aria-label={t('comments.openEmojiPicker')} title={t('comments.openEmojiPicker')}
+          className="grid size-8 shrink-0 place-items-center rounded-lg text-gray-400 transition hover:bg-white/10 hover:text-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400">
+          <SmilePlus className="size-[18px]" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent side="top" align="start" className="w-[min(352px,calc(100vw-2rem))] overflow-hidden p-0">
+        <Suspense fallback={<div className="grid h-[420px] place-items-center text-sm text-muted-foreground">{t('common.loading', 'Loading...')}</div>}>
+          {open && <LazyEmojiPicker theme="dark" emojiStyle="native" width="100%" height={420} searchPlaceholder={t('comments.searchEmoji')} onEmojiClick={item => { onSelect(item.emoji); setOpen(false); }} />}
+        </Suspense>
+      </PopoverContent>
+    </Popover>
+  );
+};
 
 interface CommentsProps {
   movieId: number;
@@ -94,7 +133,7 @@ const ReplyItem = ({
     : t(`comments.${timeAgo.key}`, { count: timeAgo.count });
 
   return (
-    <div className="flex gap-3">
+    <div className="flex gap-3 rounded-xl border border-white/[.06] bg-white/[.025] p-3 sm:p-4">
       {/* Reply Avatar */}
       <img
         src={
@@ -104,7 +143,7 @@ const ReplyItem = ({
           )}&background=dc2626&color=fff`
         }
         alt={reply.user.name}
-        className="w-10 h-10 rounded-full flex-shrink-0 object-cover"
+        className="size-10 rounded-full flex-shrink-0 object-cover ring-2 ring-white/10"
       />
 
       {/* Reply Content */}
@@ -113,8 +152,8 @@ const ReplyItem = ({
         <div className="flex items-center gap-2 mb-1">
           <h5 className="text-white font-semibold text-sm">{reply.user.name}</h5>
           {reply.isSpoiler && (
-            <span className="px-1.5 py-0.5 text-xs font-medium rounded bg-orange-900/50 text-orange-300 border border-orange-700">
-              ⚠️
+            <span className="inline-flex items-center rounded-full border border-orange-400/20 bg-orange-400/10 px-2 py-0.5 text-[11px] font-medium text-orange-200">
+              <Sparkles className="mr-1 size-3" />{t('comments.spoiler', 'Spoiler')}
             </span>
           )}
           <span className="text-gray-500 text-xs">{timeAgoText}</span>
@@ -144,11 +183,7 @@ const ReplyItem = ({
               : 'text-gray-400 hover:text-white'
               }`}
           >
-            {currentUserId && reply.likes.includes(currentUserId) ? (
-              <AiFillLike className="text-base" />
-            ) : (
-              <AiOutlineLike className="text-base" />
-            )}
+            <ThumbsUp className={`size-4 ${currentUserId && reply.likes.includes(currentUserId) ? 'fill-current' : ''}`} />
             {reply.likesCount > 0 && <span className="font-medium">{reply.likesCount}</span>}
           </button>
 
@@ -159,11 +194,7 @@ const ReplyItem = ({
               : 'text-gray-400 hover:text-white'
               }`}
           >
-            {currentUserId && reply.dislikes.includes(currentUserId) ? (
-              <AiFillDislike className="text-base" />
-            ) : (
-              <AiOutlineDislike className="text-base" />
-            )}
+            <ThumbsDown className={`size-4 ${currentUserId && reply.dislikes.includes(currentUserId) ? 'fill-current' : ''}`} />
             {reply.dislikesCount > 0 && <span className="font-medium">{reply.dislikesCount}</span>}
           </button>
 
@@ -174,7 +205,7 @@ const ReplyItem = ({
                 setReplyText(`@${reply.user.name} `);
               }
             }}
-            className="text-gray-400 hover:text-white transition-colors font-medium"
+            className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-gray-400 transition hover:bg-white/[.06] hover:text-white"
           >
             {t('comments.reply')}
           </button>
@@ -184,26 +215,26 @@ const ReplyItem = ({
         {isFormActive && user && (
           <div className="mt-3">
             <form onSubmit={handleReplySubmit}>
-              <div className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden">
+              <div className="overflow-hidden rounded-xl border border-white/10 bg-black/20 focus-within:border-red-400/50 focus-within:ring-2 focus-within:ring-red-500/10">
                 <textarea
                   ref={textareaRef}
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
                   placeholder={t('comments.writeComment')}
-                  className="w-full bg-transparent text-white p-3 resize-none focus:outline-none min-h-[60px] placeholder-gray-500 text-sm"
+                  className="min-h-[72px] w-full resize-y bg-transparent p-3 text-sm leading-relaxed text-white placeholder:text-gray-500 focus:outline-none"
                   maxLength={1000}
                 />
-                <div className="flex items-center justify-between px-3 py-2 bg-gray-800/80 border-t border-gray-700">
-                  <span className="text-xs text-gray-500">
+                <div className="flex items-center justify-between gap-3 border-t border-white/[.06] bg-white/[.025] px-3 py-2">
+                  <div className="flex items-center gap-2"><EmojiPickerButton onSelect={emoji => insertEmoji(replyText, setReplyText, textareaRef, emoji)} t={t} /><span className="text-xs tabular-nums text-gray-500">
                     {replyText.length} / 1000
-                  </span>
+                  </span></div>
                   <button
                     type="submit"
                     disabled={!replyText.trim()}
-                    className="bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-700 disabled:text-gray-500 text-gray-900 font-bold px-4 py-1.5 rounded transition-colors flex items-center gap-2 text-sm"
+                    className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-3.5 py-2 text-sm font-semibold text-white shadow-lg shadow-red-950/30 transition hover:bg-red-400 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
                   >
                     <span>{t('comments.submit')}</span>
-                    <span>▶</span>
+                    <Send className="size-3.5" />
                   </button>
                 </div>
               </div>
@@ -269,7 +300,8 @@ const CommentItem = ({
     : t(`comments.${timeAgo.key}`, { count: timeAgo.count });
 
   return (
-    <div className="flex gap-3 py-4">
+    <article className="group rounded-2xl border border-white/[.07] bg-gradient-to-br from-[#191b21] to-[#131419] p-4 shadow-lg shadow-black/10 transition hover:border-white/[.12] sm:p-5">
+      <div className="flex gap-3">
       {/* Avatar */}
       <img
         src={
@@ -279,31 +311,31 @@ const CommentItem = ({
           )}&background=dc2626&color=fff`
         }
         alt={comment.user.name}
-        className="w-12 h-12 rounded-full flex-shrink-0 object-cover"
+        className="size-10 rounded-full flex-shrink-0 object-cover ring-2 ring-red-500/25 sm:size-11"
       />
 
       {/* Content */}
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         {/* Header: Name + Badge + Time */}
-        <div className="flex items-center gap-2 mb-1">
-          <h4 className="text-white font-semibold text-base">{comment.user.name}</h4>
+        <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+          <h4 className="text-sm font-semibold text-white sm:text-base">{comment.user.name}</h4>
           {comment.isSpoiler && (
-            <span className="px-2 py-0.5 text-xs font-medium rounded bg-orange-900/50 text-orange-300 border border-orange-700">
-              ⚠️ {t('comments.spoiler', 'Spoiler')}
+            <span className="rounded-full border border-orange-400/20 bg-orange-400/10 px-2 py-0.5 text-[11px] font-medium text-orange-200">
+              {t('comments.spoiler', 'Spoiler')}
             </span>
           )}
-          <span className="text-gray-500 text-sm">{timeAgoText}</span>
+          <span className="text-xs text-gray-500">{timeAgoText}</span>
         </div>
 
         {/* Comment Text - with spoiler blur */}
-        <div className="mb-3">
-          <p className={`text-gray-300 text-base leading-relaxed ${comment.isSpoiler && !spoilerRevealed ? 'blur-sm select-none' : ''}`}>
+        <div className="mb-3 rounded-xl bg-black/15 px-3.5 py-3 sm:px-4">
+          <p className={`whitespace-pre-wrap break-words text-sm leading-7 text-gray-200 sm:text-[15px] ${comment.isSpoiler && !spoilerRevealed ? 'blur-sm select-none' : ''}`}>
             {comment.text}
           </p>
           {comment.isSpoiler && (
             <button
               onClick={() => setSpoilerRevealed(!spoilerRevealed)}
-              className="mt-1 text-orange-400 hover:text-orange-300 transition-colors text-sm"
+              className="mt-2 rounded-full border border-orange-400/20 bg-orange-400/10 px-3 py-1 text-xs font-medium text-orange-200 transition hover:bg-orange-400/20"
             >
               {spoilerRevealed ? t('comments.hideSpoiler', 'Hide') : t('comments.revealSpoiler', 'Show')}
             </button>
@@ -311,30 +343,22 @@ const CommentItem = ({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-4 text-sm">
+        <div className="flex flex-wrap items-center gap-2 text-xs sm:gap-2.5">
           <button
             onClick={() => onLike(comment._id)}
-            className={`flex items-center gap-1.5 transition-colors ${hasLiked ? 'text-white' : 'text-gray-400 hover:text-white'
+            className={`inline-flex items-center gap-1.5 rounded-full border border-white/[.07] px-3 py-1.5 transition ${hasLiked ? 'border-red-400/30 bg-red-400/10 text-red-300' : 'text-gray-400 hover:bg-white/[.06] hover:text-white'
               }`}
           >
-            {hasLiked ? (
-              <AiFillLike className="text-lg" />
-            ) : (
-              <AiOutlineLike className="text-lg" />
-            )}
+            <ThumbsUp className={`size-3.5 ${hasLiked ? 'fill-current' : ''}`} />
             {comment.likesCount > 0 && <span className="font-medium">{comment.likesCount}</span>}
           </button>
 
           <button
             onClick={() => onDislike(comment._id)}
-            className={`flex items-center gap-1.5 transition-colors ${hasDisliked ? 'text-white' : 'text-gray-400 hover:text-white'
+            className={`inline-flex items-center gap-1.5 rounded-full border border-white/[.07] px-3 py-1.5 transition ${hasDisliked ? 'border-blue-400/30 bg-blue-400/10 text-blue-300' : 'text-gray-400 hover:bg-white/[.06] hover:text-white'
               }`}
           >
-            {hasDisliked ? (
-              <AiFillDislike className="text-lg" />
-            ) : (
-              <AiOutlineDislike className="text-lg" />
-            )}
+            <ThumbsDown className={`size-3.5 ${hasDisliked ? 'fill-current' : ''}`} />
             {comment.dislikesCount > 0 && <span className="font-medium">{comment.dislikesCount}</span>}
           </button>
 
@@ -346,9 +370,9 @@ const CommentItem = ({
                 setReplyText(`@${comment.user.name} `);
               }
             }}
-            className="text-gray-400 hover:text-white transition-colors font-medium"
+            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-gray-400 transition hover:bg-white/[.06] hover:text-white"
           >
-            {t('comments.reply')}
+            <MessageCircle className="size-3.5" />{t('comments.reply')}
           </button>
         </div>
 
@@ -356,28 +380,29 @@ const CommentItem = ({
         {showReplyForm && user && (
           <div className="mt-4">
             <form onSubmit={handleReplySubmit}>
-              <div className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden">
+              <div className="overflow-hidden rounded-xl border border-white/10 bg-black/20 focus-within:border-red-400/50 focus-within:ring-2 focus-within:ring-red-500/10">
                 <textarea
                   ref={textareaRef}
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
                   placeholder={t('comments.writeComment')}
-                  className="w-full bg-transparent text-white p-4 resize-none focus:outline-none min-h-[80px] placeholder-gray-500"
+                  className="min-h-[82px] w-full resize-y bg-transparent p-3.5 text-sm leading-relaxed text-white placeholder:text-gray-500 focus:outline-none"
                   maxLength={1000}
                 />
-                <div className="flex items-center justify-between px-4 py-3 bg-gray-800/80 border-t border-gray-700">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-gray-500">
+                <div className="flex items-center justify-between gap-3 border-t border-white/[.06] bg-white/[.025] px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <EmojiPickerButton onSelect={emoji => insertEmoji(replyText, setReplyText, textareaRef, emoji)} t={t} />
+                    <span className="text-xs tabular-nums text-gray-500">
                       {replyText.length} / 1000
                     </span>
                   </div>
                   <button
                     type="submit"
                     disabled={!replyText.trim()}
-                    className="bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-700 disabled:text-gray-500 text-gray-900 font-bold px-6 py-2 rounded transition-colors flex items-center gap-2"
+                    className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-red-950/30 transition hover:bg-red-400 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
                   >
                     <span>{t('comments.submit')}</span>
-                    <span>▶</span>
+                    <Send className="size-3.5" />
                   </button>
                 </div>
               </div>
@@ -390,11 +415,9 @@ const CommentItem = ({
           <div className="mt-3">
             <button
               onClick={() => setShowReplies(!showReplies)}
-              className="flex items-center gap-2 text-yellow-500 text-sm font-medium hover:text-yellow-400 transition-colors"
+              className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-white/[.07] px-3 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-400/10 hover:text-red-200"
             >
-              <span className={`transform transition-transform ${showReplies ? 'rotate-90' : ''}`}>
-                ▶
-              </span>
+              <ChevronDown className={`size-3.5 transition-transform ${showReplies ? 'rotate-180' : ''}`} />
               {comment.repliesCount === 1
                 ? t('comments.oneReply')
                 : t('comments.replies', { count: comment.repliesCount })}
@@ -402,7 +425,7 @@ const CommentItem = ({
 
             {/* Display Replies */}
             {showReplies && replies.length > 0 && (
-              <div className="mt-4 space-y-4">
+              <div className="mt-3 space-y-3 border-l border-white/10 pl-3 sm:pl-4">
                 {replies.map((reply) => (
                   <ReplyItem
                     key={reply._id}
@@ -428,13 +451,15 @@ const CommentItem = ({
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </article>
   );
 };
 
 const Comments = ({ movieId }: CommentsProps) => {
   const { t } = useTranslation();
   const [commentText, setCommentText] = useState('');
+  const composerRef = useRef<HTMLTextAreaElement>(null);
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<'recent' | 'popular' | 'oldest'>('recent');
 
@@ -511,15 +536,18 @@ const Comments = ({ movieId }: CommentsProps) => {
   ];
 
   return (
-    <div className="space-y-6">
+    <section className="space-y-5 sm:space-y-6" aria-label={t('comments.title', 'Comments')}>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold text-white">
-          {t('comments.commentCount', { count: pagination?.total || 0 })}
-        </h3>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[.08] pb-4">
+        <div className="flex items-center gap-2.5">
+          <span className="grid size-9 place-items-center rounded-xl bg-red-500/10 text-red-300"><MessageCircle className="size-[18px]" /></span>
+          <h3 className="text-lg font-bold text-white sm:text-xl">
+            {t('comments.commentCount', { count: pagination?.total || 0 })}
+          </h3>
+        </div>
 
         {/* Sort Options */}
-        <div className="w-40">
+        <div className="w-40 rounded-xl border border-white/10 bg-white/[.04] p-1">
           <Dropdown
             value={sort}
             onChange={(value) => setSort(value as any)}
@@ -529,23 +557,20 @@ const Comments = ({ movieId }: CommentsProps) => {
       </div>
 
       {/* Comment Input */}
-      <div className="mb-6">
+      <div className="mb-1">
         {!user ? (
-          <div className="flex gap-3">
-            <div className="w-12 h-12 rounded-full bg-gray-700 flex-shrink-0" />
-            <div className="flex-1">
-              <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
-                <p className="text-gray-400 text-sm">
-                  <a href="/login" className="text-yellow-500 font-semibold hover:text-yellow-400">
-                    {t('header.signIn')}
-                  </a>{' '}
-                  {t('comments.signInToComment')}
-                </p>
-              </div>
-            </div>
+          <div className="flex items-center gap-3 rounded-2xl border border-white/[.08] bg-gradient-to-r from-[#191b21] to-[#15161b] p-4 sm:p-5">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-white/[.06] text-gray-400"><MessageCircle className="size-5" /></span>
+            <p className="flex-1 text-sm leading-relaxed text-gray-400">
+              <Link to="/login" className="font-semibold text-red-300 transition hover:text-red-200">
+                {t('header.signIn')}
+              </Link>{' '}
+              {t('comments.signInToComment')}
+            </p>
+            <Sparkles className="hidden size-5 text-amber-300/80 sm:block" />
           </div>
         ) : (
-          <div className="flex gap-3">
+          <div className="flex items-start gap-3 rounded-2xl border border-white/[.08] bg-gradient-to-br from-[#191b21] to-[#14151a] p-3.5 shadow-lg shadow-black/10 sm:gap-4 sm:p-5">
             {/* Avatar */}
             <img
               src={
@@ -555,32 +580,37 @@ const Comments = ({ movieId }: CommentsProps) => {
                 )}&background=dc2626&color=fff`
               }
               alt={user.name}
-              className="w-12 h-12 rounded-full flex-shrink-0 object-cover"
+              className="size-10 shrink-0 rounded-full object-cover ring-2 ring-red-500/25 sm:size-11"
             />
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="flex-1">
-              <div className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden">
+            <form onSubmit={handleSubmit} className="min-w-0 flex-1">
+              <div className="overflow-hidden rounded-xl border border-white/10 bg-black/20 transition focus-within:border-red-400/50 focus-within:ring-2 focus-within:ring-red-500/10">
+                <div className="flex items-center justify-end px-3.5 pt-3 sm:px-4">
+                  <span className="text-[11px] text-gray-600">{t('comments.emojiHint')}</span>
+                </div>
                 <textarea
+                  ref={composerRef}
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   placeholder={t('comments.writeComment')}
-                  className="w-full bg-transparent text-white p-4 resize-none focus:outline-none min-h-[100px] placeholder-gray-500"
+                  className="min-h-[100px] w-full resize-y bg-transparent px-3.5 py-3 text-sm leading-relaxed text-white placeholder:text-gray-500 focus:outline-none sm:px-4"
                   maxLength={1000}
                 />
-                <div className="flex items-center justify-between px-4 py-3 bg-gray-800/80 border-t border-gray-700">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-gray-500">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/[.06] bg-white/[.025] px-2.5 py-2 sm:px-3">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <EmojiPickerButton onSelect={emoji => insertEmoji(commentText, setCommentText, composerRef, emoji)} t={t} />
+                    <span className={`text-xs tabular-nums ${commentText.length > 900 ? 'text-amber-300' : 'text-gray-500'}`}>
                       {commentText.length} / 1000
                     </span>
                   </div>
                   <button
                     type="submit"
                     disabled={!commentText.trim() || createCommentMutation.isPending}
-                    className="bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-700 disabled:text-gray-500 text-gray-900 font-bold px-6 py-2 rounded transition-colors flex items-center gap-2"
+                    className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-red-950/30 transition hover:-translate-y-0.5 hover:bg-red-400 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:shadow-none"
                   >
                     <span>{createCommentMutation.isPending ? t('comments.submitting') : t('comments.submit')}</span>
-                    <span>▶</span>
+                    <Send className="size-3.5" />
                   </button>
                 </div>
               </div>
@@ -605,15 +635,15 @@ const Comments = ({ movieId }: CommentsProps) => {
       )}
 
       {!isLoading && !error && comments.length === 0 && (
-        <div className="py-12 text-center">
-          <p className="text-gray-400">
-            {t('comments.noComments')}. {t('comments.beFirstToComment')}
-          </p>
+        <div className="rounded-2xl border border-dashed border-white/10 bg-white/[.02] px-4 py-10 text-center sm:py-12">
+          <span className="mx-auto mb-3 grid size-12 place-items-center rounded-2xl bg-white/[.05] text-gray-400"><Clapperboard className="size-6" /></span>
+          <p className="font-medium text-gray-200">{t('comments.noComments')}</p>
+          <p className="mt-1 text-sm text-gray-500">{t('comments.beFirstToComment')}</p>
         </div>
       )}
 
       {!isLoading && !error && comments.length > 0 && (
-        <div>
+        <div className="space-y-3">
           {comments.map((comment) => (
             <CommentItem
               key={comment._id}
@@ -636,7 +666,7 @@ const Comments = ({ movieId }: CommentsProps) => {
           onPageChange={handlePageChange}
         />
       )}
-    </div>
+    </section>
   );
 };
 

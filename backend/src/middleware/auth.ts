@@ -59,6 +59,17 @@ export const protect = async (
         return;
       }
 
+      if (req.user.isBanned) {
+        res.status(401).json({
+          success: false,
+          code: 'ACCOUNT_BANNED',
+          message: req.user.banReason
+            ? `This account has been banned: ${req.user.banReason}`
+            : 'This account has been banned.',
+        });
+        return;
+      }
+
       next();
     } catch (error) {
       res.status(401).json({

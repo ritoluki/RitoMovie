@@ -83,8 +83,31 @@ export const checkRegistrationAllowed = async (
     next();
 };
 
+export const requireEnabledSetting = (key: string, message: string) => async (
+    _req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const enabled = await settingsService.getSetting<boolean>(key, true);
+        if (!enabled) {
+            res.status(403).json({
+                success: false,
+                code: 'FEATURE_DISABLED',
+                feature: key,
+                message,
+            });
+            return;
+        }
+        next();
+    } catch (error) {
+        next(error);
+    }
+};
+
 export default {
     checkMaintenanceMode,
     attachSettings,
     checkRegistrationAllowed,
+    requireEnabledSetting,
 };

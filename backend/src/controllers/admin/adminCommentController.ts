@@ -3,7 +3,25 @@ import asyncHandler from '../../utils/asyncHandler';
 import ApiError from '../../utils/ApiError';
 import Comment from '../../models/Comment';
 import Movie from '../../models/Movie';
+import SystemSetting from '../../models/SystemSetting';
+import settingsService from '../../services/settingsService';
 import { logAdminAction } from '../../middleware/adminAuth';
+
+const DEFAULT_MODERATION_RULES = {
+  autoApprove: true,
+  blacklistedWords: [] as string[],
+  maxCommentLength: 1000,
+  minCommentLength: 1,
+  spamThreshold: 3,
+  autoHideSpoilers: true,
+};
+
+const getRules = async () => {
+  const value = await settingsService.getSetting<Partial<typeof DEFAULT_MODERATION_RULES>>(
+    'moderation_rules', DEFAULT_MODERATION_RULES
+  );
+  return { ...DEFAULT_MODERATION_RULES, ...value };
+};
 
 /**
  * @desc    List all comments with pagination and filters
@@ -113,6 +131,10 @@ export const updateCommentStatus = asyncHandler(async (req: Request, res: Respon
   if (typeof isApproved === 'boolean') comment.isApproved = isApproved;
   if (typeof isSpoiler === 'boolean') comment.isSpoiler = isSpoiler;
   if (typeof isHidden === 'boolean') comment.isHidden = isHidden;
+  if (typeof isApproved === 'boolean' || typeof isHidden === 'boolean') {
+    comment.moderatedBy = req.user._id;
+    comment.moderatedAt = new Date();
+  }
 
   await comment.save();
 
@@ -182,25 +204,25 @@ export const bulkAction = asyncHandler(async (req: Request, res: Response) => {
     case 'approve':
       result = await Comment.updateMany(
         { _id: { $in: commentIds } },
-        { isApproved: true }
+        { isApproved: true, moderatedBy: req.user._id, moderatedAt: new Date() }
       );
       break;
     case 'reject':
       result = await Comment.updateMany(
         { _id: { $in: commentIds } },
-        { isApproved: false }
+        { isApproved: false, moderatedBy: req.user._id, moderatedAt: new Date() }
       );
       break;
     case 'hide':
       result = await Comment.updateMany(
         { _id: { $in: commentIds } },
-        { isHidden: true }
+        { isHidden: true, moderatedBy: req.user._id, moderatedAt: new Date() }
       );
       break;
     case 'unhide':
       result = await Comment.updateMany(
         { _id: { $in: commentIds } },
-        { isHidden: false }
+        { isHidden: false, moderatedBy: req.user._id, moderatedAt: new Date() }
       );
       break;
     case 'delete':
@@ -239,15 +261,7 @@ export const bulkAction = asyncHandler(async (req: Request, res: Response) => {
  * @access  Admin
  */
 export const getModerationRules = asyncHandler(async (req: Request, res: Response) => {
-  // TODO: Implement moderation rules from SystemSettings
-  const rules = {
-    autoApprove: false,
-    blacklistedWords: [],
-    maxCommentLength: 1000,
-    minCommentLength: 1,
-    spamThreshold: 3,
-    autoHideSpoilers: true,
-  };
+  const rules = await getRules();
 
   res.status(200).json({
     success: true,
@@ -261,9 +275,32 @@ export const getModerationRules = asyncHandler(async (req: Request, res: Respons
  * @access  Admin
  */
 export const updateModerationRules = asyncHandler(async (req: Request, res: Response) => {
-  const rules = req.body;
+  const body = req.body || {};
+  const current = await getRules();
+  const rules = { ...current };
+  if (typeof body.autoApprove === 'boolean') rules.autoApprove = body.autoApprove;
+  if (typeof body.autoHideSpoilers === 'boolean') rules.autoHideSpoilers = body.autoHideSpoilers;
+  if (body.blacklistedWords !== undefined) {
+    if (!Array.isArray(body.blacklistedWords) || body.blacklistedWords.length > 200 || body.blacklistedWords.some((word: unknown) => typeof word !== 'string' || word.trim().length > 80)) {
+      throw new ApiError(400, 'Blacklisted words must be a list of at most 200 words (80 characters each)');
+    }
+    rules.blacklistedWords = [...new Set((body.blacklistedWords as string[]).map(word => word.trim().toLocaleLowerCase()).filter(Boolean))];
+  }
+  for (const key of ['minCommentLength', 'maxCommentLength', 'spamThreshold'] as const) {
+    if (body[key] === undefined) continue;
+    const max = key === 'maxCommentLength' ? 1000 : key === 'minCommentLength' ? 1000 : 100;
+    const min = key === 'spamThreshold' ? 1 : 0;
+    if (!Number.isInteger(body[key]) || body[key] < min || body[key] > max) throw new ApiError(400, `Invalid ${key}`);
+    rules[key] = body[key];
+  }
+  if (rules.minCommentLength > rules.maxCommentLength) throw new ApiError(400, 'Minimum comment length cannot exceed maximum length');
 
-  // TODO: Save to SystemSettings
+  await SystemSetting.findOneAndUpdate(
+    { key: 'moderation_rules' },
+    { $set: { value: rules, type: 'json', category: 'user', description: 'Comment moderation rules', isPublic: false, isSecret: false, updatedBy: req.user._id } },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  );
+  await settingsService.refreshSettings();
   await logAdminAction(req, 'SETTINGS_CHANGE', 'SETTINGS', undefined, {
     type: 'moderation_rules',
     newRules: rules,

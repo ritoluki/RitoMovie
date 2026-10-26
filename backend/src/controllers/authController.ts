@@ -217,6 +217,12 @@ export const googleLogin = asyncHandler(
         }
       }
 
+      if (user.isBanned) {
+        throw new ApiError(403, user.banReason
+          ? `This account has been banned: ${user.banReason}`
+          : 'This account has been banned.');
+      }
+
       // Generate token (Google login always uses remember me = true)
       const token = user.getSignedJwtToken(true);
 

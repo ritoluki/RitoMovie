@@ -338,6 +338,7 @@ export const initializeSettings = asyncHandler(async (req: Request, res: Respons
     // User Management
     { key: 'allow_registration', value: true, category: 'user', description: 'Allow user registration', type: 'boolean', isPublic: true },
     { key: 'require_email_verification', value: false, category: 'user', description: 'Unverified users can browse and watch, but must verify before commenting or rating', type: 'boolean', isPublic: false },
+    { key: 'moderation_rules', value: { autoApprove: true, blacklistedWords: [], maxCommentLength: 1000, minCommentLength: 1, spamThreshold: 3, autoHideSpoilers: true }, category: 'user', description: 'Comment moderation rules', type: 'json', isPublic: false },
     { key: 'enable_comments', value: true, category: 'user', description: 'Enable comments', type: 'boolean', isPublic: true },
     { key: 'enable_ratings', value: true, category: 'user', description: 'Enable ratings', type: 'boolean', isPublic: true },
     { key: 'enable_watchlist', value: true, category: 'user', description: 'Enable watchlist', type: 'boolean', isPublic: true },

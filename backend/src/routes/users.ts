@@ -17,14 +17,17 @@ import {
 } from '../controllers/userController';
 import { protect, requireVerifiedEmail } from '../middleware/auth';
 import { validate } from '../middleware/validate';
+import { requireEnabledSetting } from '../middleware/settings';
 
 const router = express.Router();
+const watchlistEnabled = requireEnabledSetting('enable_watchlist', 'Watchlists are currently disabled.');
+const ratingsEnabled = requireEnabledSetting('enable_ratings', 'Ratings are currently disabled.');
 
 // Watchlist routes
-router.get('/watchlist', protect, getWatchlist);
-router.post('/watchlist/:movieId', protect, addToWatchlist);
+router.get('/watchlist', protect, watchlistEnabled, getWatchlist);
+router.post('/watchlist/:movieId', protect, watchlistEnabled, addToWatchlist);
 router.delete('/watchlist/:movieId', protect, removeFromWatchlist);
-router.get('/watchlist/:movieId/check', protect, checkWatchlist);
+router.get('/watchlist/:movieId/check', protect, watchlistEnabled, checkWatchlist);
 
 // Watch history routes
 router.get('/history', protect, getWatchHistory);
@@ -48,6 +51,7 @@ router.get('/ratings/:movieId/average', getAverageRating); // Public
 router.post(
   '/ratings',
   protect,
+  ratingsEnabled,
   requireVerifiedEmail,
   validate([
     body('movieId').isInt().withMessage('Movie ID must be a number'),

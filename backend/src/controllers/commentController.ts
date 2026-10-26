@@ -2,6 +2,16 @@ import { Request, Response } from 'express';
 import Comment from '../models/Comment';
 import asyncHandler from '../utils/asyncHandler';
 import ApiError from '../utils/ApiError';
+import settingsService from '../services/settingsService';
+
+const DEFAULT_MODERATION_RULES = {
+    autoApprove: true,
+    blacklistedWords: [] as string[],
+    maxCommentLength: 1000,
+    minCommentLength: 1,
+    spamThreshold: 3,
+    autoHideSpoilers: true,
+};
 
 // @desc    Get comments for a movie
 // @route   GET /api/comments/movie/:movieId
@@ -23,12 +33,15 @@ export const getMovieComments = asyncHandler(
             sortOption = { createdAt: 1 };
         }
 
-        // Get only parent comments (not replies)
-        const comments = await Comment.find({
+        // Only approved, visible comments are public. Apply the same policy to counts and replies.
+        const publicCommentFilter = {
             movie: parseInt(movieId),
             parentComment: null,
             isDeleted: false,
-        })
+            isApproved: true,
+            isHidden: { $ne: true },
+        };
+        const comments = await Comment.find(publicCommentFilter)
             .populate('user', 'name avatar email')
             .sort(sortOption)
             .skip(skip)
@@ -41,6 +54,8 @@ export const getMovieComments = asyncHandler(
                 const repliesCount = await Comment.countDocuments({
                     parentComment: comment._id,
                     isDeleted: false,
+                    isApproved: true,
+                    isHidden: { $ne: true },
                 });
 
                 return {
@@ -53,11 +68,7 @@ export const getMovieComments = asyncHandler(
         );
 
         // Get total count
-        const total = await Comment.countDocuments({
-            movie: parseInt(movieId),
-            parentComment: null,
-            isDeleted: false,
-        });
+        const total = await Comment.countDocuments(publicCommentFilter);
 
         res.status(200).json({
             success: true,
@@ -84,6 +95,8 @@ export const getCommentReplies = asyncHandler(
         const replies = await Comment.find({
             parentComment: commentId,
             isDeleted: false,
+            isApproved: true,
+            isHidden: { $ne: true },
         })
             .populate('user', 'name avatar email')
             .sort({ createdAt: 1 })
@@ -119,6 +132,26 @@ export const createComment = asyncHandler(
             throw new ApiError(400, 'Movie ID and text are required');
         }
 
+        const rules = {
+            ...DEFAULT_MODERATION_RULES,
+            ...(await settingsService.getSetting<Partial<typeof DEFAULT_MODERATION_RULES>>('moderation_rules', DEFAULT_MODERATION_RULES)),
+        };
+        const normalizedText = String(text).trim();
+        if (normalizedText.length < rules.minCommentLength || normalizedText.length > rules.maxCommentLength) {
+            throw new ApiError(400, `Comment must be between ${rules.minCommentLength} and ${rules.maxCommentLength} characters`);
+        }
+        const lowerText = normalizedText.toLocaleLowerCase();
+        const matchedWord = rules.blacklistedWords.find(word => word && lowerText.includes(word.toLocaleLowerCase()));
+        if (matchedWord) throw new ApiError(400, 'Your comment contains a word that is not allowed');
+
+        const duplicateCount = await Comment.countDocuments({
+            user: userId,
+            text: normalizedText,
+            createdAt: { $gte: new Date(Date.now() - 10 * 60 * 1000) },
+            isDeleted: false,
+        });
+        const spammed = duplicateCount >= rules.spamThreshold;
+
         // If it's a reply, validate parent comment exists
         if (parentComment) {
             const parent = await Comment.findById(parentComment);
@@ -130,10 +163,12 @@ export const createComment = asyncHandler(
         const comment = await Comment.create({
             user: userId,
             movie: parseInt(movie),
-            text: text.trim(),
+            text: normalizedText,
             rating: rating || null,
             isSpoiler: isSpoiler || false,
             parentComment: parentComment || null,
+            isApproved: rules.autoApprove,
+            isHidden: spammed || (Boolean(isSpoiler) && rules.autoHideSpoilers),
         });
 
         // Populate user info

@@ -74,8 +74,8 @@ router.delete('/comments/:id', requireModerator, commentController.deleteComment
 router.post('/comments/bulk-action', requireModerator, commentController.bulkAction);
 
 // Moderation rules (Admin level)
-router.get('/moderation/rules', requireAdminLevel, commentController.getModerationRules);
-router.put('/moderation/rules', requireAdminLevel, commentController.updateModerationRules);
+router.get('/moderation/rules', requireModerator, commentController.getModerationRules);
+router.put('/moderation/rules', requireModerator, commentController.updateModerationRules);
 
 // ==========================================
 // Report Management Routes

@@ -72,6 +72,8 @@ axiosInstance.interceptors.response.use(
           !currentPath.includes('/register')
         ) {
           localStorage.removeItem('auth-storage');
+          sessionStorage.removeItem('auth-token');
+          sessionStorage.removeItem('auth-user');
           window.location.href = '/login';
         }
       }

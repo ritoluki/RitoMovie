@@ -15,6 +15,7 @@ import {
 import { protect } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { verifyTurnstile } from '../middleware/turnstile';
+import { checkRegistrationAllowed } from '../middleware/settings';
 
 const router = express.Router();
 
@@ -105,7 +106,7 @@ const resetPasswordValidation = [
 ];
 
 // Routes
-router.post('/register', validate(registerValidation), verifyTurnstile, register);
+router.post('/register', checkRegistrationAllowed, validate(registerValidation), verifyTurnstile, register);
 router.post('/login', validate(loginValidation), verifyTurnstile, login);
 router.post('/google', googleLogin);
 router.get('/me', protect, getMe);

@@ -9,6 +9,7 @@ import {
     dislikeComment,
 } from '../controllers/commentController';
 import { protect, requireVerifiedEmail } from '../middleware/auth';
+import { requireEnabledSetting } from '../middleware/settings';
 
 const router = express.Router();
 
@@ -17,10 +18,12 @@ router.get('/movie/:movieId', getMovieComments);
 router.get('/:commentId/replies', getCommentReplies);
 
 // Protected routes
-router.post('/', protect, requireVerifiedEmail, createComment);
-router.put('/:id', protect, requireVerifiedEmail, updateComment);
+const commentsEnabled = requireEnabledSetting('enable_comments', 'Comments are currently disabled.');
+
+router.post('/', protect, commentsEnabled, requireVerifiedEmail, createComment);
+router.put('/:id', protect, commentsEnabled, requireVerifiedEmail, updateComment);
 router.delete('/:id', protect, deleteComment);
-router.post('/:id/like', protect, requireVerifiedEmail, likeComment);
-router.post('/:id/dislike', protect, requireVerifiedEmail, dislikeComment);
+router.post('/:id/like', protect, commentsEnabled, requireVerifiedEmail, likeComment);
+router.post('/:id/dislike', protect, commentsEnabled, requireVerifiedEmail, dislikeComment);
 
 export default router;
