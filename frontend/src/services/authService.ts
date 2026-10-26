@@ -20,10 +20,18 @@ interface AuthResponse {
   token: string;
 }
 
+export interface EmailVerificationRequiredResponse {
+  requiresEmailVerification: true;
+  verificationEmailSent: boolean;
+  email: string;
+}
+
+export type RegisterResponse = AuthResponse | EmailVerificationRequiredResponse;
+
 export const authService = {
   // Register new user
-  register: async (credentials: RegisterCredentials): Promise<AuthResponse> => {
-    const response = await axios.post<ApiResponse<AuthResponse>>(
+  register: async (credentials: RegisterCredentials): Promise<RegisterResponse> => {
+    const response = await axios.post<ApiResponse<RegisterResponse>>(
       '/auth/register',
       credentials
     );

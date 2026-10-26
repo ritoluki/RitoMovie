@@ -5,7 +5,8 @@ import { describeExternalApiError } from '../utils/externalApi';
 
 interface CustomError extends Error {
   statusCode?: number;
-  code?: number;
+  code?: number | string;
+  email?: string;
   keyValue?: Record<string, unknown>;
   errors?: Record<string, { message: string }>;
 }
@@ -117,6 +118,8 @@ const errorHandler = (
   res.status(error.statusCode || 500).json({
     success: false,
     message: finalMessage,
+    ...(err.code && { code: err.code }),
+    ...(err.email && { email: err.email }),
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 };

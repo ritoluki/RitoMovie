@@ -85,6 +85,16 @@ const forgotPasswordValidation = [
     .normalizeEmail(),
 ];
 
+const resendVerificationValidation = [
+  body('email')
+    .trim()
+    .notEmpty()
+    .withMessage('Email is required')
+    .isEmail()
+    .withMessage('Please provide a valid email')
+    .normalizeEmail(),
+];
+
 const resetPasswordValidation = [
   body('token').notEmpty().withMessage('Reset token is required'),
   body('newPassword')
@@ -106,7 +116,7 @@ router.put('/password', protect, validate(updatePasswordValidation), updatePassw
 router.post('/forgot-password', validate(forgotPasswordValidation), verifyTurnstile, forgotPassword);
 router.post('/reset-password', validate(resetPasswordValidation), resetPassword);
 router.get('/verify-email/:token', verifyEmail);
-router.post('/resend-verification', protect, resendVerification);
+router.post('/resend-verification', validate(resendVerificationValidation), verifyTurnstile, resendVerification);
 
 export default router;
 

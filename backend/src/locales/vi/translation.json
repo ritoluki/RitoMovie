@@ -19,6 +19,8 @@
     "emailVerified": "Xác minh email thành công",
     "alreadyVerified": "Email đã được xác minh",
     "verificationEmailSent": "Email xác minh đã được gửi thành công",
+    "emailNotVerified": "Vui lòng xác minh email trước khi đăng nhập",
+    "verificationEmailResendGeneric": "Nếu tài khoản cần xác minh, email sẽ được gửi trong ít phút. Nếu vừa yêu cầu, hãy đợi khoảng một phút trước khi gửi lại.",
     "emailError": "Lỗi khi gửi email. Vui lòng thử lại sau"
   },
   "validation": {

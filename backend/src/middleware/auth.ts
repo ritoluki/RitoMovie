@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
+import settingsService from '../services/settingsService';
 
 interface JwtPayload {
   id: string;
@@ -54,6 +55,20 @@ export const protect = async (
         res.status(401).json({
           success: false,
           message: 'User not found',
+        });
+        return;
+      }
+
+      const requireEmailVerification = await settingsService.getSetting<boolean>(
+        'require_email_verification',
+        false
+      );
+      if (requireEmailVerification && !req.user.isEmailVerified) {
+        res.status(403).json({
+          success: false,
+          code: 'EMAIL_NOT_VERIFIED',
+          email: req.user.email,
+          message: 'Please verify your email before using account features.',
         });
         return;
       }

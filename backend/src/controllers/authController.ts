@@ -44,15 +44,32 @@ export const register = asyncHandler(
     if (requireVerification === true) {
       // Generate verification token
       const verificationToken = user.getEmailVerificationToken();
+      user.emailVerificationSentAt = new Date();
       await user.save({ validateBeforeSave: false });
 
+      let verificationEmailSent = true;
       try {
         // Send verification email
         await emailService.sendVerificationEmail(user.email, verificationToken, user.name);
       } catch (error) {
         console.error('Error sending verification email:', error);
-        // Don't fail registration if email fails
+        verificationEmailSent = false;
+        user.emailVerificationSentAt = undefined;
+        await user.save({ validateBeforeSave: false });
       }
+
+      res.status(201).json({
+        success: true,
+        message: verificationEmailSent
+          ? getTranslation(t, 'auth.verificationEmailSent', 'Verification email sent successfully')
+          : getTranslation(t, 'auth.emailError', 'Account created, but we could not send the verification email. Please request another one.'),
+        data: {
+          requiresEmailVerification: true,
+          verificationEmailSent,
+          email: user.email,
+        },
+      });
+      return;
     }
 
     // Generate token
@@ -103,6 +120,16 @@ export const login = asyncHandler(
 
     if (!isMatch) {
       throw new ApiError(401, getTranslation(t, 'auth.invalidCredentials', 'Invalid email or password'));
+    }
+
+    const requireVerification = await settingsService.getSetting<boolean>('require_email_verification', false);
+    if (requireVerification && !user.isEmailVerified) {
+      throw new ApiError(
+        403,
+        getTranslation(t, 'auth.emailNotVerified', 'Please verify your email before signing in.'),
+        'EMAIL_NOT_VERIFIED',
+        user.email
+      );
     }
 
     // Check if user is banned
@@ -162,16 +189,32 @@ export const googleLogin = asyncHandler(
         throw new ApiError(401, 'Invalid Google token');
       }
 
-      const googleUser = await response.json();
+      const googleUser = await response.json() as {
+        email?: string;
+        name?: string;
+        picture?: string;
+        email_verified?: boolean;
+      };
 
-      if (!googleUser || !(googleUser as any).email) {
+      if (!googleUser || !googleUser.email) {
         throw new ApiError(401, 'Invalid Google token');
       }
 
-      const { email, name, picture } = googleUser as { email: string; name: string; picture: string };
+      const { email, name, picture } = googleUser;
+      const googleEmailVerified = googleUser.email_verified === true;
+      const requireVerification = await settingsService.getSetting<boolean>('require_email_verification', false);
 
       // Check if user exists
       let user = await User.findOne({ email });
+
+      if (requireVerification && !googleEmailVerified && (!user || !user.isEmailVerified)) {
+        throw new ApiError(
+          403,
+          getTranslation(t, 'auth.emailNotVerified', 'Please verify your email before signing in.'),
+          'EMAIL_NOT_VERIFIED',
+          email
+        );
+      }
 
       if (!user) {
         // Create new user with Google info
@@ -181,11 +224,24 @@ export const googleLogin = asyncHandler(
           avatar: picture || '',
           password: Math.random().toString(36).slice(-8) + 'Aa1!', // Random secure password
           role: 'user',
+          isEmailVerified: googleEmailVerified,
         });
-      } else if (picture && !user.avatar) {
-        // Update avatar if user doesn't have one
-        user.avatar = picture;
-        await user.save();
+      } else {
+        let userChanged = false;
+        if (picture && !user.avatar) {
+          user.avatar = picture;
+          userChanged = true;
+        }
+        if (googleEmailVerified && !user.isEmailVerified) {
+          user.isEmailVerified = true;
+          user.emailVerificationToken = undefined;
+          user.emailVerificationExpire = undefined;
+          user.emailVerificationSentAt = undefined;
+          userChanged = true;
+        }
+        if (userChanged) {
+          await user.save();
+        }
       }
 
       // Generate token (Google login always uses remember me = true)
@@ -209,6 +265,7 @@ export const googleLogin = asyncHandler(
       });
     } catch (error) {
       console.error('Google login error:', error);
+      if (error instanceof ApiError) throw error;
       throw new ApiError(401, 'Google authentication failed');
     }
   }
@@ -248,15 +305,62 @@ export const updateProfile = asyncHandler(
         delete fieldsToUpdate[key as keyof typeof fieldsToUpdate]
     );
 
-    const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
-      new: true,
-      runValidators: true,
-    });
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      throw new ApiError(404, getTranslation(t, 'user.notFound', 'User not found'));
+    }
+
+    const emailChanged = Boolean(fieldsToUpdate.email && fieldsToUpdate.email !== user.email);
+    if (fieldsToUpdate.name !== undefined) user.name = fieldsToUpdate.name;
+    if (fieldsToUpdate.avatar !== undefined) user.avatar = fieldsToUpdate.avatar;
+
+    const requireVerification = emailChanged
+      ? await settingsService.getSetting<boolean>('require_email_verification', false)
+      : false;
+    let verificationToken: string | undefined;
+    if (emailChanged) {
+      user.email = fieldsToUpdate.email!;
+      user.isEmailVerified = false;
+      user.emailVerificationToken = undefined;
+      user.emailVerificationExpire = undefined;
+      user.emailVerificationSentAt = undefined;
+      if (requireVerification) {
+        verificationToken = user.getEmailVerificationToken();
+        user.emailVerificationSentAt = new Date();
+      }
+    }
+
+    await user.save();
+
+    let verificationEmailSent = false;
+    if (emailChanged && requireVerification) {
+      try {
+        await emailService.sendVerificationEmail(
+          user.email,
+          verificationToken!,
+          user.name
+        );
+        verificationEmailSent = true;
+      } catch (error) {
+        console.error('Error sending changed-email verification:', error);
+        user.emailVerificationSentAt = undefined;
+        await user.save({ validateBeforeSave: false });
+      }
+    }
+
+    const safeUser = user.toObject();
+    delete safeUser.emailVerificationToken;
+    delete safeUser.emailVerificationExpire;
+    delete safeUser.emailVerificationSentAt;
+    delete safeUser.resetPasswordToken;
+    delete safeUser.resetPasswordExpire;
 
     res.status(200).json({
       success: true,
-      message: getTranslation(t, 'auth.profileUpdated', 'Profile updated successfully'),
-      data: user,
+      message: emailChanged && requireVerification
+        ? getTranslation(t, verificationEmailSent ? 'auth.verificationEmailSent' : 'auth.emailError', 'Profile updated. Verify the new email address before continuing.')
+        : getTranslation(t, 'auth.profileUpdated', 'Profile updated successfully'),
+      data: safeUser,
     });
   }
 );
@@ -376,6 +480,10 @@ export const resetPassword = asyncHandler(
     user.password = newPassword;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
+    user.isEmailVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpire = undefined;
+    user.emailVerificationSentAt = undefined;
     await user.save();
 
     // Generate JWT token
@@ -429,6 +537,7 @@ export const verifyEmail = asyncHandler(
     user.isEmailVerified = true;
     user.emailVerificationToken = undefined;
     user.emailVerificationExpire = undefined;
+    user.emailVerificationSentAt = undefined;
     await user.save();
 
     // Send welcome email
@@ -467,35 +576,42 @@ export const verifyEmail = asyncHandler(
 export const resendVerification = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
     const t: TFunction = (req as unknown as { t: TFunction }).t || ((key: string) => key);
+    const { email } = req.body;
+    const genericResponse = () => res.status(200).json({
+      success: true,
+      message: getTranslation(t, 'auth.verificationEmailResendGeneric', 'If this account needs verification, an email will be sent shortly.'),
+    });
 
-    const user = await User.findById(req.user.id);
+    const user = await User.findOne({ email });
 
-    if (!user) {
-      throw new ApiError(404, getTranslation(t, 'user.notFound', 'User not found'));
+    if (!user || user.isEmailVerified) {
+      genericResponse();
+      return;
     }
 
-    if (user.isEmailVerified) {
-      throw new ApiError(400, getTranslation(t, 'auth.alreadyVerified', 'Email is already verified'));
+    const resendCooldownMs = 60 * 1000;
+    if (user.emailVerificationSentAt && Date.now() - user.emailVerificationSentAt.getTime() < resendCooldownMs) {
+      genericResponse();
+      return;
     }
 
     // Generate new verification token
     const verificationToken = user.getEmailVerificationToken();
+    user.emailVerificationSentAt = new Date();
     await user.save({ validateBeforeSave: false });
 
     try {
       // Send verification email
       await emailService.sendVerificationEmail(user.email, verificationToken, user.name);
 
-      res.status(200).json({
-        success: true,
-        message: getTranslation(t, 'auth.verificationEmailSent', 'Verification email sent successfully'),
-      });
+      genericResponse();
     } catch (error) {
       console.error('Error sending verification email:', error);
       
       // Clear verification token on error
       user.emailVerificationToken = undefined;
       user.emailVerificationExpire = undefined;
+      user.emailVerificationSentAt = undefined;
       await user.save({ validateBeforeSave: false });
 
       throw new ApiError(500, getTranslation(t, 'auth.emailError', 'Error sending email. Please try again later'));

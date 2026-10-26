@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Mail, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
+import { CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
 import Logo from '../components/common/Logo';
 import api from '../lib/axios';
 import { useAuthStore } from '../store/authStore';
@@ -8,14 +8,12 @@ import { useAuthStore } from '../store/authStore';
 const VerifyEmail: React.FC = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
   const requestedToken = useRef<string>();
   const redirectTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
-  const [isResending, setIsResending] = useState(false);
 
   useEffect(() => {
     if (token && requestedToken.current !== token) {
@@ -69,27 +67,6 @@ const VerifyEmail: React.FC = () => {
       );
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleResendVerification = async () => {
-    setIsResending(true);
-    setError('');
-
-    try {
-      const response = await api.post<{ success: boolean; message: string }>(
-        '/auth/resend-verification'
-      );
-
-      if (response.success) {
-        alert('Verification email sent! Please check your inbox.');
-      }
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message || 'Failed to resend verification email.'
-      );
-    } finally {
-      setIsResending(false);
     }
   };
 
@@ -187,49 +164,20 @@ const VerifyEmail: React.FC = () => {
               request a new verification email.
             </p>
 
-            {user && !user.isEmailVerified ? (
-              <div className="space-y-3">
-                <button
-                  onClick={handleResendVerification}
-                  disabled={isResending}
-                  className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {isResending ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <Mail className="w-5 h-5" />
-                      Resend Verification Email
-                    </>
-                  )}
-                </button>
-
-                <Link
-                  to="/"
-                  className="block text-center text-gray-400 hover:text-white transition-colors py-2"
-                >
-                  Go to Home
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <Link
-                  to="/login"
-                  className="block w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-lg font-medium transition-colors text-center"
-                >
-                  Go to Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="block text-center text-gray-400 hover:text-white transition-colors py-2"
-                >
-                  Create New Account
-                </Link>
-              </div>
-            )}
+            <div className="space-y-3">
+              <Link
+                to="/verify-email-pending"
+                className="block w-full rounded-lg bg-primary py-3 text-center font-medium text-white transition-colors hover:bg-primary/90"
+              >
+                Request a new verification email
+              </Link>
+              <Link to="/login" className="block py-2 text-center text-gray-400 transition-colors hover:text-white">
+                Go to Login
+              </Link>
+              <Link to="/register" className="block py-2 text-center text-gray-400 transition-colors hover:text-white">
+                Create New Account
+              </Link>
+            </div>
           </div>
         </div>
       </div>

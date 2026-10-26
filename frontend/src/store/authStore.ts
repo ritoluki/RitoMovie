@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User } from '@/types';
 import { authService } from '@/services/authService';
+import type { RegisterResponse } from '@/services/authService';
 import toast from 'react-hot-toast';
 
 interface AuthState {
@@ -12,7 +13,7 @@ interface AuthState {
   rememberMe: boolean;
   login: (email: string, password: string, rememberMe?: boolean, turnstileToken?: string) => Promise<void>;
   loginWithGoogle: (credential: string) => Promise<void>;
-  register: (name: string, email: string, password: string, turnstileToken?: string) => Promise<void>;
+  register: (name: string, email: string, password: string, turnstileToken?: string) => Promise<RegisterResponse>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
   setUser: (user: User) => void;
@@ -60,21 +61,33 @@ export const useAuthStore = create<AuthState>()(
       register: async (name: string, email: string, password: string, turnstileToken?: string) => {
         try {
           set({ isLoading: true });
-          const { user, token } = await authService.register({
+          const registration = await authService.register({
             name,
             email,
             password,
             turnstileToken,
           });
 
+          if ('requiresEmailVerification' in registration) {
+            sessionStorage.removeItem('auth-token');
+            sessionStorage.removeItem('auth-user');
+            set({ user: null, token: null, isAuthenticated: false, isLoading: false });
+            localStorage.removeItem('auth-storage');
+            toast.success(registration.verificationEmailSent
+              ? 'Check your email to verify your account.'
+              : 'Account created. Request a new verification email to continue.');
+            return registration;
+          }
+
           set({
-            user,
-            token,
+            user: registration.user,
+            token: registration.token,
             isAuthenticated: true,
             isLoading: false,
           });
 
           toast.success('Registration successful!');
+          return registration;
         } catch (error: any) {
           set({ isLoading: false });
           toast.error(error || 'Registration failed');

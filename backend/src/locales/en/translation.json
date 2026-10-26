@@ -19,6 +19,8 @@
     "emailVerified": "Email verified successfully",
     "alreadyVerified": "Email is already verified",
     "verificationEmailSent": "Verification email sent successfully",
+    "emailNotVerified": "Please verify your email before signing in.",
+    "verificationEmailResendGeneric": "If this account needs verification, an email will be sent shortly. If you just requested one, wait about a minute before trying again.",
     "emailError": "Error sending email. Please try again later"
   },
   "validation": {

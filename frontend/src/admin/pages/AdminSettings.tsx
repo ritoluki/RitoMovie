@@ -220,7 +220,7 @@ const defaultSettings: Record<
     {
       key: 'require_email_verification',
       label: 'Require Email Verification',
-      description: 'Users must verify email before accessing',
+      description: 'New accounts must verify email before signing in or using account-only features',
       type: 'boolean',
       defaultValue: false,
     },
@@ -465,7 +465,7 @@ const defaultSettings: Record<
     {
       key: 'require_email_verification',
       label: 'Require Email Verification',
-      description: 'Users must verify email after registration',
+      description: 'New accounts must verify email before signing in or using account-only features',
       type: 'boolean',
       defaultValue: false,
     },

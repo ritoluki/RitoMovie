@@ -188,20 +188,12 @@ const Profile = () => {
                         )}
                       </div>
                       {!user?.isEmailVerified && (
-                        <button
-                          onClick={async () => {
-                            try {
-                              const api = (await import('@/lib/axios')).default;
-                              await api.post('/auth/resend-verification');
-                              toast.success('Verification email sent! Please check your inbox.');
-                            } catch (error: any) {
-                              toast.error(error.response?.data?.message || 'Failed to send verification email');
-                            }
-                          }}
+                        <Link
+                          to={`/verify-email-pending?email=${encodeURIComponent(user.email)}`}
                           className="mt-1 text-xs text-primary-500 hover:text-primary-400 underline"
                         >
                           Resend verification email
-                        </button>
+                        </Link>
                       )}
                     </div>
                   </div>

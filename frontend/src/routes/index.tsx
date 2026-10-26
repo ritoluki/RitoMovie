@@ -16,6 +16,7 @@ const Register = lazy(() => import('@/pages/Register'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 const VerifyEmail = lazy(() => import('@/pages/VerifyEmail'));
+const VerifyEmailPending = lazy(() => import('@/pages/VerifyEmailPending'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 const SkeletonTest = lazy(() => import('@/pages/SkeletonTest'));
 
@@ -31,6 +32,7 @@ const AppRoutes = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/verify-email/:token" element={<VerifyEmail />} />
+        <Route path="/verify-email-pending" element={<VerifyEmailPending />} />
 
         {/* Admin Panel */}
         <Route path="/admin/*" element={<AdminRoutes />} />
