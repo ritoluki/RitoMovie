@@ -29,6 +29,7 @@ const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/admin', icon: Home },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Movies', href: '/admin/movies', icon: Film },
+  { name: 'Home sections', href: '/admin/home-layout', icon: Home },
   { name: 'Comments', href: '/admin/comments', icon: MessageCircle },
   { name: 'Reports', href: '/admin/reports', icon: Flag },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },

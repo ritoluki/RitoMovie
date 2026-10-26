@@ -4,6 +4,7 @@ import Comments from '../Comments';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
 import { PhimEpisodeServer } from '@/types';
+import { phimEpisodeName, phimLabel } from '@/utils/phimLocalization';
 
 interface EpisodesTabProps {
   movieId: number;
@@ -15,7 +16,7 @@ interface EpisodesTabProps {
 }
 
 const EpisodesTab = ({ movieId, movieTitle, streamingServers, isStreamingLoading, mediaType = 'movie', slug }: EpisodesTabProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [activeServerIndex, setActiveServerIndex] = useState(0);
 
   useEffect(() => {
@@ -48,7 +49,7 @@ const EpisodesTab = ({ movieId, movieTitle, streamingServers, isStreamingLoading
                 : 'border-gray-700 bg-gray-800 text-gray-300 hover:border-red-500/60'
                 }`}
             >
-              {server.server_name}
+              {phimLabel(server.server_name, i18n.language)}
             </button>
           ))}
         </div>
@@ -86,7 +87,7 @@ const EpisodesTab = ({ movieId, movieTitle, streamingServers, isStreamingLoading
                     to={href}
                     className={`group rounded-xl border border-gray-800 bg-gray-800/60 px-6 py-3 text-center text-sm font-semibold text-gray-200 transition hover:border-red-500 hover:bg-red-600/30 ${isSingleEpisodeMovie ? 'min-w-[120px]' : ''}`}
                   >
-                    <span>{episode.name}</span>
+                    <span>{phimEpisodeName(episode.name, i18n.language)}</span>
                   </Link>
                 );
               })}

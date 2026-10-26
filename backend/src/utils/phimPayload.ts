@@ -36,7 +36,7 @@ export const parsePhimYear = (value?: string): string | undefined => {
   return value;
 };
 
-export const normalizePhimExtras = (imagesPayload: unknown, peoplePayload: unknown, keywordsPayload: unknown) => {
+export const normalizePhimExtras = (imagesPayload: unknown, peoplePayload: unknown, keywordsPayload: unknown, language = 'vi') => {
   const images = unwrapPhimData(imagesPayload);
   const people = unwrapPhimData(peoplePayload);
   const keywords = unwrapPhimData(keywordsPayload);
@@ -59,7 +59,9 @@ export const normalizePhimExtras = (imagesPayload: unknown, peoplePayload: unkno
     keywords: [...new Set(keywordList.map(keyword => {
       if (typeof keyword === 'string') return keyword;
       const item = asRecord(keyword);
-      return String(item.name_vn || item.name || '');
+      return String(language.toLowerCase().startsWith('vi')
+        ? item.name_vn || item.name || ''
+        : item.name_en || item.name || '');
     }).filter(Boolean))],
   };
 };

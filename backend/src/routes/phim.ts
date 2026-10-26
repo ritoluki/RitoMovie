@@ -35,7 +35,7 @@ router.get('/home', asyncHandler(async (req, res) => {
     res.json({ success: true, data: await getHomeUpdates(page) });
 }));
 router.get('/movie/:slug/extras', asyncHandler(async (req, res) => {
-    res.json({ success: true, data: await getMovieExtras(req.params.slug) });
+    res.json({ success: true, data: await getMovieExtras(req.params.slug, (req as { language?: string }).language || 'en') });
 }));
 
 router.get('/latest', fetchLatestMovies);

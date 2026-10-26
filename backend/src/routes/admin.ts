@@ -12,7 +12,8 @@ import {
 // Import admin controllers
 import * as dashboardController from '../controllers/admin/adminDashboardController';
 import * as userController from '../controllers/admin/adminUserController';
-import * as movieController from '../controllers/admin/adminMovieController';
+import * as movieController from '../controllers/admin/managedMovieController';
+import * as homeLayoutController from '../controllers/admin/homeLayoutController';
 import * as commentController from '../controllers/admin/adminCommentController';
 import * as reportController from '../controllers/admin/adminReportController';
 import * as analyticsController from '../controllers/admin/adminAnalyticsController';
@@ -49,14 +50,17 @@ router.post('/users/bulk-action', requireAdminLevel, userController.bulkAction);
 // Movie Management Routes
 // ==========================================
 router.get('/movies', requireAdminLevel, movieController.listMovies);
-router.post('/movies', requireAdminLevel, movieController.createMovie);
-router.get('/movies/:id', requireAdminLevel, movieController.getMovieDetails);
-router.put('/movies/:id', requireAdminLevel, movieController.updateMovie);
-router.delete('/movies/:id', requireAdminLevel, movieController.deleteMovie);
-router.post('/movies/:id/feature', requireAdminLevel, movieController.setFeatured);
-router.post('/movies/:id/trending', requireAdminLevel, movieController.setTrending);
-router.post('/movies/import-tmdb', requireAdminLevel, movieController.importFromTMDB);
+router.get('/home-layout', requireAdminLevel, homeLayoutController.getLayout);
+router.put('/home-layout/order', requireAdminLevel, homeLayoutController.reorderSections);
+router.post('/home-layout/reset', requireAdminLevel, homeLayoutController.resetLayout);
+router.put('/home-layout/sections/:id', requireAdminLevel, homeLayoutController.updateSection);
+router.post('/home-layout/sections/:id/visibility', requireAdminLevel, homeLayoutController.setGlobalVisibility);
+router.get('/movies/source', requireAdminLevel, movieController.sourceMovies);
+router.post('/movies/import-phim', requireAdminLevel, movieController.importMovie);
 router.post('/movies/bulk-action', requireAdminLevel, movieController.bulkAction);
+router.get('/movies/:id', requireAdminLevel, movieController.getMovie);
+router.put('/movies/:id', requireAdminLevel, movieController.updateMovie);
+router.delete('/movies/:id', requireAdminLevel, movieController.removeMovie);
 
 // Genre management
 router.get('/genres', requireAdminLevel, movieController.listGenres);

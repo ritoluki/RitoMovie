@@ -85,7 +85,7 @@ const AdminDashboard: React.FC = () => {
           loading={statsLoading}
         />
         <StatCard
-          title="Total Movies"
+          title="Managed Movies"
           value={stats?.overview?.totalMovies || 0}
           icon={<Film className="h-5 w-5 text-purple-400" />}
           loading={statsLoading}

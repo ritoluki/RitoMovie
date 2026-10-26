@@ -1,0 +1,49 @@
+import { useState } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { getPhimImageUrl } from '@/utils/helpers';
+import { managedMovieService, ManagedMovie, movieErrorMessage } from '../../services/managedMovieService';
+
+export default function MovieSourcePicker({ open, onClose, onImported }: {
+  open: boolean; onClose: () => void; onImported: (movie: ManagedMovie) => void;
+}) {
+  const [query, setQuery] = useState('');
+  const [keyword, setKeyword] = useState('');
+  const [slug, setSlug] = useState('');
+  const [page, setPage] = useState(1);
+  const source = useQuery({ queryKey: ['admin', 'movie-source', keyword, page],
+    queryFn: () => managedMovieService.source(keyword, page), enabled: open, staleTime: 30000 });
+  const add = useMutation({ mutationFn: managedMovieService.import,
+    onSuccess: response => { toast.success('Movie added to management'); onImported(response.data); onClose(); },
+    onError: error => toast.error(movieErrorMessage(error)),
+  });
+  return <Dialog open={open} onOpenChange={value => { if (!value && !add.isPending) onClose(); }}>
+    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogTitle>Add from PhimAPI</DialogTitle>
+      <DialogDescription className="mt-2">Search the source catalog or enter a movie slug. Existing entries refresh their source metadata and keep your site settings.</DialogDescription>
+      <form className="mt-4 flex gap-2" onSubmit={event => { event.preventDefault(); setKeyword(query.trim()); setPage(1); }}>
+        <Input aria-label="Search PhimAPI" value={query} onChange={event => setQuery(event.target.value)} placeholder="Movie name..." maxLength={200} /><Button type="submit">Search</Button>
+      </form>
+      <form className="mt-3 flex gap-2" onSubmit={event => { event.preventDefault(); add.mutate(slug.trim()); }}>
+        <Input aria-label="PhimAPI slug" value={slug} onChange={event => setSlug(event.target.value)} placeholder="Or enter a slug, e.g. chien-binh-anh-sang-teo" required pattern="[a-z0-9]+(-[a-z0-9]+)*" maxLength={200} />
+        <Button type="submit" variant="outline" disabled={add.isPending}>Add slug</Button>
+      </form>
+      {source.isError && <div role="alert" className="mt-4 text-sm text-red-300">{movieErrorMessage(source.error)} <button onClick={() => source.refetch()} className="underline">Retry</button></div>}
+      {source.isLoading && <p className="py-6 text-muted-foreground">Loading source movies...</p>}
+      {!source.isLoading && !source.isError && !source.data?.data.length && <p className="py-6 text-muted-foreground">No source movies found.</p>}
+      <div className="mt-4 divide-y divide-border">{source.data?.data.map(movie => <div key={movie.slug} className="flex items-center gap-3 py-3">
+        <img src={getPhimImageUrl(movie.thumb_url || movie.poster_url)} alt="" className="h-16 w-11 rounded object-cover" />
+        <div className="min-w-0 flex-1"><p className="font-medium">{movie.name}</p><p className="text-xs text-muted-foreground">{movie.origin_name} · {movie.year}</p><p className="text-xs text-muted-foreground">{movie.slug}</p></div>
+        <Button size="sm" disabled={add.isPending} variant={movie.managedId ? 'outline' : 'default'} onClick={() => add.mutate(movie.slug)}>{movie.managedId ? 'Sync & edit' : 'Add'}</Button>
+      </div>)}</div>
+      {source.data?.pagination && <div className="mt-4 flex items-center justify-between gap-3">
+        <Button size="sm" variant="outline" disabled={page <= 1 || source.isFetching} onClick={() => setPage(page - 1)}>Previous</Button>
+        <span className="text-sm text-muted-foreground">Page {page} / {source.data.pagination.pages}</span>
+        <Button size="sm" variant="outline" disabled={page >= source.data.pagination.pages || source.isFetching} onClick={() => setPage(page + 1)}>Next</Button>
+      </div>}
+    </DialogContent>
+  </Dialog>;
+}

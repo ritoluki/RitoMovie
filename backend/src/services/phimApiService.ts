@@ -133,7 +133,7 @@ export const getHomeUpdates = (page = 1) => apiCache.getOrSet(`phim:home:${page}
     return ensurePhimSuccess(response.data);
 }, CACHE_TTL.SHORT);
 
-export const getMovieExtras = async (slug: string) => {
+export const getMovieExtras = async (slug: string, language = 'vi') => {
     const resources = ['images', 'peoples', 'keywords'];
     const results = await Promise.allSettled(resources.map(resource =>
         apiCache.getOrSet(`phim:extras:${slug}:${resource}`, async () => {
@@ -148,7 +148,7 @@ export const getMovieExtras = async (slug: string) => {
         console.warn(`[PhimAPI] ${resources[index]}: ${describeExternalApiError(result.reason)}`);
         return {};
     });
-    return { ...normalizePhimExtras(payloads[0], payloads[1], payloads[2]), unavailable: warnings };
+    return { ...normalizePhimExtras(payloads[0], payloads[1], payloads[2], language), unavailable: warnings };
 };
 
 const buildQuery = (params: Record<string, unknown>) => {

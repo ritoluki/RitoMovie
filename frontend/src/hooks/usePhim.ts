@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { CatalogQuery, CatalogType, phimService } from '@/services/phimService';
 import {
     PhimLatestResponse,
@@ -14,13 +15,14 @@ type Version = 'v1' | 'v2' | 'v3';
 type PhimType = 'movie' | 'tv' | 'auto';
 
 export const usePhim = () => {
+    const { i18n } = useTranslation();
     const useHomeUpdates = () => useQuery<PhimCatalogData>({
         queryKey: ['phim', 'home'],
         queryFn: async () => (await phimService.getHome()).data.data,
         staleTime: 2 * 60 * 1000,
     });
     const useExtras = (slug?: string) => useQuery<PhimMovieExtras>({
-        queryKey: ['phim', 'extras', slug],
+        queryKey: ['phim', 'extras', slug, i18n.language],
         queryFn: async () => (await phimService.getExtras(slug!)).data,
         enabled: Boolean(slug),
         staleTime: 10 * 60 * 1000,
@@ -40,6 +42,8 @@ export const usePhim = () => {
     const useMovieByTmdb = (tmdbId?: number, type: PhimType = 'auto', options?: { enabled?: boolean }) => {
         return useQuery<PhimMovieDetailResponse>({
             queryKey: ['phim', 'tmdb', type, tmdbId],
+            retry: (count, error) => (error as { code?: string }).code !== 'MOVIE_UNAVAILABLE' && count < 2,
+            refetchOnMount: 'always',
             queryFn: async () => {
                 const response = await phimService.getMovieByTmdb(tmdbId as number, type);
                 return (response.data ?? response) as PhimMovieDetailResponse;
@@ -52,6 +56,8 @@ export const usePhim = () => {
     const useMovieBySlug = (slug?: string) => {
         return useQuery<PhimMovieDetailResponse>({
             queryKey: ['phim', 'slug', slug],
+            retry: (count, error) => (error as { code?: string }).code !== 'MOVIE_UNAVAILABLE' && count < 2,
+            refetchOnMount: 'always',
             queryFn: async () => {
                 const response = await phimService.getMovieBySlug(slug || '');
                 return (response.data ?? response) as PhimMovieDetailResponse;

@@ -1,7 +1,14 @@
 import api from '@/lib/axios';
 import { Movie, PhimMovieSummary } from '@/types';
+import type { HomeSection } from '@/utils/homeSections';
 
 export interface HomePageBatchData {
+    homeSections?: HomeSection[];
+    updates?: { items: PhimMovieSummary[] };
+    managed?: {
+        featured: { items: PhimMovieSummary[] };
+        trending: { items: PhimMovieSummary[] };
+    };
     trending: {
         results: Movie[];
     };

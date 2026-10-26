@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { phimService } from '@/services/phimService';
 import PhimCard from '@/components/movie/PhimCard';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import { phimLabel } from '@/utils/phimLocalization';
 
 interface RecommendationsTabProps {
   movieId: number;
@@ -38,7 +39,7 @@ const RecommendationsTab = ({ movieId, slug, mediaType, isResolvingSource }: Rec
         {data.items.map(movie => (
           <div key={movie.slug} className="min-w-0" data-recommendation={movie.slug}>
             <PhimCard item={movie} />
-            <p className="mt-2 text-xs text-gray-400">{[movie.year, movie.quality, movie.lang].filter(Boolean).join(' · ')}</p>
+            <p className="mt-2 text-xs text-gray-400">{[movie.year, movie.quality, phimLabel(movie.lang, i18n.language)].filter(Boolean).join(' · ')}</p>
             <p className="mt-1 text-xs text-yellow-400">{t(`movie.recommendationReasons.${movie.reason}`)}</p>
           </div>
         ))}

@@ -7,6 +7,8 @@ import { useMovies } from '@/hooks/useMovies';
 import PhimPopup from './PhimPopup';
 import LazyImage from '@/components/common/LazyImage';
 import { Badge } from '@/components/ui/badge';
+import { useTranslation } from 'react-i18next';
+import { phimTitle, phimLabel } from '@/utils/phimLocalization';
 
 interface PhimCardProps {
     item: PhimMovieSummary;
@@ -23,6 +25,7 @@ const getTmdbMediaType = (item: PhimMovieSummary): 'movie' | 'tv' => {
 };
 
 const PhimCard = ({ item }: PhimCardProps) => {
+    const { i18n } = useTranslation();
     const tmdbId = getTmdbNumericId(item);
     const mediaType = getTmdbMediaType(item);
     const slug = item.slug || item._id;
@@ -49,17 +52,12 @@ const PhimCard = ({ item }: PhimCardProps) => {
         };
     }, []);
 
-    if (!slug) {
-        return null;
-    }
-
     const slugPath = encodeURIComponent(slug);
     const detailHref = tmdbId
-        ? `/movie/${tmdbId}?type=${mediaType}&phimSlug=${encodeURIComponent(slug)}`
+        ? `/movie/${tmdbId}?type=${mediaType}${item.siteSource === 'tmdb' ? '' : `&phimSlug=${encodeURIComponent(slug)}`}`
         : `/movie/0?type=${mediaType}&phimSlug=${slugPath}`;
     const poster = getPhimImageUrl(item.thumb_url || item.poster_url);
-    const episodeLabel = item.episode_current || item.time || '';
-    const qualityLabel = item.quality || item.lang || '';
+    const episodeLabel = phimLabel(item.episode_current || item.time, i18n.language);
 
     const handleMouseEnter = () => {
         if (isMobile || !tmdbId) return;
@@ -86,6 +84,8 @@ const PhimCard = ({ item }: PhimCardProps) => {
         enabled: Boolean(tmdbId) && shouldFetchDetails,
         mediaType,
     });
+    const title = phimTitle(item, i18n.language, tmdbDetails);
+    if (!slug) return null;
 
     return (
         <div
@@ -111,7 +111,7 @@ const PhimCard = ({ item }: PhimCardProps) => {
                     whileHover={{ scale: 1.04 }}
                     transition={{ duration: 0.25 }}
                 >
-                    <LazyImage src={poster} alt={item.name} className="h-full w-full object-cover" />
+                    <LazyImage src={poster} alt={title} className="h-full w-full object-cover" />
                     {item.quality && <Badge className="absolute left-2 top-2 border-white/10 bg-black/65 text-white backdrop-blur-sm">{item.quality}</Badge>}
 
                     {/* Dark gradient overlay */}
@@ -122,17 +122,17 @@ const PhimCard = ({ item }: PhimCardProps) => {
                         {/* Episode/Status - Only show for series (phim bộ) */}
                         {item.episode_current && item.type === 'series' && (
                             <p className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-yellow-400 drop-shadow-md">
-                                {item.episode_current}
+                                {episodeLabel}
                             </p>
                         )}
 
                         {/* Movie Title */}
                         <h3 className="text-sm md:text-base font-bold text-white line-clamp-2 drop-shadow-lg">
-                            {item.name}
+                            {title}
                         </h3>
 
                         {/* Original Name */}
-                        {item.origin_name && (
+                        {item.origin_name && item.origin_name !== title && (
                             <p className="text-[10px] md:text-xs text-gray-300 line-clamp-1 drop-shadow-md">
                                 {item.origin_name}
                             </p>

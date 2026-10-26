@@ -26,6 +26,7 @@ export const useHomeData = () => {
         staleTime: 30 * 60 * 1000, // 30 minutes
         gcTime: 60 * 60 * 1000, // 1 hour (formerly cacheTime)
         refetchOnWindowFocus: false, // Don't refetch on window focus
+        refetchOnMount: true, // Apply admin-invalidated layout data when returning via SPA navigation.
         retry: 2, // Retry failed requests 2 times
     });
 };

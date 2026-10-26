@@ -8,6 +8,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 const AdminDashboard = lazy(() => import('../pages/AdminDashboard'));
 const AdminUsers = lazy(() => import('../pages/AdminUsers'));
 const AdminMovies = lazy(() => import('../pages/AdminMovies'));
+const AdminHomeLayout = lazy(() => import('../pages/AdminHomeLayout'));
 const AdminComments = lazy(() => import('../pages/AdminComments'));
 const AdminReports = lazy(() => import('../pages/AdminReports'));
 const AdminAnalytics = lazy(() => import('../pages/AdminAnalytics'));
@@ -79,6 +80,7 @@ const AdminRoutes: React.FC = () => {
               </Suspense>
             }
           />
+          <Route path="home-layout" element={<Suspense fallback={<PageLoader />}><AdminHomeLayout /></Suspense>} />
           <Route
             path="comments"
             element={

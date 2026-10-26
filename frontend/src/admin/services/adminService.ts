@@ -6,8 +6,6 @@ import type {
   SystemAlert,
   AdminUser,
   AdminUserWithStats,
-  AdminMovie,
-  AdminMovieWithStats,
   AdminComment,
   AdminReport,
   AuditLog,
@@ -16,7 +14,6 @@ import type {
   UserAnalytics,
   ContentAnalytics,
   UserQueryParams,
-  MovieQueryParams,
   CommentQueryParams,
   ReportQueryParams,
   ApiResponse,
@@ -71,35 +68,8 @@ export const adminService = {
     api.post<ApiResponse<{ modifiedCount: number }>>('/admin/users/bulk-action', { action, userIds, reason }),
 
   // ==========================================
-  // Movies API
+  // Managed PhimAPI movies live in managedMovieService.ts.
   // ==========================================
-  getMovies: (params: MovieQueryParams) =>
-    api.get<ApiResponse<AdminMovie[]> & { pagination: PaginationInfo }>('/admin/movies', { params }),
-  
-  getMovieDetails: (id: string) =>
-    api.get<ApiResponse<AdminMovieWithStats>>(`/admin/movies/${id}`),
-  
-  createMovie: (data: Partial<AdminMovie>) =>
-    api.post<ApiResponse<AdminMovie>>('/admin/movies', data),
-  
-  updateMovie: (id: string, data: Partial<AdminMovie>) =>
-    api.put<ApiResponse<AdminMovie>>(`/admin/movies/${id}`, data),
-  
-  deleteMovie: (id: string) =>
-    api.delete<ApiResponse<void>>(`/admin/movies/${id}`),
-  
-  setMovieFeatured: (id: string, isFeatured: boolean) =>
-    api.post<ApiResponse<AdminMovie>>(`/admin/movies/${id}/feature`, { isFeatured }),
-  
-  setMovieTrending: (id: string, isTrending: boolean) =>
-    api.post<ApiResponse<AdminMovie>>(`/admin/movies/${id}/trending`, { isTrending }),
-  
-  importFromTMDB: (tmdbId: number) =>
-    api.post<ApiResponse<AdminMovie>>('/admin/movies/import-tmdb', { tmdbId }),
-  
-  bulkMovieAction: (action: 'delete' | 'feature' | 'unfeature' | 'trending' | 'untrending', movieIds: string[]) =>
-    api.post<ApiResponse<{ modifiedCount: number }>>('/admin/movies/bulk-action', { action, movieIds }),
-  
   getGenres: () =>
     api.get<ApiResponse<Array<{ _id: string; count: number }>>>('/admin/genres'),
 

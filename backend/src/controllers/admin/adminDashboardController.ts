@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import asyncHandler from '../../utils/asyncHandler';
 import User from '../../models/User';
-import Movie from '../../models/Movie';
+import ManagedMovie from '../../models/ManagedMovie';
 import Comment from '../../models/Comment';
 import Rating from '../../models/Rating';
 import WatchHistory from '../../models/WatchHistory';
@@ -26,7 +26,7 @@ export const getStats = asyncHandler(async (req: Request, res: Response) => {
   // Get total counts
   const [totalUsers, totalMovies, totalComments, totalRatings] = await Promise.all([
     User.countDocuments(),
-    Movie.countDocuments(),
+    ManagedMovie.countDocuments(),
     Comment.countDocuments(),
     Rating.countDocuments(),
   ]);
@@ -124,9 +124,9 @@ export const getCharts = asyncHandler(async (req: Request, res: Response) => {
   ]);
 
   // Top genres
-  const topGenres = await Movie.aggregate([
-    { $unwind: '$genres' },
-    { $group: { _id: '$genres', count: { $sum: 1 } } },
+  const topGenres = await ManagedMovie.aggregate([
+    { $unwind: '$snapshot.category' },
+    { $group: { _id: '$snapshot.category.name', count: { $sum: 1 } } },
     { $sort: { count: -1 } },
     { $limit: 10 },
   ]);

@@ -9,9 +9,11 @@ import { usePhim } from '@/hooks/usePhim';
 import VideoPlayer from '@/components/movie/VideoPlayer';
 import Comments from '@/components/movie/Comments';
 import { getImageUrl, getPhimImageUrl } from '@/utils/helpers';
+import { phimTitle, phimOverview, phimLabel, phimEpisodeName, phimEpisodeCount } from '@/utils/phimLocalization';
+import { getTranslatedGenre, getTranslatedCountry } from '@/utils/translations';
 
 const Watch = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -31,11 +33,6 @@ const Watch = () => {
   const { useMovieDetails } = useMovies();
   const { useMovieByTmdb, useMovieBySlug } = usePhim();
 
-  const {
-    data: movie,
-    isLoading: movieLoading,
-  } = useMovieDetails(movieId, { mediaType });
-
   const tmdbType = mediaType === 'tv' ? 'tv' : 'movie';
 
   // Prefer slug lookup when available (slug identifies the exact season for multi-season shows).
@@ -44,15 +41,20 @@ const Watch = () => {
     data: streamingByTmdb,
     isLoading: streamingByTmdbLoading,
     isError: streamingByTmdbError,
+    error: streamingByTmdbFailure,
   } = useMovieByTmdb(resolvedSlug ? undefined : (hasNumericId ? movieId : undefined), tmdbType);
 
   const {
     data: streamingBySlug,
     isLoading: streamingBySlugLoading,
     isError: streamingBySlugError,
+    error: streamingBySlugFailure,
   } = useMovieBySlug(resolvedSlug);
 
   const streamingData = streamingBySlug ?? streamingByTmdb;
+  const metadataId = movieId || Number(streamingData?.movie?.tmdb?.id) || 0;
+  const metadataMediaType = streamingData?.movie?.tmdb?.type === 'tv' ? 'tv' : mediaType;
+  const { data: movie, isLoading: movieLoading } = useMovieDetails(metadataId, { mediaType: metadataMediaType });
   const streamingLoading = resolvedSlug ? streamingBySlugLoading : streamingByTmdbLoading;
   const streamingError = resolvedSlug ? streamingBySlugError : streamingByTmdbError;
 
@@ -130,8 +132,15 @@ const Watch = () => {
     return <LoadingSpinner fullScreen />;
   }
 
+  if (((resolvedSlug ? streamingBySlugFailure : streamingByTmdbFailure) as { code?: string })?.code === 'MOVIE_UNAVAILABLE') {
+    return <div role="alert" className="container mx-auto min-h-[50vh] px-4 py-16 text-center text-white">
+      <p>{t('movie.unavailableOnSite', { defaultValue: i18n.language.startsWith('vi') ? 'Phim này hiện không có sẵn trên website.' : 'This movie is not available on this website.' })}</p>
+      <Link to="/" className="mt-4 inline-block underline">{t('header.home')}</Link>
+    </div>;
+  }
+
   const streamingMeta = streamingData?.movie;
-  const displayTitle = movie?.title || movie?.name || streamingMeta?.name || streamingMeta?.origin_name || t('movie.watchNow');
+  const displayTitle = phimTitle(streamingMeta, i18n.language, movie) || t('movie.watchNow');
   const ratingValue = movie?.vote_average ?? streamingMeta?.tmdb?.vote_average;
   const releaseSource = movie?.release_date || movie?.first_air_date;
   const releaseYear = releaseSource
@@ -140,10 +149,11 @@ const Watch = () => {
   const runtimeMinutes = movie?.runtime ?? movie?.episode_run_time?.[0];
   const runtimeLabel = runtimeMinutes
     ? `${Math.floor(runtimeMinutes / 60)}h ${runtimeMinutes % 60}m`
-    : streamingMeta?.time;
-  const overviewText = movie?.overview || streamingMeta?.content || t('movie.noOverview');
-  const genresToShow = movie?.genres?.map((genre) => ({ id: genre.id, label: genre.name }))
-    || streamingMeta?.category?.map((cat) => ({ id: cat.id || cat.slug, label: cat.name }));
+    : phimLabel(streamingMeta?.time, i18n.language);
+  const overviewText = phimOverview(streamingMeta, i18n.language, movie) || t('movie.noOverview');
+  const genresToShow = movie?.genres?.length
+    ? movie.genres.map((genre) => ({ id: genre.id, label: genre.name }))
+    : streamingMeta?.category?.map((cat) => ({ id: cat.id || cat.slug, label: getTranslatedGenre(cat.name, i18n.language) }));
   const posterImage = streamingMeta?.thumb_url
     ? getPhimImageUrl(streamingMeta.thumb_url)
     : streamingMeta?.poster_url
@@ -155,15 +165,15 @@ const Watch = () => {
       ? getImageUrl(movie.poster_path, 'poster')
       : posterImage;
   const infoBadges = [
-    streamingMeta?.type ? streamingMeta.type : null,
-    streamingMeta?.episode_current ? `${t('movie.episode')} ${streamingMeta.episode_current}` : null,
+    phimLabel(streamingMeta?.type, i18n.language),
+    phimLabel(streamingMeta?.episode_current, i18n.language),
     streamingMeta?.episode_total && streamingMeta?.episode_total !== streamingMeta?.episode_current
-      ? `${streamingMeta.episode_total} ${t('movie.episodes')}`
+      ? phimEpisodeCount(streamingMeta.episode_total, i18n.language)
       : null,
     releaseYear?.toString(),
     runtimeLabel,
     streamingMeta?.quality,
-    streamingMeta?.lang_name || streamingMeta?.lang,
+    phimLabel(streamingMeta?.lang_name || streamingMeta?.lang, i18n.language),
   ].filter(Boolean) as string[];
   const detailFacts = [
     { label: t('movie.rating'), value: ratingValue ? ratingValue.toFixed(1) : null },
@@ -174,7 +184,7 @@ const Watch = () => {
     },
     {
       label: t('movie.country'),
-      value: streamingMeta?.country?.map((country) => country.name).join(', '),
+      value: streamingMeta?.country?.map((country) => getTranslatedCountry(country.name, i18n.language)).join(', '),
     },
   ].filter((item) => item.value);
   const actorList = streamingMeta?.actor?.filter(Boolean).slice(0, 5) ?? [];
@@ -222,7 +232,7 @@ const Watch = () => {
               <div className="pointer-events-none">
                 <p className="text-lg md:text-2xl font-semibold text-white drop-shadow-lg">{displayTitle}</p>
                 {currentEpisode?.name && (
-                  <span className="text-white/80 text-sm md:text-base">{currentEpisode.name}</span>
+                  <span className="text-white/80 text-sm md:text-base">{phimEpisodeName(currentEpisode.name, i18n.language)}</span>
                 )}
               </div>
               <div className="pointer-events-auto">
@@ -241,9 +251,9 @@ const Watch = () => {
             hlsSource={currentEpisode?.link_m3u8}
             embedSource={currentEpisode?.link_embed}
             poster={posterImage}
-            title={`${displayTitle} • ${currentEpisode?.name || ''}`}
+            title={`${displayTitle} • ${phimEpisodeName(currentEpisode?.name, i18n.language)}`}
             onNextEpisode={nextEpisode ? handleNextEpisode : undefined}
-            nextEpisodeLabel={nextEpisode?.name}
+            nextEpisodeLabel={phimEpisodeName(nextEpisode?.name, i18n.language)}
             onEpisodeListToggle={isSeries ? handleScrollToEpisodes : undefined}
             showEpisodeListButton={isSeries}
             episodeListLabel={t('watch.toggleEpisodes')}
@@ -366,7 +376,7 @@ const Watch = () => {
                       : 'border-gray-700 bg-gray-800 text-gray-300 hover:border-red-500/60'
                       }`}
                   >
-                    {server.server_name}
+                    {phimLabel(server.server_name, i18n.language)}
                   </button>
                 ))}
               </div>
@@ -394,7 +404,7 @@ const Watch = () => {
                           : 'border-gray-800 bg-gray-800/60 text-gray-200 hover:border-red-500/60'
                           }`}
                       >
-                        {episode.name}
+                        {phimEpisodeName(episode.name, i18n.language)}
                       </button>
                     );
                   })}

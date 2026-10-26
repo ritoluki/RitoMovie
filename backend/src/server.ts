@@ -1,16 +1,15 @@
+// Services read API credentials during import, so load .env before importing them.
+import 'dotenv/config';
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import middleware from 'i18next-http-middleware';
 import connectDB from './config/database';
 import errorHandler from './middleware/errorHandler';
 import i18next from './config/i18n';
 import { getAllowedOrigins } from './utils/corsOrigins';
-
-// Load environment variables
-dotenv.config();
+import { publicMoviePolicy } from './middleware/publicMoviePolicy';
 
 // Initialize express app
 const app: Application = express();
@@ -85,6 +84,7 @@ app.get('/api/settings/public', getPublicSettings);
 app.use(checkMaintenanceMode);
 
 app.use('/api/auth', authRoutes);
+app.use(['/api/movies', '/api/phim', '/api/home'], publicMoviePolicy);
 app.use('/api/movies', movieRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/users', userRoutes);

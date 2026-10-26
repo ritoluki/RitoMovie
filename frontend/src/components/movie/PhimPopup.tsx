@@ -5,9 +5,11 @@ import { FiPlus, FiCheck, FiInfo } from 'react-icons/fi';
 import { IoPlay } from 'react-icons/io5';
 import { useTranslation } from 'react-i18next';
 import { PhimMovieSummary, MovieDetails } from '@/types';
-import { getPhimImageUrl, truncateText, formatRating, formatRuntime } from '@/utils/helpers';
+import { getPhimImageUrl, formatRating, formatRuntime } from '@/utils/helpers';
 import { useMovieStore } from '@/store/movieStore';
 import { useAuthStore } from '@/store/authStore';
+import { phimTitle, phimOverview, phimLabel } from '@/utils/phimLocalization';
+import { getTranslatedGenre } from '@/utils/translations';
 
 interface PhimPopupProps {
   item: PhimMovieSummary;
@@ -29,7 +31,7 @@ const getTmdbMediaType = (item: PhimMovieSummary): 'movie' | 'tv' => {
 };
 
 const PhimPopup = ({ item, tmdbMovie, isLoading, isVisible, onClose, cardRef }: PhimPopupProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const tmdbId = getTmdbNumericId(item);
   const mediaType = getTmdbMediaType(item);
   const slug = item.slug || item._id || '';
@@ -39,7 +41,7 @@ const PhimPopup = ({ item, tmdbMovie, isLoading, isVisible, onClose, cardRef }: 
     if (tmdbId) {
       const params = new URLSearchParams();
       params.set('type', mediaType);
-      if (slug) {
+      if (slug && item.siteSource !== 'tmdb') {
         params.set('slug', slug);
       }
       return `/watch/${tmdbId}?${params.toString()}`;
@@ -52,10 +54,11 @@ const PhimPopup = ({ item, tmdbMovie, isLoading, isVisible, onClose, cardRef }: 
   };
 
   const watchHref = buildWatchHref();
-  const detailHref = tmdbId ? `/movie/${tmdbId}?type=${mediaType}&phimSlug=${encodeURIComponent(slug)}` : watchHref;
-  const qualityLabel = item.quality || item.lang;
-  const langLabel = item.lang;
-  const episodeLabel = item.episode_current || item.time;
+  const detailHref = tmdbId ? `/movie/${tmdbId}?type=${mediaType}${item.siteSource === 'tmdb' ? '' : `&phimSlug=${encodeURIComponent(slug)}`}` : watchHref;
+  const qualityLabel = item.quality || phimLabel(item.lang, i18n.language);
+  const langLabel = phimLabel(item.lang, i18n.language);
+  const episodeLabel = phimLabel(item.episode_current || item.time, i18n.language);
+  const title = phimTitle(item, i18n.language, tmdbMovie);
 
   const { isAuthenticated } = useAuthStore();
   const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useMovieStore();
@@ -119,7 +122,7 @@ const PhimPopup = ({ item, tmdbMovie, isLoading, isVisible, onClose, cardRef }: 
   const backdropImage = getPhimImageUrl(item.poster_url || item.thumb_url);
   const rating = tmdbMovie?.vote_average ?? item.tmdb?.vote_average;
   const runtime = tmdbMovie?.runtime ?? tmdbMovie?.episode_run_time?.[0];
-  const overview = tmdbMovie?.overview || item.origin_name || truncateText(item.name, 90);
+  const overview = phimOverview({ siteOverrides: item.siteOverrides }, i18n.language, tmdbMovie) || t('movie.noOverview');
 
   return (
     <AnimatePresence>
@@ -140,7 +143,7 @@ const PhimPopup = ({ item, tmdbMovie, isLoading, isVisible, onClose, cardRef }: 
           <div className="relative h-56 overflow-hidden rounded-t-xl">
             <img
               src={backdropImage}
-              alt={item.name}
+              alt={title}
               className="w-full h-full object-cover"
               loading="lazy"
             />
@@ -192,8 +195,8 @@ const PhimPopup = ({ item, tmdbMovie, isLoading, isVisible, onClose, cardRef }: 
 
           <div className="p-5 space-y-3 rounded-b-xl overflow-hidden">
             <div>
-              <h3 className="text-white font-bold text-lg line-clamp-2 leading-tight">{item.name}</h3>
-              {item.origin_name && item.origin_name !== item.name && (
+              <h3 className="text-white font-bold text-lg line-clamp-2 leading-tight">{title}</h3>
+              {item.origin_name && item.origin_name !== title && (
                 <p className="text-gray-400 text-xs mt-1 line-clamp-1">{item.origin_name}</p>
               )}
             </div>
@@ -225,7 +228,7 @@ const PhimPopup = ({ item, tmdbMovie, isLoading, isVisible, onClose, cardRef }: 
               {item.lang && (
                 <>
                   <span className="px-2 py-0.5 bg-gray-700/50 text-white text-xs font-medium rounded border border-gray-600/50">
-                    {item.lang}
+                    {langLabel}
                   </span>
                   {episodeLabel && <span className="text-gray-500">•</span>}
                 </>
@@ -245,7 +248,7 @@ const PhimPopup = ({ item, tmdbMovie, isLoading, isVisible, onClose, cardRef }: 
                     key={category.id || category._id || category.slug}
                     className="px-2 py-0.5 bg-gray-800/80 text-gray-300 text-xs font-medium rounded border border-gray-700/50"
                   >
-                    {category.name}
+                    {getTranslatedGenre(category.name, i18n.language)}
                   </span>
                 ))}
                 {item.category.length > 3 && (

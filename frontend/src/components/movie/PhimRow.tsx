@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { PhimMovieSummary } from '@/types';
 import PhimCard from './PhimCard';
+import { useTranslation } from 'react-i18next';
 
 interface PhimRowProps {
     title: string;
@@ -11,6 +12,7 @@ interface PhimRowProps {
 
 import { Link } from 'react-router-dom';
 const PhimRow = ({ title, items, link }: PhimRowProps) => {
+    const { t, i18n } = useTranslation();
     const scrollRef = useRef<HTMLDivElement>(null);
     const [showLeft, setShowLeft] = useState(false);
     const [showRight, setShowRight] = useState(true);
@@ -57,7 +59,7 @@ const PhimRow = ({ title, items, link }: PhimRowProps) => {
                                         className="group/more flex items-center justify-center gap-0 px-2 py-1 rounded-full group-hover/more:rounded-lg border-2 border-white/30 group-hover/more:border-red-500/50 hover:bg-red-500/10 text-white transition-all duration-300"
                                     >
                                         <span className="text-sm font-medium text-red-500 max-w-0 group-hover/more:max-w-[80px] group-hover/more:pl-2 group-hover/more:pr-1 opacity-0 group-hover/more:opacity-100 transition-all duration-300 ease-out whitespace-nowrap overflow-hidden">
-                                            Xem thêm
+                                            {t('common.viewMore', { defaultValue: i18n.language.startsWith('vi') ? 'Xem thêm' : 'View more' })}
                                         </span>
                                         <FiChevronRight size={16} className="flex-shrink-0" />
                                     </Link>

@@ -237,6 +237,8 @@ export interface PhimMovieImdbInfo {
 }
 
 export interface PhimMovieSummary {
+  siteSource?: 'tmdb';
+  siteOverrides?: SiteMovieOverrides;
   _id: string;
   name: string;
   slug: string;
@@ -298,6 +300,8 @@ export interface PhimEpisodeServer {
 }
 
 export interface PhimMovieMeta {
+  siteSource?: 'tmdb';
+  siteOverrides?: SiteMovieOverrides;
   _id: string;
   name: string;
   slug: string;
@@ -375,5 +379,12 @@ export interface PhimCatalogResponse {
   status: boolean;
   msg: string;
   data: PhimCatalogData;
+}
+
+export interface SiteMovieOverrides {
+  titles?: { vi?: string; en?: string };
+  overviews?: { vi?: string; en?: string };
+  posterUrl?: string;
+  backdropUrl?: string;
 }
 

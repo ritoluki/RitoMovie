@@ -1,5 +1,8 @@
 // Mapping các thể loại phim từ tiếng Việt sang tiếng Anh
 export const genreTranslations: Record<string, string> = {
+    'Hài': 'Comedy',
+    'Khoa Học Viễn Tưởng': 'Science Fiction',
+    'Nhạc': 'Music',
     'Hành Động': 'Action',
     'Cổ Trang': 'Period Drama',
     'Tài Liệu': 'Documentary',
@@ -74,8 +77,9 @@ export const countryTranslations: Record<string, string> = {
  * Lấy tên thể loại đã dịch dựa trên ngôn ngữ hiện tại
  */
 export const getTranslatedGenre = (genreName: string, currentLanguage: string): string => {
-    if (currentLanguage === 'en' && genreTranslations[genreName]) {
-        return genreTranslations[genreName];
+    if (currentLanguage.toLowerCase().startsWith('en')) {
+        const match = Object.keys(genreTranslations).find(key => key.toLocaleLowerCase('vi') === genreName.trim().toLocaleLowerCase('vi'));
+        if (match) return genreTranslations[match];
     }
     return genreName;
 };
@@ -84,8 +88,9 @@ export const getTranslatedGenre = (genreName: string, currentLanguage: string): 
  * Lấy tên quốc gia đã dịch dựa trên ngôn ngữ hiện tại
  */
 export const getTranslatedCountry = (countryName: string, currentLanguage: string): string => {
-    if (currentLanguage === 'en' && countryTranslations[countryName]) {
-        return countryTranslations[countryName];
+    if (currentLanguage.toLowerCase().startsWith('en')) {
+        const match = Object.keys(countryTranslations).find(key => key.toLocaleLowerCase('vi') === countryName.trim().toLocaleLowerCase('vi'));
+        if (match) return countryTranslations[match];
     }
     return countryName;
 };

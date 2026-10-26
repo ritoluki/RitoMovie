@@ -43,6 +43,17 @@ test('missing supplemental endpoints produce empty data instead of crashing', ()
   assert.deepEqual(extras.keywords, []);
 });
 
+test('selects the requested keyword language from the same cached payload', () => {
+  const payload = { data: { keywords: [
+    { name: 'space', name_vn: 'Vũ trụ' },
+    { name: 'fallback', name_en: 'English name', name_vn: 'Tên tiếng Việt' },
+    { name_vn: 'Chỉ có tiếng Việt' },
+  ] } };
+  assert.deepEqual(normalizePhimExtras({}, {}, payload, 'en-US').keywords, ['space', 'English name']);
+  assert.deepEqual(normalizePhimExtras({}, {}, payload, 'vi').keywords, ['Vũ trụ', 'Tên tiếng Việt', 'Chỉ có tiếng Việt']);
+  assert.equal(payload.data.keywords[0].name_vn, 'Vũ trụ');
+});
+
 test('validates single years and ranges without silently discarding invalid input', () => {
   assert.equal(parsePhimYear('2024'), '2024');
   assert.equal(parsePhimYear('2014,2024'), '2014,2024');

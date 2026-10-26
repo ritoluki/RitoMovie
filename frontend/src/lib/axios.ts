@@ -80,6 +80,10 @@ axiosInstance.interceptors.response.use(
       // API error response structure: { success: false, message: '...', errors: [...] }
       let errorMessage = data?.message || error.message || 'An error occurred';
 
+      if (data?.code === 'MOVIE_UNAVAILABLE') {
+        return Promise.reject(Object.assign(new Error(errorMessage), { code: 'MOVIE_UNAVAILABLE' }));
+      }
+
       if (status === 403 && data?.code === 'EMAIL_VERIFICATION_REQUIRED') {
         window.dispatchEvent(new CustomEvent('email-verification-required', {
           detail: { email: data.email },

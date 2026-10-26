@@ -30,17 +30,18 @@ import {
   phimActorNames,
   selectPhimImages,
 } from '@/utils/phimFallback';
+import { phimTitle, phimOverview } from '@/utils/phimLocalization';
 
 type TabType = 'episodes' | 'gallery' | 'cast' | 'recommendations';
 
 const MovieDetails = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const mediaTypeParam = searchParams.get('type');
   const mediaType: 'movie' | 'tv' = mediaTypeParam === 'tv' ? 'tv' : 'movie';
   const phimSlug = searchParams.get('phimSlug') || undefined;
-  const movieId = parseInt(id || '0');
+  const routeMovieId = parseInt(id || '0');
   const [activeTab, setActiveTab] = useState<TabType>('episodes');
   const [showMovieInfo, setShowMovieInfo] = useState(false);
 
@@ -48,40 +49,40 @@ const MovieDetails = () => {
     useMovies();
   const { useMovieByTmdb, useMovieBySlug, useExtras } = usePhim();
 
-  const { data: tmdbMovie, isLoading: movieLoading } = useMovieDetails(
-    movieId,
-    { mediaType }
-  );
-  const { data: credits, isLoading: creditsLoading } = useMovieCredits(
-    movieId,
-    mediaType
-  );
-  const { data: tmdbImages, isLoading: imagesLoading } = useMovieImages(
-    movieId,
-    mediaType
-  );
-  const { data: releaseDates } = useReleaseDates(movieId, mediaType);
-
-  const { data: streamingBySlug, isLoading: streamingBySlugLoading } =
+  const { data: streamingBySlug, isLoading: streamingBySlugLoading, error: streamingBySlugError } =
     useMovieBySlug(phimSlug);
-  const { data: streamingByTmdb, isLoading: streamingByTmdbLoading } =
+  const { data: streamingByTmdb, isLoading: streamingByTmdbLoading, error: streamingByTmdbError } =
     useMovieByTmdb(
-      phimSlug ? undefined : movieId,
+      phimSlug ? undefined : routeMovieId,
       mediaType === 'tv' ? 'tv' : 'movie'
     );
 
   const streamingData = phimSlug ? streamingBySlug : streamingByTmdb;
+  const movieId = routeMovieId || Number(streamingData?.movie?.tmdb?.id) || 0;
+  const metadataMediaType = streamingData?.movie?.tmdb?.type === 'tv' ? 'tv' : mediaType;
+  const { data: tmdbMovie, isLoading: movieLoading } = useMovieDetails(movieId, { mediaType: metadataMediaType });
+  const { data: credits, isLoading: creditsLoading } = useMovieCredits(movieId, metadataMediaType);
+  const { data: tmdbImages, isLoading: imagesLoading } = useMovieImages(movieId, metadataMediaType);
+  const { data: releaseDates } = useReleaseDates(movieId, metadataMediaType);
   const streamingLoading = phimSlug
     ? streamingBySlugLoading
     : streamingByTmdbLoading;
   const { data: extras, isLoading: extrasLoading } = useExtras(
     streamingData?.movie?.slug || phimSlug
   );
-  const movie =
-    tmdbMovie ||
-    (streamingData?.movie
-      ? phimToMovieDetails(streamingData.movie, movieId)
-      : undefined);
+  const fallback = streamingData?.movie
+    ? phimToMovieDetails(streamingData.movie, movieId, i18n.language)
+    : undefined;
+  const movie = tmdbMovie ? {
+    ...tmdbMovie,
+    title: phimTitle(streamingData?.movie, i18n.language, tmdbMovie),
+    overview: phimOverview(streamingData?.movie, i18n.language, tmdbMovie),
+    poster_path: streamingData?.movie?.siteOverrides?.posterUrl || tmdbMovie.poster_path,
+    backdrop_path: streamingData?.movie?.siteOverrides?.backdropUrl || tmdbMovie.backdrop_path,
+    genres: tmdbMovie.genres?.length ? tmdbMovie.genres : fallback?.genres || [],
+    production_countries: tmdbMovie.production_countries?.length
+      ? tmdbMovie.production_countries : fallback?.production_countries || [],
+  } : fallback;
   const images = selectPhimImages(tmdbImages, extras?.images);
 
   const { isAuthenticated } = useAuthStore();
@@ -151,7 +152,7 @@ const MovieDetails = () => {
     return <LoadingSpinner fullScreen />;
   }
 
-  if (!movie) {
+  if (!movie || ((phimSlug ? streamingBySlugError : streamingByTmdbError) as { code?: string })?.code === 'MOVIE_UNAVAILABLE') {
     return (
       <div className="container mx-auto px-4 py-8">
         <p className="text-white">{t('errors.pageNotFound')}</p>
