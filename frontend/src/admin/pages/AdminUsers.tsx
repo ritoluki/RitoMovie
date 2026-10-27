@@ -1,4 +1,5 @@
 import { SelectField } from '@/components/ui/select-field';
+import { useTranslation } from 'react-i18next';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -24,6 +25,7 @@ import type { AdminUser, UserQueryParams } from '../types/admin';
 const AdminUsers: React.FC = () => {
   const queryClient = useQueryClient();
   
+  const { t, i18n } = useTranslation();
   // State
   const [queryParams, setQueryParams] = useState<UserQueryParams>({
     page: 1,
@@ -85,10 +87,10 @@ const AdminUsers: React.FC = () => {
   const liftCommentRestrictionMutation = useMutation({
     mutationFn: (id: string) => adminService.liftUserCommentRestriction(id),
     onSuccess: () => {
-      toast.success('Comment restriction lifted');
+      toast.success(t('admin.users.restrictionLifted'));
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
     },
-    onError: (error: any) => toast.error(error?.response?.data?.message || 'Could not lift restriction'),
+    onError: (error: any) => toast.error(error?.response?.data?.message || t('admin.users.liftRestrictionFailed')),
   });
 
   // axios interceptor returns response.data directly, so structure is {success, data, pagination}
@@ -101,8 +103,8 @@ const AdminUsers: React.FC = () => {
   const handleBanUser = (user: AdminUser) => {
     setConfirmDialog({
       open: true,
-      title: 'Ban User',
-      message: `Are you sure you want to ban ${user.name}? They will not be able to access their account.`,
+      title: t('admin.users.banTitle'),
+      message: t('admin.users.banMessage', { name: user.name }),
       variant: 'warning',
       action: () => {
         banMutation.mutate({ id: user._id, reason: 'Banned by admin' });
@@ -118,8 +120,8 @@ const AdminUsers: React.FC = () => {
   const handleDeleteUser = (user: AdminUser) => {
     setConfirmDialog({
       open: true,
-      title: 'Delete User',
-      message: `Are you sure you want to delete ${user.name}? This action cannot be undone.`,
+      title: t('admin.users.deleteTitle'),
+      message: t('admin.users.deleteMessage', { name: user.name }),
       variant: 'danger',
       action: () => {
         deleteMutation.mutate(user._id);
@@ -132,7 +134,7 @@ const AdminUsers: React.FC = () => {
   const columns: Column<AdminUser>[] = [
     {
       key: 'name',
-      header: 'User',
+      header: t('admin.users.user'),
       sortable: true,
       render: (user) => (
         <div className="flex items-center space-x-3">
@@ -156,7 +158,7 @@ const AdminUsers: React.FC = () => {
     },
     {
       key: 'role',
-      header: 'Role',
+      header: t('admin.users.role'),
       sortable: true,
       render: (user) => (
         <span
@@ -170,21 +172,21 @@ const AdminUsers: React.FC = () => {
               : 'bg-gray-700 text-gray-300'
           }`}
         >
-          {user.role}
+          {t(`admin.roles.${user.role}`, { defaultValue: user.role.replace('_', ' ') })}
         </span>
       ),
     },
     {
       key: 'status',
-      header: 'Status',
+      header: t('admin.users.status'),
       render: (user) => (
         <div className="flex flex-col items-start gap-1.5">
           <span className={`px-2 py-1 text-xs font-medium rounded-full ${user.isBanned ? 'bg-red-900/50 text-red-300' : 'bg-green-900/50 text-green-300'}`}>
-            {user.isBanned ? 'Banned' : 'Active'}
+            {user.isBanned ? t('admin.users.banned') : t('admin.users.active')}
           </span>
           {hasActiveCommentRestriction(user) && (
-            <span title={user.commentRestrictionReason || 'Commenting restricted'} className="px-2 py-1 text-xs font-medium rounded-full bg-amber-900/50 text-amber-200">
-              Comments restricted
+            <span title={user.commentRestrictionReason || t('admin.users.commentRestrictionTitle')} className="px-2 py-1 text-xs font-medium rounded-full bg-amber-900/50 text-amber-200">
+              {t('admin.users.commentRestricted')}
             </span>
           )}
         </div>
@@ -192,45 +194,45 @@ const AdminUsers: React.FC = () => {
     },
     {
       key: 'createdAt',
-      header: 'Joined',
+      header: t('admin.users.joined'),
       sortable: true,
       render: (user) => (
         <span className="text-gray-400">
-          {new Date(user.createdAt).toLocaleDateString()}
+          {new Date(user.createdAt).toLocaleDateString(i18n.language)}
         </span>
       ),
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('admin.users.actions'),
       width: '80px',
       render: (user) => (
         <ActionDropdown
           actions={[
             {
-              label: 'View Details',
+              label: t('admin.users.viewDetails'),
               icon: <Eye className="h-5 w-5" />,
               onClick: () => setViewUserId(user._id),
             },
             {
-              label: 'Edit User',
+              label: t('admin.users.editUser'),
               icon: <Pencil className="h-5 w-5" />,
               onClick: () => setEditUser(user),
             },
             {
-              label: 'Change Role',
+              label: t('admin.users.changeRole'),
               icon: <ShieldCheck className="h-5 w-5" />,
               onClick: () => setChangeRoleUser(user),
             },
             ...(hasActiveCommentRestriction(user)
               ? [{
-                  label: 'Allow comments',
+                  label: t('admin.users.allowComments'),
                   icon: <CheckCircle className="h-5 w-5" />,
                   onClick: () => liftCommentRestrictionMutation.mutate(user._id),
                   disabled: liftCommentRestrictionMutation.isPending,
                 }]
               : [{
-                  label: 'Restrict comments',
+                  label: t('admin.users.restrictComments'),
                   icon: <MessageSquareOff className="h-5 w-5" />,
                   onClick: () => setRestrictCommentsUser(user),
                   disabled: user.isBanned || ['super_admin', 'admin', 'moderator'].includes(user.role),
@@ -238,14 +240,14 @@ const AdminUsers: React.FC = () => {
             ...(user.isBanned
               ? [
                   {
-                    label: 'Unban User',
+                    label: t('admin.users.unban'),
                     icon: <CheckCircle className="h-5 w-5" />,
                     onClick: () => handleUnbanUser(user),
                   },
                 ]
               : [
                   {
-                    label: 'Ban User',
+                    label: t('admin.users.ban'),
                     icon: <Ban className="h-5 w-5" />,
                     onClick: () => handleBanUser(user),
                     variant: 'danger' as const,
@@ -253,7 +255,7 @@ const AdminUsers: React.FC = () => {
                   },
                 ]),
             {
-              label: 'Delete User',
+              label: t('admin.users.delete'),
               icon: <Trash2 className="h-5 w-5" />,
               onClick: () => handleDeleteUser(user),
               variant: 'danger',
@@ -267,12 +269,12 @@ const AdminUsers: React.FC = () => {
 
   return (
     <div>
-      <AdminBreadcrumb items={[{ label: 'Admin', href: '/admin' }, { label: 'Users' }]} />
+      <AdminBreadcrumb items={[{ label: t('admin.common.admin'), href: '/admin' }, { label: t('admin.users.title') }]} />
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Users</h1>
-          <p className="text-gray-400 mt-1">Manage user accounts and permissions</p>
+          <h1 className="text-2xl font-bold text-white">{t('admin.users.title')}</h1>
+          <p className="text-gray-400 mt-1">{t('admin.users.description')}</p>
         </div>
       </div>
 
@@ -281,7 +283,7 @@ const AdminUsers: React.FC = () => {
         <SearchInput
           value={search}
           onChange={setSearch}
-          placeholder="Search users..."
+          placeholder={t('admin.users.searchPlaceholder')}
           className="sm:w-64"
         />
         
@@ -290,11 +292,12 @@ const AdminUsers: React.FC = () => {
           onValueChange={value => setQueryParams({ ...queryParams, role: value || undefined, page: 1 })}
           className="w-full sm:w-44"
         >
-          <option value="">All Roles</option>
-          <option value="user">User</option>
-          <option value="moderator">Moderator</option>
-          <option value="admin">Admin</option>
-          <option value="super_admin">Super Admin</option>
+          <option value="">{t('admin.users.allRoles')}</option>
+          <option value="user">{t('admin.roles.user')}</option>
+          <option value="moderator">{t('admin.roles.moderator')}</option>
+          <option value="analyst">{t('admin.roles.analyst')}</option>
+          <option value="admin">{t('admin.roles.admin')}</option>
+          <option value="super_admin">{t('admin.roles.super_admin')}</option>
         </SelectField>
 
         <SelectField
@@ -302,10 +305,10 @@ const AdminUsers: React.FC = () => {
           onValueChange={value => setQueryParams({ ...queryParams, status: value as UserQueryParams['status'], page: 1 })}
           className="w-full sm:w-44"
         >
-          <option value="">All Status</option>
-          <option value="active">Active</option>
-          <option value="banned">Banned</option>
-          <option value="comment_restricted">Comments restricted</option>
+          <option value="">{t('admin.users.allStatuses')}</option>
+          <option value="active">{t('admin.users.active')}</option>
+          <option value="banned">{t('admin.users.banned')}</option>
+          <option value="comment_restricted">{t('admin.users.commentRestricted')}</option>
         </SelectField>
       </div>
 
@@ -331,7 +334,7 @@ const AdminUsers: React.FC = () => {
             onClick={() => setSelectedRows([])}
             className="px-3 py-1.5 text-sm text-gray-400 hover:text-white"
           >
-            Clear Selection
+            {t('admin.common.clearSelection')}
           </button>
         </div>
       )}
@@ -349,7 +352,7 @@ const AdminUsers: React.FC = () => {
         selectable
         selectedRows={selectedRows}
         onSelectRows={setSelectedRows}
-        emptyMessage="No users found"
+        emptyMessage={t('admin.users.noUsers')}
       />
 
       {/* Confirm Dialog */}

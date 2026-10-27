@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ChevronUp,
   ChevronDown,
@@ -49,9 +50,10 @@ function DataTable<T extends object>({
   selectedRows = [],
   onSelectRows,
   getRowId = (row) => String((row as Record<string, unknown>)._id || (row as Record<string, unknown>).id),
-  emptyMessage = 'No data found',
+  emptyMessage,
   className = '',
 }: DataTableProps<T>) {
+  const { t } = useTranslation();
   const [internalSort, setInternalSort] = useState<{ key: string; order: 'asc' | 'desc' } | null>(null);
 
   const currentSort = sortBy ? { key: sortBy, order: sortOrder } : internalSort;
@@ -155,7 +157,7 @@ function DataTable<T extends object>({
                   colSpan={columns.length + (selectable ? 1 : 0)}
                   className="px-4 py-12 text-center text-gray-500"
                 >
-                  {emptyMessage}
+                  {emptyMessage || t('admin.common.noData')}
                 </td>
               </tr>
             ) : (
@@ -199,9 +201,11 @@ function DataTable<T extends object>({
       {pagination && pagination.pages > 1 && (
         <div className="flex items-center justify-between px-4 py-3 border-t border-gray-700">
           <div className="text-sm text-gray-400">
-            Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-            {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-            {pagination.total} results
+            {t('admin.common.showingResults', {
+              from: (pagination.page - 1) * pagination.limit + 1,
+              to: Math.min(pagination.page * pagination.limit, pagination.total),
+              total: pagination.total,
+            })}
           </div>
           
           <div className="flex items-center space-x-2">

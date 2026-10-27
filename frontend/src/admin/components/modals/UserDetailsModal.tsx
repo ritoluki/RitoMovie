@@ -1,5 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import Button from '@/components/common/Button';
 
@@ -26,6 +27,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   onClose,
   userId,
 }) => {
+  const { t, i18n } = useTranslation();
   const { data, isLoading } = useQuery({
     queryKey: ['admin', 'user', userId],
     queryFn: () => adminService.getUserDetails(userId!),
@@ -48,7 +50,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <DialogTitle className="text-lg font-semibold text-white">
-            User Details
+            {t('admin.modals.userDetails')}
           </DialogTitle>
         </div>
 
@@ -89,11 +91,11 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                               : 'bg-gray-700 text-gray-300'
                       }`}
                     >
-                      {user.user?.role}
+                      {user.user?.role ? t(`admin.roles.${user.user.role}`, { defaultValue: user.user.role.replace('_', ' ') }) : ''}
                     </span>
                     {user.user?.isBanned && (
                       <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-red-900/50 text-red-300">
-                        Banned
+                        {t('admin.users.banned')}
                       </span>
                     )}
                   </div>
@@ -109,15 +111,14 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                 <div className="flex items-center gap-3 text-gray-300">
                   <Calendar className="w-5 h-5 text-gray-500" />
                   <span>
-                    Joined {new Date(user.user?.createdAt).toLocaleDateString()}
+                    {t('admin.modals.joined')} {new Date(user.user?.createdAt).toLocaleDateString(i18n.language)}
                   </span>
                 </div>
                 {user.user?.lastLoginAt && (
                   <div className="flex items-center gap-3 text-gray-300">
                     <Clock className="w-5 h-5 text-gray-500" />
                     <span>
-                      Last login:{' '}
-                      {new Date(user.user.lastLoginAt).toLocaleString()}
+                      {t('admin.modals.lastLogin')}: {new Date(user.user.lastLoginAt).toLocaleString(i18n.language)}
                     </span>
                   </div>
                 )}
@@ -130,21 +131,21 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                   <div className="text-2xl font-bold text-white">
                     {user.stats?.watchHistoryCount || 0}
                   </div>
-                  <div className="text-xs text-gray-400">Movies Watched</div>
+                  <div className="text-xs text-gray-400">{t('admin.modals.moviesWatched')}</div>
                 </div>
                 <div className="bg-[#2a2a2a] rounded-lg p-4 text-center">
                   <MessageCircle className="w-6 h-6 text-green-400 mx-auto mb-2" />
                   <div className="text-2xl font-bold text-white">
                     {user.stats?.commentsCount || 0}
                   </div>
-                  <div className="text-xs text-gray-400">Comments</div>
+                  <div className="text-xs text-gray-400">{t('admin.comments.comment')}</div>
                 </div>
                 <div className="bg-[#2a2a2a] rounded-lg p-4 text-center">
                   <Star className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
                   <div className="text-2xl font-bold text-white">
                     {user.stats?.ratingsCount || 0}
                   </div>
-                  <div className="text-xs text-gray-400">Ratings</div>
+                  <div className="text-xs text-gray-400">{t('admin.modals.ratings')}</div>
                 </div>
               </div>
 
@@ -152,29 +153,29 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
               {user.user?.isBanned && (
                 <div className="bg-red-900/20 border border-red-700 rounded-lg p-4">
                   <h4 className="text-red-400 font-medium mb-2">
-                    Ban Information
+                    {t('admin.modals.banInformation')}
                   </h4>
                   <p className="text-gray-300 text-sm">
-                    <strong>Reason:</strong>{' '}
-                    {user.user.banReason || 'No reason provided'}
+                    <strong>{t('admin.modals.reason')}:</strong>{' '}
+                    {user.user.banReason || t('admin.modals.noReason')}
                   </p>
                   {user.user.bannedAt && (
                     <p className="text-gray-400 text-sm mt-1">
-                      Banned on: {new Date(user.user.bannedAt).toLocaleString()}
+                      {t('admin.modals.bannedOn')}: {new Date(user.user.bannedAt).toLocaleString(i18n.language)}
                     </p>
                   )}
                 </div>
               )}
             </div>
           ) : (
-            <p className="text-gray-400 text-center py-8">User not found</p>
+            <p className="text-gray-400 text-center py-8">{t('admin.modals.userNotFound')}</p>
           )}
         </div>
 
         {/* Footer */}
         <div className="flex justify-end gap-3 p-4 border-t border-gray-700">
           <Button onClick={onClose} variant="outline">
-            Close
+            {t('admin.modals.close')}
           </Button>
         </div>
       </DialogContent>

@@ -206,6 +206,7 @@ export const getActivity = asyncHandler(async (req: Request, res: Response) => {
 export const getAlerts = asyncHandler(async (req: Request, res: Response) => {
   const alerts: Array<{
     type: 'warning' | 'error' | 'info';
+    key: 'pendingReports' | 'criticalReports' | 'failedLogins';
     message: string;
     count?: number;
   }> = [];
@@ -215,6 +216,7 @@ export const getAlerts = asyncHandler(async (req: Request, res: Response) => {
   if (pendingReports > 0) {
     alerts.push({
       type: 'warning',
+      key: 'pendingReports',
       message: `${pendingReports} pending report(s) require attention`,
       count: pendingReports,
     });
@@ -228,6 +230,7 @@ export const getAlerts = asyncHandler(async (req: Request, res: Response) => {
   if (criticalReports > 0) {
     alerts.push({
       type: 'error',
+      key: 'criticalReports',
       message: `${criticalReports} critical report(s) need immediate attention`,
       count: criticalReports,
     });
@@ -244,6 +247,7 @@ export const getAlerts = asyncHandler(async (req: Request, res: Response) => {
   if (failedLogins > 10) {
     alerts.push({
       type: 'warning',
+      key: 'failedLogins',
       message: `${failedLogins} unauthorized access attempts in the last 24 hours`,
       count: failedLogins,
     });

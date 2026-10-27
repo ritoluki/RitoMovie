@@ -1,6 +1,7 @@
 import { SelectField } from '@/components/ui/select-field';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   CheckCircle,
   XCircle,
@@ -15,6 +16,7 @@ import AdminBreadcrumb from '../components/layout/AdminBreadcrumb';
 import type { AdminReport, ReportQueryParams } from '../types/admin';
 
 const AdminReports: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
 
   // State
@@ -79,8 +81,8 @@ const AdminReports: React.FC = () => {
   const handleResolve = (report: AdminReport) => {
     setConfirmDialog({
       open: true,
-      title: 'Resolve Report',
-      message: `Mark this ${report.type.toLowerCase()} report as resolved?`,
+      title: t('admin.reports.resolveTitle'),
+      message: t('admin.reports.resolveMessage', { type: t(`admin.reports.${report.type.toLowerCase()}`, { defaultValue: report.type.toLowerCase() }) }),
       variant: 'info',
       action: () => {
         resolveMutation.mutate({ id: report._id, resolution: 'Resolved by admin' });
@@ -92,8 +94,8 @@ const AdminReports: React.FC = () => {
   const handleReject = (report: AdminReport) => {
     setConfirmDialog({
       open: true,
-      title: 'Reject Report',
-      message: `Reject this ${report.type.toLowerCase()} report?`,
+      title: t('admin.reports.rejectTitle'),
+      message: t('admin.reports.rejectMessage', { type: t(`admin.reports.${report.type.toLowerCase()}`, { defaultValue: report.type.toLowerCase() }) }),
       variant: 'warning',
       action: () => {
         rejectMutation.mutate({ id: report._id, reason: 'Rejected by admin' });
@@ -138,23 +140,23 @@ const AdminReports: React.FC = () => {
   const columns: Column<AdminReport>[] = [
     {
       key: 'type',
-      header: 'Type',
+      header: t('admin.reports.type'),
       render: (report) => (
         <span className="px-2 py-1 text-xs font-medium bg-gray-700 text-gray-300 rounded">
-          {report.type}
+          {t(`admin.reports.${report.type.toLowerCase()}`, { defaultValue: report.type })}
         </span>
       ),
     },
     {
       key: 'reason',
-      header: 'Reason',
+      header: t('admin.reports.reason'),
       render: (report) => (
-        <span className="text-gray-300 text-sm">{report.reason.replace('_', ' ')}</span>
+        <span className="text-gray-300 text-sm">{t(`admin.reportReasons.${report.reason}`, { defaultValue: report.reason.replace('_', ' ') })}</span>
       ),
     },
     {
       key: 'description',
-      header: 'Description',
+      header: t('admin.reports.descriptionColumn'),
       render: (report) => (
         <p className="text-gray-400 text-sm line-clamp-2 max-w-xs">
           {report.description}
@@ -163,7 +165,7 @@ const AdminReports: React.FC = () => {
     },
     {
       key: 'reporter',
-      header: 'Reporter',
+      header: t('admin.reports.reporter'),
       render: (report) => (
         <div className="flex items-center space-x-2">
           {report.reporter?.avatar ? (
@@ -177,35 +179,35 @@ const AdminReports: React.FC = () => {
               {report.reporter?.name?.charAt(0).toUpperCase() || '?'}
             </div>
           )}
-          <span className="text-gray-300 text-sm">{report.reporter?.name || 'Unknown'}</span>
+          <span className="text-gray-300 text-sm">{report.reporter?.name || t('admin.common.unknown')}</span>
         </div>
       ),
     },
     {
       key: 'priority',
-      header: 'Priority',
+      header: t('admin.reports.priority'),
       render: (report) => (
         <span className={`px-2 py-1 text-xs font-medium rounded ${getPriorityColor(report.priority)}`}>
-          {report.priority}
+          {t(`admin.reportPriority.${report.priority}`, { defaultValue: report.priority })}
         </span>
       ),
     },
     {
       key: 'status',
-      header: 'Status',
+      header: t('admin.common.status'),
       render: (report) => (
         <span className={`px-2 py-1 text-xs font-medium rounded ${getStatusColor(report.status)}`}>
-          {report.status}
+          {t(`admin.reportStatus.${report.status}`, { defaultValue: report.status })}
         </span>
       ),
     },
     {
       key: 'createdAt',
-      header: 'Date',
+      header: t('admin.reports.date'),
       sortable: true,
       render: (report) => (
         <span className="text-gray-400 text-sm">
-          {new Date(report.createdAt).toLocaleDateString()}
+          {new Date(report.createdAt).toLocaleDateString(i18n.language)}
         </span>
       ),
     },
@@ -217,14 +219,14 @@ const AdminReports: React.FC = () => {
         <ActionDropdown
           actions={[
             {
-              label: 'View Details',
+              label: t('admin.reports.viewDetails'),
               icon: <Eye className="h-5 w-5" />,
               onClick: () => console.log('View', report._id),
             },
             ...(report.status === 'PENDING'
               ? [
                   {
-                    label: 'Start Reviewing',
+                    label: t('admin.reports.startReviewing'),
                     icon: <RefreshCw className="h-5 w-5" />,
                     onClick: () => updateStatusMutation.mutate({ id: report._id, status: 'REVIEWING' }),
                   },
@@ -233,12 +235,12 @@ const AdminReports: React.FC = () => {
             ...(report.status !== 'RESOLVED' && report.status !== 'REJECTED'
               ? [
                   {
-                    label: 'Resolve',
+                    label: t('admin.reports.resolve'),
                     icon: <CheckCircle className="h-5 w-5" />,
                     onClick: () => handleResolve(report),
                   },
                   {
-                    label: 'Reject',
+                    label: t('admin.reports.reject'),
                     icon: <XCircle className="h-5 w-5" />,
                     onClick: () => handleReject(report),
                     variant: 'danger' as const,
@@ -253,11 +255,11 @@ const AdminReports: React.FC = () => {
 
   return (
     <div>
-      <AdminBreadcrumb items={[{ label: 'Admin', href: '/admin' }, { label: 'Reports' }]} />
+      <AdminBreadcrumb items={[{ label: t('admin.common.admin'), href: '/admin' }, { label: t('admin.reports.title') }]} />
 
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Reports</h1>
-        <p className="text-gray-400 mt-1">Handle user reports and flags</p>
+        <h1 className="text-2xl font-bold text-white">{t('admin.reports.title')}</h1>
+        <p className="text-gray-400 mt-1">{t('admin.reports.description')}</p>
       </div>
 
       {/* Status tabs */}
@@ -270,7 +272,7 @@ const AdminReports: React.FC = () => {
               : 'bg-[#2a2a2a] text-gray-300 hover:bg-gray-700'
           }`}
         >
-          All ({Object.values(statusCounts).reduce((a, b) => a + b, 0) || 0})
+          {t('admin.common.all')} ({Object.values(statusCounts).reduce((a, b) => a + b, 0) || 0})
         </button>
         {['PENDING', 'REVIEWING', 'RESOLVED', 'REJECTED'].map((status) => (
           <button
@@ -282,7 +284,7 @@ const AdminReports: React.FC = () => {
                 : 'bg-[#2a2a2a] text-gray-300 hover:bg-gray-700'
             }`}
           >
-            {status.charAt(0) + status.slice(1).toLowerCase()} ({statusCounts[status] || 0})
+            {t(`admin.reportStatus.${status}`, { defaultValue: status.charAt(0) + status.slice(1).toLowerCase() })} ({statusCounts[status] || 0})
           </button>
         ))}
       </div>
@@ -294,11 +296,11 @@ const AdminReports: React.FC = () => {
           onValueChange={value => setQueryParams({ ...queryParams, type: value as ReportQueryParams['type'], page: 1 })}
           className="w-full sm:w-44"
         >
-          <option value="">All Types</option>
-          <option value="COMMENT">Comment</option>
-          <option value="USER">User</option>
-          <option value="MOVIE">Movie</option>
-          <option value="BUG">Bug</option>
+          <option value="">{t('admin.reports.allTypes')}</option>
+          <option value="COMMENT">{t('admin.reports.comment')}</option>
+          <option value="USER">{t('admin.reports.user')}</option>
+          <option value="MOVIE">{t('admin.reports.movie')}</option>
+          <option value="BUG">{t('admin.reports.bug')}</option>
         </SelectField>
 
         <SelectField
@@ -306,11 +308,11 @@ const AdminReports: React.FC = () => {
           onValueChange={value => setQueryParams({ ...queryParams, priority: value as ReportQueryParams['priority'], page: 1 })}
           className="w-full sm:w-44"
         >
-          <option value="">All Priorities</option>
-          <option value="CRITICAL">Critical</option>
-          <option value="HIGH">High</option>
-          <option value="MEDIUM">Medium</option>
-          <option value="LOW">Low</option>
+          <option value="">{t('admin.reports.allPriorities')}</option>
+          <option value="CRITICAL">{t('admin.reports.critical')}</option>
+          <option value="HIGH">{t('admin.reports.high')}</option>
+          <option value="MEDIUM">{t('admin.reports.medium')}</option>
+          <option value="LOW">{t('admin.reports.low')}</option>
         </SelectField>
       </div>
 
@@ -318,19 +320,19 @@ const AdminReports: React.FC = () => {
       {selectedRows.length > 0 && (
         <div className="flex items-center gap-4 mb-4 p-4 bg-[#2a2a2a] rounded-lg">
           <span className="text-sm text-gray-300">
-            {selectedRows.length} report(s) selected
+            {t('admin.reports.selected', { count: selectedRows.length })}
           </span>
           <button className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700">
-            Resolve Selected
+            {t('admin.reports.resolveSelected')}
           </button>
           <button className="px-3 py-1.5 text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700">
-            Reject Selected
+            {t('admin.reports.rejectSelected')}
           </button>
           <button
             onClick={() => setSelectedRows([])}
             className="px-3 py-1.5 text-sm text-gray-400 hover:text-white"
           >
-            Clear Selection
+            {t('admin.common.clearSelection')}
           </button>
         </div>
       )}
@@ -348,7 +350,7 @@ const AdminReports: React.FC = () => {
         selectable
         selectedRows={selectedRows}
         onSelectRows={setSelectedRows}
-        emptyMessage="No reports found"
+        emptyMessage={t('admin.reports.noReports')}
       />
 
       {/* Confirm Dialog */}

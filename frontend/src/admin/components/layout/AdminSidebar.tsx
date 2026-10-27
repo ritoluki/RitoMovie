@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Home,
   Users,
@@ -19,26 +20,27 @@ interface AdminSidebarProps {
 }
 
 interface NavItem {
-  name: string;
+  key: string;
   href: string;
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   badge?: number;
 }
 
 const navigation: NavItem[] = [
-  { name: 'Dashboard', href: '/admin', icon: Home },
-  { name: 'Users', href: '/admin/users', icon: Users },
-  { name: 'Movies', href: '/admin/movies', icon: Film },
-  { name: 'Home sections', href: '/admin/home-layout', icon: Home },
-  { name: 'Comments', href: '/admin/comments', icon: MessageCircle },
-  { name: 'Reports', href: '/admin/reports', icon: Flag },
-  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-  { name: 'Audit Log', href: '/admin/audit-log', icon: ClipboardList },
-  { name: 'Settings', href: '/admin/settings', icon: Settings },
+  { key: 'dashboard', href: '/admin', icon: Home },
+  { key: 'users', href: '/admin/users', icon: Users },
+  { key: 'movies', href: '/admin/movies', icon: Film },
+  { key: 'homeSections', href: '/admin/home-layout', icon: Home },
+  { key: 'comments', href: '/admin/comments', icon: MessageCircle },
+  { key: 'reports', href: '/admin/reports', icon: Flag },
+  { key: 'analytics', href: '/admin/analytics', icon: BarChart3 },
+  { key: 'auditLog', href: '/admin/audit-log', icon: ClipboardList },
+  { key: 'settings', href: '/admin/settings', icon: Settings },
 ];
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, isMobileOpen, onClose }) => {
   const location = useLocation();
+  const { t } = useTranslation();
 
   const isActive = (href: string) => {
     if (href === '/admin') {
@@ -75,7 +77,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, isMobileOpen, onClo
           const active = isActive(item.href);
           return (
             <NavLink
-              key={item.name}
+              key={item.key}
               to={item.href}
               end={item.href === '/admin'}
               onClick={onClose}
@@ -95,7 +97,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, isMobileOpen, onClo
               />
               {isOpen && (
                 <>
-                  <span className="ml-3 flex-1">{item.name}</span>
+                  <span className="ml-3 flex-1">{t(`admin.nav.${item.key}`)}</span>
                   {item.badge && item.badge > 0 && (
                     <span className="ml-auto bg-red-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
                       {item.badge}
@@ -114,7 +116,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, isMobileOpen, onClo
           to="/"
           className="flex items-center text-gray-400 hover:text-white transition-colors"
         >
-          <span className="text-sm">← Back to Site</span>
+          <span className="text-sm">← {t('admin.nav.backToSite')}</span>
         </NavLink>
       </div>
     </>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   Save,
   RefreshCw,
@@ -53,17 +54,6 @@ const categoryIcons: Record<SettingCategory, React.ReactNode> = {
   api: <Code size={18} />,
   email: <Mail size={18} />,
   performance: <Zap size={18} />,
-};
-
-const categoryLabels: Record<SettingCategory, string> = {
-  general: 'General',
-  movie: 'Movie Settings',
-  user: 'User Management',
-  appearance: 'Appearance',
-  footer: 'Footer & Social',
-  api: 'API & Integration',
-  email: 'Email',
-  performance: 'Performance',
 };
 
 const defaultSettings: Record<
@@ -522,6 +512,7 @@ const defaultSettings: Record<
 };
 
 const AdminSettings: React.FC = () => {
+  const { t } = useTranslation();
   const [activeCategory, setActiveCategory] =
     useState<SettingCategory>('general');
   const [formData, setFormData] = useState<Record<string, unknown>>({});
@@ -559,7 +550,7 @@ const AdminSettings: React.FC = () => {
       return response;
     },
     onSuccess: () => {
-      toast.success('Settings saved successfully');
+      toast.success(t('admin.settings.saveSuccess'));
       queryClient.invalidateQueries({ queryKey: ['admin', 'settings'] });
 
       // Clear cache and force refresh main app settings to apply changes immediately
@@ -574,7 +565,7 @@ const AdminSettings: React.FC = () => {
       toast.error(
         error instanceof Error
           ? error.message
-          : String(error || 'Failed to save settings')
+          : String(error || t('admin.settings.saveFailed'))
       );
     },
   });
@@ -583,13 +574,13 @@ const AdminSettings: React.FC = () => {
     mutationFn: () => adminService.testEmailSettings(testRecipient.trim()),
     onSuccess: () =>
       toast.success(
-        'The email provider accepted the test email. Check the inbox and spam folder.'
+        t('admin.settings.testEmailAccepted')
       ),
     onError: (error: unknown) =>
       toast.error(
         error instanceof Error
           ? error.message
-          : String(error || 'Test email failed')
+          : String(error || t('admin.settings.testEmailFailed'))
       ),
   });
 
@@ -597,14 +588,14 @@ const AdminSettings: React.FC = () => {
   const initMutation = useMutation({
     mutationFn: () => adminService.initializeSettings(),
     onSuccess: () => {
-      toast.success('Settings initialized');
+      toast.success(t('admin.settings.initializeSuccess'));
       queryClient.invalidateQueries({ queryKey: ['admin', 'settings'] });
 
       // Refresh main app settings
       fetchSettings();
     },
     onError: (error: any) => {
-      toast.error(getErrorMessage(error, 'Failed to initialize settings'));
+      toast.error(getErrorMessage(error, t('admin.settings.initializeFailed')));
     },
   });
 
@@ -645,7 +636,7 @@ const AdminSettings: React.FC = () => {
         )
     );
     if (invalidColor) {
-      toast.error('Enter a color in #RRGGBB format');
+      toast.error(t('admin.settings.colorFormatError'));
       return;
     }
     const settingsToUpdate = defaultSettings[activeCategory]
@@ -676,6 +667,7 @@ const AdminSettings: React.FC = () => {
   // Render input based on type
   const renderInput = (setting: (typeof defaultSettings.general)[0]) => {
     const value = getSettingValue(setting.key, setting.defaultValue);
+    const settingLabel = t(`admin.settings.labels.${setting.key}`, { defaultValue: setting.label });
 
     if (setting.key.endsWith('_color')) {
       const color = /^#[0-9a-f]{6}$/i.test(String(value))
@@ -686,14 +678,14 @@ const AdminSettings: React.FC = () => {
           <Input
             type="color"
             value={color}
-            aria-label={`${setting.label} picker`}
+            aria-label={t('admin.settings.colorPickerLabel', { label: settingLabel })}
             onChange={(event) => handleChange(setting.key, event.target.value)}
             className="w-14 shrink-0 cursor-pointer p-1.5"
           />
           <Input
             id={`setting-${setting.key}`}
             value={String(value || '')}
-            aria-label={setting.label}
+            aria-label={settingLabel}
             placeholder="#dc2626"
             maxLength={7}
             onChange={(event) => handleChange(setting.key, event.target.value)}
@@ -709,7 +701,7 @@ const AdminSettings: React.FC = () => {
           <Input
             type="checkbox"
             role="switch"
-            aria-label={setting.label}
+            aria-label={settingLabel}
             className="sr-only peer"
             checked={Boolean(value)}
             onChange={(e) => handleChange(setting.key, e.target.checked)}
@@ -723,7 +715,7 @@ const AdminSettings: React.FC = () => {
       return (
         <Input
           type="number"
-          aria-label={setting.label}
+          aria-label={settingLabel}
           value={String(value)}
           onChange={(e) => handleChange(setting.key, Number(e.target.value))}
         />
@@ -740,8 +732,8 @@ const AdminSettings: React.FC = () => {
           onChange={(e) => handleChange(setting.key, e.target.value)}
           placeholder={
             value === '********'
-              ? 'Saved — leave blank to keep the current password'
-              : 'App password or SMTP API key'
+              ? t('admin.settings.savedPasswordPlaceholder')
+              : t('admin.settings.smtpPasswordPlaceholder')
           }
           autoComplete="new-password"
         />
@@ -752,7 +744,7 @@ const AdminSettings: React.FC = () => {
       <Input
         type="text"
         id={`setting-${setting.key}`}
-        aria-label={setting.label}
+        aria-label={settingLabel}
         value={String(value || '')}
         onChange={(e) => handleChange(setting.key, e.target.value)}
       />
@@ -772,26 +764,26 @@ const AdminSettings: React.FC = () => {
   return (
     <div>
       <AdminBreadcrumb
-        items={[{ label: 'Admin', href: '/admin' }, { label: 'Settings' }]}
+        items={[{ label: t('admin.common.admin'), href: '/admin' }, { label: t('admin.settings.title') }]}
       />
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Settings</h1>
-          <p className="text-gray-400 mt-1">Configure system settings</p>
+          <h1 className="text-2xl font-bold text-white">{t('admin.settings.title')}</h1>
+          <p className="text-gray-400 mt-1">{t('admin.settings.description')}</p>
         </div>
         <div className="flex items-center gap-3">
           <Button
             onClick={() => {
               clearCache();
               fetchSettings(true);
-              toast.success('Settings cache cleared and refreshed');
+              toast.success(t('admin.settings.cacheCleared'));
             }}
             variant="outline"
             className="gap-2"
           >
             <RefreshCw size={16} />
-            Refresh Cache
+            {t('admin.settings.refreshCache')}
           </Button>
           <Button
             onClick={() => initMutation.mutate()}
@@ -803,7 +795,7 @@ const AdminSettings: React.FC = () => {
               size={16}
               className={initMutation.isPending ? 'animate-spin' : ''}
             />
-            Initialize Defaults
+            {t('admin.settings.initialize')}
           </Button>
         </div>
       </div>
@@ -812,7 +804,7 @@ const AdminSettings: React.FC = () => {
         {/* Sidebar Navigation */}
         <div className="ui-panel p-4 h-fit">
           <nav className="space-y-1">
-            {(Object.keys(categoryLabels) as SettingCategory[]).map(
+            {(Object.keys(categoryIcons) as SettingCategory[]).map(
               (category) => (
                 <Button
                   key={category}
@@ -830,7 +822,7 @@ const AdminSettings: React.FC = () => {
                   }`}
                 >
                   {categoryIcons[category]}
-                  {categoryLabels[category]}
+                  {t(`admin.settings.categories.${category}`)}
                 </Button>
               )
             )}
@@ -844,21 +836,15 @@ const AdminSettings: React.FC = () => {
               {categoryIcons[activeCategory]}
             </div>
             <h2 className="text-lg font-semibold text-white">
-              {categoryLabels[activeCategory]} Settings
+              {t('admin.settings.categoryTitle', { category: t(`admin.settings.categories.${activeCategory}`) })}
             </h2>
           </div>
 
           <div className="space-y-6">
             {activeCategory === 'email' && (
               <div className="rounded-xl border border-border bg-background/60 p-4 space-y-3">
-                <h3 className="font-medium text-foreground">
-                  Gửi từ noreply@ritomovie.live
-                </h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  Xác minh ritomovie.live trong Resend, tạo API key có quyền gửi
-                  email, rồi nhập key vào SMTP Password. Không dùng mật khẩu
-                  đăng nhập Resend.
-                </p>
+                <h3 className="font-medium text-foreground">{t('admin.settings.emailSenderTitle')}</h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">{t('admin.settings.emailSenderDescription')}</p>
                 <div className="flex flex-wrap items-center gap-3">
                   <Button
                     variant="outline"
@@ -875,21 +861,16 @@ const AdminSettings: React.FC = () => {
                       setHasChanges(true);
                     }}
                   >
-                    Điền cấu hình Resend
+                    {t('admin.settings.fillResend')}
                   </Button>
                   <a
                     href="https://resend.com/domains"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm text-brand hover:underline"
-                  >
-                    Xác minh tên miền ↗
-                  </a>
+                  >{t('admin.settings.verifyDomain')}</a>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Cổng 465 dùng TLS trực tiếp; cổng 587 dùng STARTTLS. Lưu cấu
-                  hình trước khi gửi thử.
-                </p>
+                <p className="text-xs text-muted-foreground">{t('admin.settings.smtpPortHint')}</p>
               </div>
             )}
             {currentSettings.map((setting) => (
@@ -904,9 +885,9 @@ const AdminSettings: React.FC = () => {
                 {setting.type === 'boolean' ? (
                   <>
                     <div>
-                      <p className="text-white font-medium">{setting.label}</p>
+                      <p className="text-white font-medium">{t(`admin.settings.labels.${setting.key}`, { defaultValue: setting.label })}</p>
                       <p className="text-sm text-gray-400">
-                        {setting.description}
+                        {t(`admin.settings.descriptions.${setting.key}`, { defaultValue: setting.description })}
                       </p>
                     </div>
                     {renderInput(setting)}
@@ -917,11 +898,11 @@ const AdminSettings: React.FC = () => {
                       htmlFor={`setting-${setting.key}`}
                       className="block text-sm font-medium text-gray-300 mb-2"
                     >
-                      {setting.label}
+                      {t(`admin.settings.labels.${setting.key}`, { defaultValue: setting.label })}
                     </label>
                     {renderInput(setting)}
                     <p className="text-xs text-gray-500 mt-1">
-                      {setting.description}
+                      {t(`admin.settings.descriptions.${setting.key}`, { defaultValue: setting.description })}
                     </p>
                   </>
                 )}
@@ -930,17 +911,12 @@ const AdminSettings: React.FC = () => {
 
             {activeCategory === 'email' && (
               <div className="rounded-xl border border-border p-4 space-y-3">
-                <h3 className="font-medium">Gửi email kiểm tra</h3>
-                <label
-                  htmlFor="smtp-test-recipient"
-                  className="block text-sm text-muted-foreground"
-                >
-                  Địa chỉ nhận thử — dùng hộp thư thật bạn có thể kiểm tra
-                </label>
+                <h3 className="font-medium">{t('admin.settings.testEmailTitle')}</h3>
+                <label htmlFor="smtp-test-recipient" className="block text-sm text-muted-foreground">{t('admin.settings.testEmailRecipient')}</label>
                 <Input
                   id="smtp-test-recipient"
                   type="email"
-                  placeholder="ban@gmail.com"
+                  placeholder="you@example.com"
                   value={testRecipient}
                   onChange={(event) => setTestRecipient(event.target.value)}
                 />
@@ -956,12 +932,12 @@ const AdminSettings: React.FC = () => {
                   }
                   onClick={() => testEmailMutation.mutate()}
                 >
-                  Gửi email thử
+                  {t('admin.settings.sendTestEmail')}
                 </Button>
                 <p className="text-xs text-muted-foreground">
                   {hasChanges
-                    ? 'Hãy Save Changes trước khi gửi thử.'
-                    : 'Gửi bằng cấu hình của máy chủ. Sau khi dịch vụ chấp nhận, kiểm tra Inbox và Spam.'}
+                    ? t('admin.settings.saveBeforeTest')
+                    : t('admin.settings.testEmailHint')}
                 </p>
               </div>
             )}
@@ -970,7 +946,7 @@ const AdminSettings: React.FC = () => {
               <div>
                 {hasChanges && (
                   <span className="text-sm text-yellow-500">
-                    You have unsaved changes
+                    {t('admin.settings.unsavedChanges')}
                   </span>
                 )}
               </div>
@@ -984,7 +960,7 @@ const AdminSettings: React.FC = () => {
                 ) : (
                   <Save size={16} />
                 )}
-                Save Changes
+                {t('admin.common.saveChanges')}
               </Button>
             </div>
           </div>

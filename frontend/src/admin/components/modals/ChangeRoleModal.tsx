@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -73,6 +74,7 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({
   onClose,
   user,
 }) => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [selectedRole, setSelectedRole] = useState<UserRole>('user');
   const [error, setError] = useState('');
@@ -91,7 +93,7 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({
       onClose();
     },
     onError: (err: Error) => {
-      setError(err.message || 'Failed to change role');
+      setError(err.message || t('admin.modals.changeRoleFailed'));
     },
   });
 
@@ -154,7 +156,7 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <DialogTitle className="text-lg font-semibold text-white">
-            Change User Role
+            {t('admin.modals.changeRole')}
           </DialogTitle>
         </div>
 
@@ -191,7 +193,7 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({
             {/* Role Selection */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-300">
-                Select Role
+                {t('admin.modals.selectRole')}
               </label>
               <div className="space-y-2">
                 {roles.map((role) => (
@@ -217,10 +219,10 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({
                       <p
                         className={`font-medium ${selectedRole === role.value ? 'text-white' : 'text-gray-300'}`}
                       >
-                        {role.label}
+                        {t(`admin.roles.${role.value}`)}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {role.description}
+                        {t(`admin.roleDescriptions.${role.value}`)}
                       </p>
                     </div>
                     {selectedRole === role.value && (
@@ -235,7 +237,7 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({
           {/* Footer */}
           <div className="flex justify-end gap-3 p-4 border-t border-gray-700">
             <Button type="button" onClick={onClose} variant="outline">
-              Cancel
+              {t('admin.common.cancel')}
             </Button>
             <Button
               type="submit"
@@ -247,7 +249,7 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({
               {changeRoleMutation.isPending && (
                 <Loader2 className="w-4 h-4 animate-spin" />
               )}
-              Change Role
+              {t('admin.modals.changeRole')}
             </Button>
           </div>
         </form>

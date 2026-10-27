@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -19,6 +20,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
   onClose,
   user,
 }) => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     name: '',
@@ -46,18 +48,18 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
       onClose();
     },
     onError: (err: Error) => {
-      setError(err.message || 'Failed to update user');
+      setError(err.message || t('admin.modals.updateUserFailed'));
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      setError('Name is required');
+      setError(t('admin.modals.nameRequired'));
       return;
     }
     if (!formData.email.trim()) {
-      setError('Email is required');
+      setError(t('admin.modals.emailRequired'));
       return;
     }
     updateMutation.mutate(formData);
@@ -77,7 +79,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <DialogTitle className="text-lg font-semibold text-white">
-            Edit User
+            {t('admin.modals.editUser')}
           </DialogTitle>
         </div>
 
@@ -92,7 +94,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Name
+                {t('admin.modals.name')}
               </label>
               <Input
                 type="text"
@@ -100,14 +102,14 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                aria-label="Name"
-                placeholder="Enter name"
+                aria-label={t('admin.modals.name')}
+                placeholder={t('admin.modals.enterName')}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Email
+                {t('admin.modals.email')}
               </label>
               <Input
                 type="email"
@@ -115,14 +117,14 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                aria-label="Email"
-                placeholder="Enter email"
+                aria-label={t('admin.modals.email')}
+                placeholder={t('admin.modals.enterEmail')}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Avatar URL
+                {t('admin.modals.avatarUrl')}
               </label>
               <Input
                 type="url"
@@ -130,8 +132,8 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
                 onChange={(e) =>
                   setFormData({ ...formData, avatar: e.target.value })
                 }
-                aria-label="Avatar URL"
-                placeholder="Enter avatar URL (optional)"
+                aria-label={t('admin.modals.avatarUrl')}
+                placeholder={t('admin.modals.avatarOptional')}
               />
             </div>
 
@@ -139,7 +141,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
               <div className="flex justify-center">
                 <img
                   src={formData.avatar}
-                  alt="Avatar preview"
+                  alt={t('admin.modals.avatarPreview')}
                   className="w-20 h-20 rounded-full object-cover border-2 border-gray-600"
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = 'none';
@@ -152,7 +154,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
           {/* Footer */}
           <div className="flex justify-end gap-3 p-4 border-t border-gray-700">
             <Button type="button" onClick={onClose} variant="outline">
-              Cancel
+              {t('admin.common.cancel')}
             </Button>
             <Button
               type="submit"
@@ -162,7 +164,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
               {updateMutation.isPending && (
                 <Loader2 className="w-4 h-4 animate-spin" />
               )}
-              Save Changes
+              {t('admin.common.saveChanges')}
             </Button>
           </div>
         </form>

@@ -1,5 +1,6 @@
 import { SelectField } from '@/components/ui/select-field';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import {
   Search,
@@ -61,6 +62,8 @@ const actionColors: Record<string, string> = {
 };
 
 const AdminAuditLog: React.FC = () => {
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language.startsWith('vi') ? 'vi-VN' : 'en-US';
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [actionFilter, setActionFilter] = useState('');
@@ -120,21 +123,21 @@ const AdminAuditLog: React.FC = () => {
   const columns: Column<AuditLog>[] = [
     {
       key: 'createdAt',
-      header: 'Time',
+      header: t('admin.audit.time'),
       sortable: true,
       render: (log) => (
         <div className="flex items-center gap-2 text-gray-300">
           <Clock className="w-4 h-4 text-gray-500" />
           <div>
-            <p className="text-sm">{new Date(log.createdAt).toLocaleDateString()}</p>
-            <p className="text-xs text-gray-500">{new Date(log.createdAt).toLocaleTimeString()}</p>
+            <p className="text-sm">{new Date(log.createdAt).toLocaleDateString(dateLocale)}</p>
+            <p className="text-xs text-gray-500">{new Date(log.createdAt).toLocaleTimeString(dateLocale)}</p>
           </div>
         </div>
       ),
     },
     {
       key: 'admin',
-      header: 'Admin',
+      header: t('admin.audit.admin'),
       render: (log) => (
         <div className="flex items-center gap-2">
           {log.admin ? (
@@ -150,28 +153,28 @@ const AdminAuditLog: React.FC = () => {
               </div>
             </>
           ) : (
-            <span className="text-gray-500">System</span>
+            <span className="text-gray-500">{t('admin.common.system')}</span>
           )}
         </div>
       ),
     },
     {
       key: 'action',
-      header: 'Action',
+      header: t('admin.audit.action'),
       sortable: true,
       render: (log) => (
         <span className={`px-2 py-1 rounded text-xs font-medium ${actionColors[log.action] || 'bg-gray-500/20 text-gray-400'}`}>
-          {log.action}
+          {t(`admin.auditActions.${log.action}`, { defaultValue: log.action })}
         </span>
       ),
     },
     {
       key: 'resource',
-      header: 'Resource',
+      header: t('admin.audit.resource'),
       sortable: true,
       render: (log) => (
         <div>
-          <p className="text-white text-sm">{log.resource}</p>
+          <p className="text-white text-sm">{t(`admin.resources.${log.resource}`, { defaultValue: log.resource })}</p>
           {log.resourceId && (
             <p className="text-gray-500 text-xs truncate max-w-[150px]">{log.resourceId}</p>
           )}
@@ -180,9 +183,9 @@ const AdminAuditLog: React.FC = () => {
     },
     {
       key: 'ipAddress',
-      header: 'IP Address',
+      header: t('admin.audit.ipAddress'),
       render: (log) => (
-        <span className="text-gray-400 text-sm">{log.ipAddress || 'N/A'}</span>
+        <span className="text-gray-400 text-sm">{log.ipAddress || t('admin.common.na')}</span>
       ),
     },
     {
@@ -201,12 +204,12 @@ const AdminAuditLog: React.FC = () => {
 
   // Prepare chart data
   const activityChartData = stats?.dailyActivity?.map((item) => ({
-    name: new Date(item._id).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      name: new Date(item._id).toLocaleDateString(dateLocale, { month: 'short', day: 'numeric' }),
     actions: item.count,
   })) || [];
 
   const actionTypeChartData = stats?.actionsByType?.map((item) => ({
-    name: item._id,
+      name: t(`admin.auditActions.${item._id}`, { defaultValue: item._id }),
     value: item.count,
   })) || [];
 
@@ -215,8 +218,8 @@ const AdminAuditLog: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Audit Logs</h1>
-          <p className="text-gray-400 mt-1">Track all administrative actions and security events</p>
+          <h1 className="text-2xl font-bold text-white">{t('admin.audit.title')}</h1>
+          <p className="text-gray-400 mt-1">{t('admin.audit.description')}</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -232,7 +235,7 @@ const AdminAuditLog: React.FC = () => {
             className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
             <Download className="w-4 h-4" />
-            Export
+            {t('admin.common.export')}
           </button>
         </div>
       </div>
@@ -241,14 +244,14 @@ const AdminAuditLog: React.FC = () => {
       {stats && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ChartWrapper
-            title="Daily Activity (Last 7 days)"
+            title={t('admin.audit.dailyActivity')}
             type="bar"
             data={activityChartData}
             dataKey="actions"
             height={200}
           />
           <ChartWrapper
-            title="Actions by Type"
+            title={t('admin.audit.actionsByType')}
             type="pie"
             data={actionTypeChartData}
             dataKey="value"
@@ -262,12 +265,12 @@ const AdminAuditLog: React.FC = () => {
         <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <AlertTriangle className="w-5 h-5 text-red-400" />
-            <h3 className="text-red-400 font-semibold">Security Events (Last 7 days)</h3>
+            <h3 className="text-red-400 font-semibold">{t('admin.audit.securityEvents')}</h3>
           </div>
           <div className="flex flex-wrap gap-4">
             {stats.securityEvents.map((event) => (
               <div key={event._id} className="flex items-center gap-2">
-                <span className="text-red-300">{event._id}:</span>
+                <span className="text-red-300">{t(`admin.auditActions.${event._id}`, { defaultValue: event._id })}:</span>
                 <span className="text-white font-medium">{event.count}</span>
               </div>
             ))}
@@ -283,7 +286,7 @@ const AdminAuditLog: React.FC = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search logs..."
+              placeholder={t('admin.audit.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"
@@ -297,7 +300,7 @@ const AdminAuditLog: React.FC = () => {
             }`}
           >
             <Filter className="w-4 h-4" />
-            Filters
+            {t('admin.audit.filters')}
           </button>
         </div>
 
@@ -305,45 +308,45 @@ const AdminAuditLog: React.FC = () => {
         {showFilters && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-700">
             <div>
-              <label className="block text-gray-400 text-sm mb-1">Action</label>
+              <label className="block text-gray-400 text-sm mb-1">{t('admin.audit.action')}</label>
               <SelectField
                 value={actionFilter}
                 onValueChange={value => setActionFilter(value)}
                 className="w-full sm:w-44"
               >
-                <option value="">All Actions</option>
-                <option value="CREATE">Create</option>
-                <option value="UPDATE">Update</option>
-                <option value="DELETE">Delete</option>
-                <option value="BAN">Ban</option>
-                <option value="UNBAN">Unban</option>
-                <option value="RESTRICT_COMMENTS">Restrict comments</option>
-                <option value="LIFT_COMMENT_RESTRICTION">Lift comment restriction</option>
-                <option value="APPROVE">Approve</option>
-                <option value="REJECT">Reject</option>
-                <option value="LOGIN">Login</option>
-                <option value="UNAUTHORIZED_ACCESS">Unauthorized Access</option>
+                <option value="">{t('admin.audit.allActions')}</option>
+                <option value="CREATE">{t('admin.auditActions.CREATE')}</option>
+                <option value="UPDATE">{t('admin.auditActions.UPDATE')}</option>
+                <option value="DELETE">{t('admin.auditActions.DELETE')}</option>
+                <option value="BAN">{t('admin.auditActions.BAN')}</option>
+                <option value="UNBAN">{t('admin.auditActions.UNBAN')}</option>
+                <option value="RESTRICT_COMMENTS">{t('admin.auditActions.RESTRICT_COMMENTS')}</option>
+                <option value="LIFT_COMMENT_RESTRICTION">{t('admin.auditActions.LIFT_COMMENT_RESTRICTION')}</option>
+                <option value="APPROVE">{t('admin.auditActions.APPROVE')}</option>
+                <option value="REJECT">{t('admin.auditActions.REJECT')}</option>
+                <option value="LOGIN">{t('admin.auditActions.LOGIN')}</option>
+                <option value="UNAUTHORIZED_ACCESS">{t('admin.auditActions.UNAUTHORIZED_ACCESS')}</option>
               </SelectField>
             </div>
 
             <div>
-              <label className="block text-gray-400 text-sm mb-1">Resource</label>
+              <label className="block text-gray-400 text-sm mb-1">{t('admin.audit.resource')}</label>
               <SelectField
                 value={resourceFilter}
                 onValueChange={value => setResourceFilter(value)}
                 className="w-full sm:w-44"
               >
-                <option value="">All Resources</option>
-                <option value="USER">User</option>
-                <option value="MOVIE">Movie</option>
-                <option value="COMMENT">Comment</option>
-                <option value="REPORT">Report</option>
-                <option value="SETTING">Setting</option>
+                <option value="">{t('admin.audit.allResources')}</option>
+                <option value="USER">{t('admin.reports.user')}</option>
+                <option value="MOVIE">{t('admin.reports.movie')}</option>
+                <option value="COMMENT">{t('admin.reports.comment')}</option>
+                <option value="REPORT">{t('admin.nav.reports')}</option>
+                <option value="SETTING">{t('admin.nav.settings')}</option>
               </SelectField>
             </div>
 
             <div>
-              <label className="block text-gray-400 text-sm mb-1">From Date</label>
+              <label className="block text-gray-400 text-sm mb-1">{t('admin.audit.from')}</label>
               <input
                 type="date"
                 value={dateFrom}
@@ -353,7 +356,7 @@ const AdminAuditLog: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-gray-400 text-sm mb-1">To Date</label>
+              <label className="block text-gray-400 text-sm mb-1">{t('admin.audit.to')}</label>
               <input
                 type="date"
                 value={dateTo}
@@ -391,7 +394,7 @@ const AdminAuditLog: React.FC = () => {
           <div className="bg-gray-800 rounded-xl max-w-2xl w-full max-h-[80vh] overflow-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-white">Log Details</h2>
+                <h2 className="text-xl font-bold text-white">{t('admin.audit.logDetails')}</h2>
                 <button
                   onClick={() => setSelectedLog(null)}
                   className="text-gray-400 hover:text-white"
@@ -403,14 +406,14 @@ const AdminAuditLog: React.FC = () => {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-gray-400 text-sm">Time</label>
-                    <p className="text-white">{new Date(selectedLog.createdAt).toLocaleString()}</p>
+                    <label className="text-gray-400 text-sm">{t('admin.audit.time')}</label>
+                    <p className="text-white">{new Date(selectedLog.createdAt).toLocaleString(dateLocale)}</p>
                   </div>
                   <div>
-                    <label className="text-gray-400 text-sm">Action</label>
+                    <label className="text-gray-400 text-sm">{t('admin.audit.action')}</label>
                     <p>
                       <span className={`px-2 py-1 rounded text-xs font-medium ${actionColors[selectedLog.action] || 'bg-gray-500/20 text-gray-400'}`}>
-                        {selectedLog.action}
+                        {t(`admin.auditActions.${selectedLog.action}`, { defaultValue: selectedLog.action })}
                       </span>
                     </p>
                   </div>
@@ -418,30 +421,30 @@ const AdminAuditLog: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-gray-400 text-sm">Admin</label>
-                    <p className="text-white">{selectedLog.admin?.name || 'System'}</p>
+                    <label className="text-gray-400 text-sm">{t('admin.audit.admin')}</label>
+                    <p className="text-white">{selectedLog.admin?.name || t('admin.common.system')}</p>
                     <p className="text-gray-500 text-sm">{selectedLog.admin?.email}</p>
                   </div>
                   <div>
-                    <label className="text-gray-400 text-sm">Resource</label>
-                    <p className="text-white">{selectedLog.resource}</p>
+                    <label className="text-gray-400 text-sm">{t('admin.audit.resource')}</label>
+                    <p className="text-white">{t(`admin.resources.${selectedLog.resource}`, { defaultValue: selectedLog.resource })}</p>
                     <p className="text-gray-500 text-sm truncate">{selectedLog.resourceId}</p>
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-gray-400 text-sm">IP Address</label>
-                  <p className="text-white">{selectedLog.ipAddress || 'N/A'}</p>
+                  <label className="text-gray-400 text-sm">{t('admin.audit.ipAddress')}</label>
+                  <p className="text-white">{selectedLog.ipAddress || t('admin.common.na')}</p>
                 </div>
 
                 <div>
-                  <label className="text-gray-400 text-sm">User Agent</label>
-                  <p className="text-gray-300 text-sm break-all">{selectedLog.userAgent || 'N/A'}</p>
+                  <label className="text-gray-400 text-sm">{t('admin.audit.userAgent')}</label>
+                  <p className="text-gray-300 text-sm break-all">{selectedLog.userAgent || t('admin.common.na')}</p>
                 </div>
 
                 {selectedLog.details && Object.keys(selectedLog.details).length > 0 && (
                   <div>
-                    <label className="text-gray-400 text-sm">Details</label>
+                    <label className="text-gray-400 text-sm">{t('admin.audit.details')}</label>
                     <pre className="mt-2 p-4 bg-gray-900 rounded-lg text-gray-300 text-sm overflow-auto">
                       {JSON.stringify(selectedLog.details, null, 2)}
                     </pre>
@@ -454,7 +457,7 @@ const AdminAuditLog: React.FC = () => {
                   onClick={() => setSelectedLog(null)}
                   className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
                 >
-                  Close
+                  {t('admin.modals.close')}
                 </button>
               </div>
             </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   Users,
   Film,
@@ -14,6 +15,7 @@ import ChartWrapper from '../components/common/ChartWrapper';
 import AdminBreadcrumb from '../components/layout/AdminBreadcrumb';
 
 const AdminDashboard: React.FC = () => {
+  const { t, i18n } = useTranslation();
   // Fetch dashboard stats
   const { data: statsData, isLoading: statsLoading } = useQuery({
     queryKey: ['admin', 'dashboard', 'stats'],
@@ -46,11 +48,11 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div>
-      <AdminBreadcrumb items={[{ label: 'Dashboard' }]} />
+      <AdminBreadcrumb items={[{ label: t('admin.nav.dashboard') }]} />
       
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-gray-400 mt-1">Welcome to RitoMovie Admin Panel</p>
+        <h1 className="text-2xl font-bold text-white">{t('admin.nav.dashboard')}</h1>
+        <p className="text-gray-400 mt-1">{t('admin.dashboard.welcome')}</p>
       </div>
 
       {/* Alerts */}
@@ -67,7 +69,12 @@ const AdminDashboard: React.FC = () => {
                   : 'bg-blue-900/20 border-blue-700 text-blue-400'
               }`}
             >
-              {alert.message}
+              {alert.key
+                ? t(`admin.dashboard.alerts.${alert.key}`, {
+                    count: alert.count ?? 0,
+                    defaultValue: alert.message,
+                  })
+                : alert.message}
             </div>
           ))}
         </div>
@@ -76,43 +83,43 @@ const AdminDashboard: React.FC = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
         <StatCard
-          title="Total Users"
+          title={t('admin.dashboard.totalUsers')}
           value={stats?.overview?.totalUsers || 0}
           icon={<Users className="h-5 w-5 text-blue-400" />}
           trend={stats?.trends?.userTrend >= 0 ? 'up' : 'down'}
           trendValue={Math.abs(stats?.trends?.userTrend || 0)}
-          trendLabel="vs last week"
+          trendLabel={t('admin.dashboard.vsLastWeek')}
           loading={statsLoading}
         />
         <StatCard
-          title="Managed Movies"
+          title={t('admin.dashboard.managedMovies')}
           value={stats?.overview?.totalMovies || 0}
           icon={<Film className="h-5 w-5 text-purple-400" />}
           loading={statsLoading}
         />
         <StatCard
-          title="Total Comments"
+          title={t('admin.dashboard.totalComments')}
           value={stats?.overview?.totalComments || 0}
           icon={<MessageCircle className="h-5 w-5 text-green-400" />}
           trend={stats?.trends?.commentTrend >= 0 ? 'up' : 'down'}
           trendValue={Math.abs(stats?.trends?.commentTrend || 0)}
-          trendLabel="vs last week"
+          trendLabel={t('admin.dashboard.vsLastWeek')}
           loading={statsLoading}
         />
         <StatCard
-          title="Total Ratings"
+          title={t('admin.dashboard.totalRatings')}
           value={stats?.overview?.totalRatings || 0}
           icon={<Star className="h-5 w-5 text-yellow-400" />}
           loading={statsLoading}
         />
         <StatCard
-          title="Pending Reports"
+          title={t('admin.dashboard.pendingReports')}
           value={stats?.overview?.pendingReports || 0}
           icon={<Flag className="h-5 w-5 text-red-400" />}
           loading={statsLoading}
         />
         <StatCard
-          title="Active Users"
+          title={t('admin.dashboard.activeUsers')}
           value={stats?.overview?.activeUsers || 0}
           icon={<UserCheck className="h-5 w-5 text-cyan-400" />}
           loading={statsLoading}
@@ -126,7 +133,7 @@ const AdminDashboard: React.FC = () => {
           data={charts?.userGrowth || []}
           dataKey="count"
           xAxisKey="_id"
-          title="User Growth (Last 7 Days)"
+          title={t('admin.dashboard.userGrowth')}
           loading={chartsLoading}
         />
         <ChartWrapper
@@ -134,7 +141,7 @@ const AdminDashboard: React.FC = () => {
           data={charts?.viewsData || []}
           dataKey="count"
           xAxisKey="_id"
-          title="Views (Last 7 Days)"
+          title={t('admin.dashboard.views')}
           loading={chartsLoading}
         />
       </div>
@@ -146,7 +153,7 @@ const AdminDashboard: React.FC = () => {
           dataKey="count"
           xAxisKey="_id"
           horizontal
-          title="Top Genres"
+          title={t('admin.dashboard.topGenres')}
           loading={chartsLoading}
         />
         <ChartWrapper
@@ -154,7 +161,7 @@ const AdminDashboard: React.FC = () => {
           data={charts?.ratingDistribution || []}
           dataKey="count"
           nameKey="_id"
-          title="Rating Distribution"
+          title={t('admin.dashboard.ratingDistribution')}
           loading={chartsLoading}
         />
       </div>
@@ -163,7 +170,7 @@ const AdminDashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Users */}
         <div className="bg-[#1a1a1a] rounded-xl p-6 border border-gray-700">
-          <h3 className="text-lg font-semibold text-white mb-4">Recent Users</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('admin.dashboard.recentUsers')}</h3>
           {activityLoading ? (
             <div className="space-y-3">
               {[1, 2, 3, 4, 5].map((i) => (
@@ -196,7 +203,7 @@ const AdminDashboard: React.FC = () => {
                     <p className="text-xs text-gray-400 truncate">{user.email}</p>
                   </div>
                   <span className="text-xs text-gray-500">
-                    {new Date(user.createdAt).toLocaleDateString()}
+                    {new Date(user.createdAt).toLocaleDateString(i18n.language)}
                   </span>
                 </div>
               ))}
@@ -206,7 +213,7 @@ const AdminDashboard: React.FC = () => {
 
         {/* Recent Admin Actions */}
         <div className="bg-[#1a1a1a] rounded-xl p-6 border border-gray-700">
-          <h3 className="text-lg font-semibold text-white mb-4">Recent Admin Actions</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('admin.dashboard.recentActions')}</h3>
           {activityLoading ? (
             <div className="space-y-3">
               {[1, 2, 3, 4, 5].map((i) => (
@@ -222,14 +229,14 @@ const AdminDashboard: React.FC = () => {
                 <div key={log._id} className="p-3 bg-[#2a2a2a] rounded-lg">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-white">
-                      <span className="font-medium">{log.admin?.name || 'System'}</span>
+                      <span className="font-medium">{log.admin?.name || t('admin.common.system')}</span>
                       {' '}
-                      <span className="text-gray-400">{log.action.toLowerCase()}</span>
+                      <span className="text-gray-400">{t(`admin.auditActions.${log.action}`, { defaultValue: log.action.toLowerCase() })}</span>
                       {' '}
-                      <span className="text-gray-300">{log.resource.toLowerCase()}</span>
+                      <span className="text-gray-300">{t(`admin.resources.${log.resource}`, { defaultValue: log.resource.toLowerCase() })}</span>
                     </span>
                     <span className="text-xs text-gray-500">
-                      {new Date(log.createdAt).toLocaleString()}
+                      {new Date(log.createdAt).toLocaleString(i18n.language)}
                     </span>
                   </div>
                 </div>

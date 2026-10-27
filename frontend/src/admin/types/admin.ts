@@ -158,6 +158,7 @@ export interface RecentActivity {
 
 export interface SystemAlert {
   type: 'warning' | 'error' | 'info';
+  key?: 'pendingReports' | 'criticalReports' | 'failedLogins';
   message: string;
   count?: number;
 }

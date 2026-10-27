@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ChevronRight, Home } from 'lucide-react';
 
 interface BreadcrumbItem {
@@ -13,13 +14,18 @@ interface AdminBreadcrumbProps {
 
 const AdminBreadcrumb: React.FC<AdminBreadcrumbProps> = ({ items }) => {
   const location = useLocation();
+  const { t } = useTranslation();
 
   // Auto-generate breadcrumbs from path if not provided
   const breadcrumbs = items || (() => {
     const paths = location.pathname.split('/').filter(Boolean);
     return paths.map((path, index) => {
       const href = '/' + paths.slice(0, index + 1).join('/');
-      const label = path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, ' ');
+      const routeKeys: Record<string, string> = {
+        admin: 'common.admin', users: 'nav.users', movies: 'nav.movies', 'home-layout': 'nav.homeSections',
+        comments: 'nav.comments', reports: 'nav.reports', analytics: 'nav.analytics', 'audit-log': 'nav.auditLog', settings: 'nav.settings',
+      };
+      const label = routeKeys[path] ? t(`admin.${routeKeys[path]}`) : path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, ' ');
       return { label, href: index < paths.length - 1 ? href : undefined };
     });
   })();
@@ -41,10 +47,10 @@ const AdminBreadcrumb: React.FC<AdminBreadcrumbProps> = ({ items }) => {
               to={item.href}
               className="hover:text-white transition-colors"
             >
-              {item.label}
+              {item.label === 'Admin' ? t('admin.common.admin') : item.label}
             </Link>
           ) : (
-            <span className="text-white font-medium">{item.label}</span>
+            <span className="text-white font-medium">{item.label === 'Admin' ? t('admin.common.admin') : item.label}</span>
           )}
         </React.Fragment>
       ))}

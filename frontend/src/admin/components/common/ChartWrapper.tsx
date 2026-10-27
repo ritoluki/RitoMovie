@@ -1,4 +1,5 @@
 import React, { useId } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Area,
   AreaChart,
@@ -106,6 +107,7 @@ const ChartWrapper: React.FC<ChartWrapperProps> = ({
   className = '',
   horizontal = false,
 }) => {
+  const { t } = useTranslation();
   const generatedId = useId().replace(/:/g, '');
   const areaGradientId = `chart-area-${generatedId}`;
   const barGradientId = `chart-bar-${generatedId}`;
@@ -224,7 +226,7 @@ const ChartWrapper: React.FC<ChartWrapperProps> = ({
 
     const pieData = data.map((item) => ({
       ...item,
-      [nameKey]: String(item[nameKey] ?? 'Unknown'),
+      [nameKey]: String(item[nameKey] ?? t('admin.common.unknown')),
       [dataKey]: Number(item[dataKey]) || 0,
     }));
     const pieHeight = Math.max(150, height - 68);
@@ -262,13 +264,13 @@ const ChartWrapper: React.FC<ChartWrapperProps> = ({
           </ResponsiveContainer>
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-2xl font-bold tracking-tight text-white">{compactFormat.format(total)}</span>
-            <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-[.16em] text-gray-500">Total</span>
+            <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-[.16em] text-gray-500">{t('admin.common.total')}</span>
           </div>
         </div>
         <div className="mt-1 grid max-h-28 grid-cols-2 gap-x-4 gap-y-2 overflow-y-auto pr-1">
           {pieData.map((item, index) => {
             const value = Number(item[dataKey]) || 0;
-            const label = String(item[nameKey] ?? 'Unknown');
+            const label = String(item[nameKey] ?? t('admin.common.unknown'));
             return (
               <div key={`legend-${label}-${index}`} className="flex min-w-0 items-center gap-2 text-xs" title={label}>
                 <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: colors[index % colors.length] }} />
@@ -292,7 +294,7 @@ const ChartWrapper: React.FC<ChartWrapperProps> = ({
       )}
       {data.length === 0 ? (
         <div className="flex items-center justify-center rounded-xl border border-dashed border-white/[.08] bg-white/[.015] text-sm text-gray-500" style={{ height }}>
-          No data available
+          {t('admin.common.noChartData')}
         </div>
       ) : (
         renderChart()

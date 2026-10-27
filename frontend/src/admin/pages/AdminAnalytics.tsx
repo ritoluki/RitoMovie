@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   TrendingUp,
   Users,
@@ -17,6 +18,8 @@ type Period = '7d' | '30d' | '90d' | '1y';
 
 const AdminAnalytics: React.FC = () => {
   const [period, setPeriod] = useState<Period>('30d');
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language.startsWith('vi') ? 'vi-VN' : 'en-US';
 
   // Fetch analytics data
   const { data: trafficData, isLoading: trafficLoading, refetch: refetchTraffic } = useQuery({
@@ -72,12 +75,12 @@ const AdminAnalytics: React.FC = () => {
 
   // Prepare chart data
   const registrationChartData = traffic?.userRegistrations?.map((item: { _id: string; count: number }) => ({
-    name: new Date(item._id).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      name: new Date(item._id).toLocaleDateString(dateLocale, { month: 'short', day: 'numeric' }),
     users: item.count,
   })) || [];
 
   const watchActivityChartData = traffic?.watchActivity?.map((item: { _id: string; views: number; uniqueUsers: number }) => ({
-    name: new Date(item._id).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      name: new Date(item._id).toLocaleDateString(dateLocale, { month: 'short', day: 'numeric' }),
     views: item.views,
     uniqueUsers: item.uniqueUsers,
   })) || [];
@@ -97,8 +100,8 @@ const AdminAnalytics: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Analytics</h1>
-          <p className="text-gray-400 mt-1">Detailed insights and performance metrics</p>
+          <h1 className="text-2xl font-bold text-white">{t('admin.nav.analytics')}</h1>
+          <p className="text-gray-400 mt-1">{t('admin.analytics.description')}</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -108,10 +111,10 @@ const AdminAnalytics: React.FC = () => {
             onChange={(e) => setPeriod(e.target.value as Period)}
             className="bg-gray-800 text-white border border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
           >
-            <option value="7d">Last 7 days</option>
-            <option value="30d">Last 30 days</option>
-            <option value="90d">Last 90 days</option>
-            <option value="1y">Last year</option>
+            <option value="7d">{t('admin.analytics.last7Days')}</option>
+            <option value="30d">{t('admin.analytics.last30Days')}</option>
+            <option value="90d">{t('admin.analytics.last90Days')}</option>
+            <option value="1y">{t('admin.analytics.lastYear')}</option>
           </select>
           
           <button
@@ -126,7 +129,7 @@ const AdminAnalytics: React.FC = () => {
             className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
             <Download className="w-4 h-4" />
-            Export
+            {t('admin.common.export')}
           </button>
         </div>
       </div>
@@ -134,7 +137,7 @@ const AdminAnalytics: React.FC = () => {
       {/* Overview Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Active Users"
+          title={t('admin.analytics.activeUsers')}
           value={users?.activeUsers || 0}
           icon={<Users className="w-6 h-6" />}
           trend="up"
@@ -142,19 +145,19 @@ const AdminAnalytics: React.FC = () => {
           color="blue"
         />
         <StatCard
-          title="Total Movies"
+          title={t('admin.analytics.totalMovies')}
           value={content?.movieStats?.total || 0}
           icon={<Film className="w-6 h-6" />}
           color="purple"
         />
         <StatCard
-          title="Avg Rating"
+          title={t('admin.analytics.avgRating')}
           value={(content?.movieStats?.avgRating || 0).toFixed(1)}
           icon={<TrendingUp className="w-6 h-6" />}
           color="yellow"
         />
         <StatCard
-          title="Banned Users"
+          title={t('admin.analytics.bannedUsers')}
           value={users?.bannedUsers || 0}
           icon={<Users className="w-6 h-6" />}
           color="red"
@@ -164,14 +167,14 @@ const AdminAnalytics: React.FC = () => {
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ChartWrapper
-          title="User Registrations"
+          title={t('admin.analytics.registrations')}
           type="line"
           data={registrationChartData}
           dataKey="users"
           height={300}
         />
         <ChartWrapper
-          title="Watch Activity"
+          title={t('admin.analytics.watchActivity')}
           type="bar"
           data={watchActivityChartData}
           dataKey="views"
@@ -182,14 +185,14 @@ const AdminAnalytics: React.FC = () => {
       {/* Charts Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ChartWrapper
-          title="Genre Distribution"
+          title={t('admin.analytics.genreDistribution')}
           type="pie"
           data={genreChartData}
           dataKey="value"
           height={300}
         />
         <ChartWrapper
-          title="User Roles"
+          title={t('admin.analytics.userRoles')}
           type="pie"
           data={roleChartData}
           dataKey="value"
@@ -201,7 +204,7 @@ const AdminAnalytics: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Rated Movies */}
         <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700/50 p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Top Rated Movies</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('admin.analytics.topRatedMovies')}</h3>
           <div className="space-y-3">
             {content?.topRatedMovies?.slice(0, 5).map((movie, index) => (
               <div key={movie.id} className="flex items-center gap-3">
@@ -213,7 +216,7 @@ const AdminAnalytics: React.FC = () => {
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-medium truncate">{movie.title}</p>
-                  <p className="text-gray-400 text-sm">Rating: {movie.vote_average?.toFixed(1)}</p>
+                  <p className="text-gray-400 text-sm">{t('admin.analytics.rating', { value: movie.vote_average?.toFixed(1) })}</p>
                 </div>
               </div>
             ))}
@@ -222,7 +225,7 @@ const AdminAnalytics: React.FC = () => {
 
         {/* Top Active Users */}
         <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700/50 p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Top Active Users</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('admin.analytics.topActiveUsers')}</h3>
           <div className="space-y-3">
             {users?.topActiveUsers?.slice(0, 5).map((item: { _id: string; user: { name: string; email: string; avatar?: string }; watchCount: number }, index: number) => (
               <div key={item._id} className="flex items-center gap-3">
@@ -234,7 +237,7 @@ const AdminAnalytics: React.FC = () => {
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-medium truncate">{item.user?.name}</p>
-                  <p className="text-gray-400 text-sm">{item.watchCount} movies watched</p>
+                  <p className="text-gray-400 text-sm">{t('admin.analytics.moviesWatched', { count: item.watchCount })}</p>
                 </div>
               </div>
             ))}
@@ -244,7 +247,7 @@ const AdminAnalytics: React.FC = () => {
 
       {/* Most Watched Movies */}
       <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700/50 p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">Most Watched Movies</h3>
+        <h3 className="text-lg font-semibold text-white mb-4">{t('admin.analytics.mostWatchedMovies')}</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {content?.mostWatchedMovies?.slice(0, 10).map((movie: { movieId: number; title: string; watchCount: number; poster_path: string }) => (
             <div key={movie.movieId} className="text-center">
@@ -254,7 +257,7 @@ const AdminAnalytics: React.FC = () => {
                 className="w-full aspect-[2/3] object-cover rounded-lg mb-2"
               />
               <p className="text-white text-sm font-medium truncate">{movie.title || `Movie #${movie.movieId}`}</p>
-              <p className="text-gray-400 text-xs">{movie.watchCount} views</p>
+              <p className="text-gray-400 text-xs">{t('admin.analytics.views', { count: movie.watchCount })}</p>
             </div>
           ))}
         </div>

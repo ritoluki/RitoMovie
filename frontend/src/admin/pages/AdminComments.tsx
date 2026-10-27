@@ -1,6 +1,7 @@
 import { SelectField } from '@/components/ui/select-field';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   Check,
   X,
@@ -34,6 +35,7 @@ const DEFAULT_RULES: ModerationRules = {
 };
 
 const AdminComments: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
 
@@ -95,17 +97,17 @@ const AdminComments: React.FC = () => {
     onSuccess: () => {
       setSelectedRows([]);
       queryClient.invalidateQueries({ queryKey: ['admin', 'comments'] });
-      toast.success('Selected comments updated');
+      toast.success(t('admin.comments.selectedUpdated'));
     },
-    onError: () => toast.error('Could not update selected comments'),
+    onError: () => toast.error(t('admin.comments.updateFailed')),
   });
   const saveRulesMutation = useMutation({
     mutationFn: () => adminService.updateModerationRules(rules as unknown as Record<string, unknown>),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'moderation-rules'] });
-      toast.success('Moderation rules saved');
+      toast.success(t('admin.comments.rulesSaved'));
     },
-    onError: () => toast.error('Could not save moderation rules'),
+    onError: () => toast.error(t('admin.comments.rulesSaveFailed')),
   });
 
   // axios interceptor returns response.data directly, so structure is {success, data, pagination}
@@ -119,8 +121,8 @@ const AdminComments: React.FC = () => {
     }
     setConfirmDialog({
       open: true,
-      title: 'Delete selected comments',
-      message: `Permanently delete ${selectedRows.length} selected comment(s)?`,
+      title: t('admin.comments.deleteSelectedTitle'),
+      message: t('admin.comments.deleteSelectedMessage', { count: selectedRows.length }),
       action: () => {
         bulkMutation.mutate('delete');
         setConfirmDialog(previous => ({ ...previous, open: false }));
@@ -132,8 +134,8 @@ const AdminComments: React.FC = () => {
   const handleDeleteComment = (comment: AdminComment) => {
     setConfirmDialog({
       open: true,
-      title: 'Delete Comment',
-      message: 'Are you sure you want to delete this comment? This action cannot be undone.',
+      title: t('admin.comments.deleteTitle'),
+      message: t('admin.comments.deleteMessage'),
       action: () => {
         deleteMutation.mutate(comment._id);
         setConfirmDialog((prev) => ({ ...prev, open: false }));
@@ -145,7 +147,7 @@ const AdminComments: React.FC = () => {
   const columns: Column<AdminComment>[] = [
     {
       key: 'user',
-      header: 'User',
+      header: t('admin.comments.user'),
       render: (comment) => (
         <div className="flex items-center space-x-2">
           {comment.user?.avatar ? (
@@ -159,13 +161,13 @@ const AdminComments: React.FC = () => {
               {comment.user?.name?.charAt(0).toUpperCase() || '?'}
             </div>
           )}
-          <span className="text-white text-sm">{comment.user?.name || 'Unknown'}</span>
+          <span className="text-white text-sm">{comment.user?.name || t('admin.common.unknown')}</span>
         </div>
       ),
     },
     {
       key: 'content',
-      header: 'Comment',
+      header: t('admin.comments.comment'),
       render: (comment) => (
         <div className="max-w-md">
           <p className="text-gray-300 text-sm line-clamp-2">{comment.content}</p>
@@ -174,35 +176,35 @@ const AdminComments: React.FC = () => {
     },
     {
       key: 'movie',
-      header: 'Movie',
+      header: t('admin.comments.movie'),
       render: (comment) => (
         <span className="text-gray-400 text-sm truncate max-w-[150px] block">
-          {comment.movie?.title || 'Unknown'}
+          {comment.movie?.title || t('admin.common.unknown')}
         </span>
       ),
     },
     {
       key: 'status',
-      header: 'Status',
+      header: t('admin.common.status'),
       render: (comment) => (
         <div className="flex flex-wrap gap-1">
           {comment.isApproved ? (
             <span className="px-2 py-0.5 text-xs bg-green-900/50 text-green-300 rounded">
-              Approved
+              {t('admin.comments.approved')}
             </span>
           ) : (
             <span className="px-2 py-0.5 text-xs bg-yellow-900/50 text-yellow-300 rounded">
-              Pending
+              {t('admin.comments.pending')}
             </span>
           )}
           {comment.isSpoiler && (
             <span className="px-2 py-0.5 text-xs bg-orange-900/50 text-orange-300 rounded">
-              Spoiler
+              {t('admin.comments.spoilers')}
             </span>
           )}
           {comment.isHidden && (
             <span className="px-2 py-0.5 text-xs bg-gray-700 text-gray-300 rounded">
-              Hidden
+              {t('admin.homeLayout.hidden')}
             </span>
           )}
         </div>
@@ -210,11 +212,11 @@ const AdminComments: React.FC = () => {
     },
     {
       key: 'createdAt',
-      header: 'Date',
+      header: t('admin.comments.date'),
       sortable: true,
       render: (comment) => (
         <span className="text-gray-400 text-sm">
-          {new Date(comment.createdAt).toLocaleDateString()}
+          {new Date(comment.createdAt).toLocaleDateString(i18n.language)}
         </span>
       ),
     },
@@ -226,22 +228,22 @@ const AdminComments: React.FC = () => {
         <ActionDropdown
           actions={[
             {
-              label: comment.isApproved ? 'Unapprove' : 'Approve',
+              label: comment.isApproved ? t('admin.comments.unapprove') : t('admin.comments.approve'),
               icon: comment.isApproved ? <X className="h-5 w-5" /> : <Check className="h-5 w-5" />,
               onClick: () => updateMutation.mutate({ id: comment._id, data: { isApproved: !comment.isApproved } }),
             },
             {
-              label: comment.isSpoiler ? 'Unmark Spoiler' : 'Mark as Spoiler',
+              label: comment.isSpoiler ? t('admin.comments.unmarkSpoiler') : t('admin.comments.markSpoiler'),
               icon: <AlertTriangle className="h-5 w-5" />,
               onClick: () => updateMutation.mutate({ id: comment._id, data: { isSpoiler: !comment.isSpoiler } }),
             },
             {
-              label: comment.isHidden ? 'Unhide' : 'Hide',
+              label: comment.isHidden ? t('admin.comments.unhide') : t('admin.comments.hide'),
               icon: <EyeOff className="h-5 w-5" />,
               onClick: () => updateMutation.mutate({ id: comment._id, data: { isHidden: !comment.isHidden } }),
             },
             {
-              label: 'Delete',
+              label: t('admin.comments.delete'),
               icon: <Trash2 className="h-5 w-5" />,
               onClick: () => handleDeleteComment(comment),
               variant: 'danger',
@@ -254,24 +256,24 @@ const AdminComments: React.FC = () => {
 
   return (
     <div>
-      <AdminBreadcrumb items={[{ label: 'Admin', href: '/admin' }, { label: 'Comments' }]} />
+      <AdminBreadcrumb items={[{ label: t('admin.common.admin'), href: '/admin' }, { label: t('admin.comments.title') }]} />
 
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Comments</h1>
-        <p className="text-gray-400 mt-1">Moderate user comments</p>
+        <h1 className="text-2xl font-bold text-white">{t('admin.comments.title')}</h1>
+        <p className="text-gray-400 mt-1">{t('admin.comments.description')}</p>
       </div>
 
       <form onSubmit={event => { event.preventDefault(); saveRulesMutation.mutate(); }} className="mb-6 rounded-xl border border-gray-700 bg-[#1a1a1a] p-5 space-y-4">
-        <div><h2 className="text-lg font-semibold text-white">Automatic moderation</h2><p className="text-sm text-gray-400">These rules apply to new comments. Hidden or pending comments stay visible to moderators only.</p></div>
+        <div><h2 className="text-lg font-semibold text-white">{t('admin.comments.automaticModeration')}</h2><p className="text-sm text-gray-400">{t('admin.comments.rulesDescription')}</p></div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <label className="flex items-center gap-2 text-sm text-gray-200"><input type="checkbox" checked={rules.autoApprove} disabled={user?.role === 'analyst'} onChange={e => setRules({ ...rules, autoApprove: e.target.checked })} />Auto approve comments</label>
-          <label className="flex items-center gap-2 text-sm text-gray-200"><input type="checkbox" checked={rules.autoHideSpoilers} disabled={user?.role === 'analyst'} onChange={e => setRules({ ...rules, autoHideSpoilers: e.target.checked })} />Hide spoiler comments for review</label>
-          <label className="text-sm text-gray-300">Minimum characters<input type="number" min={0} max={1000} disabled={user?.role === 'analyst'} value={rules.minCommentLength} onChange={e => setRules({ ...rules, minCommentLength: Number(e.target.value) })} className="mt-1 w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-white disabled:opacity-50" /></label>
-          <label className="text-sm text-gray-300">Maximum characters<input type="number" min={1} max={1000} disabled={user?.role === 'analyst'} value={rules.maxCommentLength} onChange={e => setRules({ ...rules, maxCommentLength: Number(e.target.value) })} className="mt-1 w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-white disabled:opacity-50" /></label>
-          <label className="text-sm text-gray-300">Repeated identical comments before hiding<input type="number" min={1} max={100} disabled={user?.role === 'analyst'} value={rules.spamThreshold} onChange={e => setRules({ ...rules, spamThreshold: Number(e.target.value) })} className="mt-1 w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-white disabled:opacity-50" /></label>
-          <label className="text-sm text-gray-300 sm:col-span-2 lg:col-span-3">Blocked words (separate with commas)<input disabled={user?.role === 'analyst'} value={rules.blacklistedWords.join(', ')} onChange={e => setRules({ ...rules, blacklistedWords: e.target.value.split(',').map(word => word.trim()).filter(Boolean) })} className="mt-1 w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-white disabled:opacity-50" /></label>
+          <label className="flex items-center gap-2 text-sm text-gray-200"><input type="checkbox" checked={rules.autoApprove} disabled={user?.role === 'analyst'} onChange={e => setRules({ ...rules, autoApprove: e.target.checked })} />{t('admin.comments.autoApprove')}</label>
+          <label className="flex items-center gap-2 text-sm text-gray-200"><input type="checkbox" checked={rules.autoHideSpoilers} disabled={user?.role === 'analyst'} onChange={e => setRules({ ...rules, autoHideSpoilers: e.target.checked })} />{t('admin.comments.hideSpoilers')}</label>
+          <label className="text-sm text-gray-300">{t('admin.comments.minimumCharacters')}<input type="number" min={0} max={1000} disabled={user?.role === 'analyst'} value={rules.minCommentLength} onChange={e => setRules({ ...rules, minCommentLength: Number(e.target.value) })} className="mt-1 w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-white disabled:opacity-50" /></label>
+          <label className="text-sm text-gray-300">{t('admin.comments.maximumCharacters')}<input type="number" min={1} max={1000} disabled={user?.role === 'analyst'} value={rules.maxCommentLength} onChange={e => setRules({ ...rules, maxCommentLength: Number(e.target.value) })} className="mt-1 w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-white disabled:opacity-50" /></label>
+          <label className="text-sm text-gray-300">{t('admin.comments.spamThreshold')}<input type="number" min={1} max={100} disabled={user?.role === 'analyst'} value={rules.spamThreshold} onChange={e => setRules({ ...rules, spamThreshold: Number(e.target.value) })} className="mt-1 w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-white disabled:opacity-50" /></label>
+          <label className="text-sm text-gray-300 sm:col-span-2 lg:col-span-3">{t('admin.comments.blockedWords')}<input disabled={user?.role === 'analyst'} value={rules.blacklistedWords.join(', ')} onChange={e => setRules({ ...rules, blacklistedWords: e.target.value.split(',').map(word => word.trim()).filter(Boolean) })} className="mt-1 w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-white disabled:opacity-50" /></label>
         </div>
-        {user?.role === 'analyst' ? <p className="text-xs text-gray-400">Analyst access is read only.</p> : <button type="submit" disabled={saveRulesMutation.isPending} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50">{saveRulesMutation.isPending ? 'Saving…' : 'Save moderation rules'}</button>}
+        {user?.role === 'analyst' ? <p className="text-xs text-gray-400">{t('admin.comments.readOnly')}</p> : <button type="submit" disabled={saveRulesMutation.isPending} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50">{saveRulesMutation.isPending ? t('admin.common.saving') : t('admin.comments.saveRules')}</button>}
       </form>
 
       {/* Filters */}
@@ -279,7 +281,7 @@ const AdminComments: React.FC = () => {
         <SearchInput
           value={search}
           onChange={setSearch}
-          placeholder="Search comments..."
+          placeholder={t('admin.comments.searchPlaceholder')}
           className="sm:w-64"
         />
 
@@ -288,10 +290,10 @@ const AdminComments: React.FC = () => {
           onValueChange={value => setQueryParams({ ...queryParams, status: value as CommentQueryParams['status'], page: 1 })}
           className="w-full sm:w-44"
         >
-          <option value="">All Status</option>
-          <option value="approved">Approved</option>
-          <option value="pending">Pending</option>
-          <option value="spoiler">Spoilers</option>
+          <option value="">{t('admin.comments.allStatus')}</option>
+          <option value="approved">{t('admin.comments.approved')}</option>
+          <option value="pending">{t('admin.comments.pending')}</option>
+          <option value="spoiler">{t('admin.comments.spoilers')}</option>
         </SelectField>
       </div>
 
@@ -299,22 +301,22 @@ const AdminComments: React.FC = () => {
       {selectedRows.length > 0 && (
         <div className="flex items-center gap-4 mb-4 p-4 bg-[#2a2a2a] rounded-lg">
           <span className="text-sm text-gray-300">
-            {selectedRows.length} comment(s) selected
+            {t('admin.comments.selected', { count: selectedRows.length })}
           </span>
           <button onClick={() => runBulkAction('approve')} disabled={bulkMutation.isPending} className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50">
-            Approve
+            {t('admin.comments.approve')}
           </button>
           <button onClick={() => runBulkAction('reject')} disabled={bulkMutation.isPending} className="px-3 py-1.5 text-sm bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50">
-            Reject
+            {t('admin.comments.reject')}
           </button>
           <button onClick={() => runBulkAction('delete')} disabled={bulkMutation.isPending} className="px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50">
-            Delete
+            {t('admin.comments.delete')}
           </button>
           <button
             onClick={() => setSelectedRows([])}
             className="px-3 py-1.5 text-sm text-gray-400 hover:text-white"
           >
-            Clear Selection
+            {t('admin.common.clearSelection')}
           </button>
         </div>
       )}
@@ -332,7 +334,7 @@ const AdminComments: React.FC = () => {
         selectable
         selectedRows={selectedRows}
         onSelectRows={setSelectedRows}
-        emptyMessage="No comments found"
+        emptyMessage={t('admin.comments.noComments')}
       />
 
       {/* Confirm Dialog */}

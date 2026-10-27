@@ -14,7 +14,7 @@ interface SearchInputProps {
 const SearchInput: React.FC<SearchInputProps> = ({
   value,
   onChange,
-  placeholder = 'Search...',
+  placeholder,
   className = '',
   onClear,
 }) => {
@@ -31,8 +31,8 @@ const SearchInput: React.FC<SearchInputProps> = ({
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        aria-label={placeholder}
+        placeholder={placeholder || t('common.search')}
+        aria-label={placeholder || t('common.search')}
         className="pl-10 pr-10"
       />
       {value && (
