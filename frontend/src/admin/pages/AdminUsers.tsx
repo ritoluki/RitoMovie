@@ -21,11 +21,14 @@ import AdminBreadcrumb from '../components/layout/AdminBreadcrumb';
 import { UserDetailsModal, EditUserModal, ChangeRoleModal } from '../components/modals';
 import CommentRestrictionModal from '../components/modals/CommentRestrictionModal';
 import type { AdminUser, UserQueryParams } from '../types/admin';
+import { useAuthStore } from '@/store/authStore';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 const AdminUsers: React.FC = () => {
-  const queryClient = useQueryClient();
-  
   const { t, i18n } = useTranslation();
+  const queryClient = useQueryClient();
+  const currentUser = useAuthStore((state) => state.user);
+  
   // State
   const [queryParams, setQueryParams] = useState<UserQueryParams>({
     page: 1,
@@ -84,6 +87,21 @@ const AdminUsers: React.FC = () => {
     },
   });
 
+  const bulkMutation = useMutation({
+    mutationFn: ({ action, userIds, reason }: { action: 'ban' | 'delete'; userIds: string[]; reason?: string }) =>
+      adminService.bulkUserAction(action, userIds, reason),
+    onSuccess: (result, variables) => {
+      toast.success(t(variables.action === 'ban' ? 'admin.users.bannedCount' : 'admin.users.deletedCount', { count: result.modifiedCount }));
+      setSelectedRows([]);
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+      setConfirmDialog((previous) => ({ ...previous, open: false }));
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, t('admin.users.bulkFailed')));
+      setConfirmDialog((previous) => ({ ...previous, open: false }));
+    },
+  });
+
   const liftCommentRestrictionMutation = useMutation({
     mutationFn: (id: string) => adminService.liftUserCommentRestriction(id),
     onSuccess: () => {
@@ -98,6 +116,7 @@ const AdminUsers: React.FC = () => {
   const pagination = data?.pagination;
   const hasActiveCommentRestriction = (user: AdminUser) =>
     Boolean(user.isCommentRestricted && (!user.commentRestrictionExpiresAt || new Date(user.commentRestrictionExpiresAt).getTime() > Date.now()));
+  const bulkBanIds = selectedRows.filter((id) => id !== currentUser?._id);
 
   // Handle actions
   const handleBanUser = (user: AdminUser) => {
@@ -127,6 +146,32 @@ const AdminUsers: React.FC = () => {
         deleteMutation.mutate(user._id);
         setConfirmDialog((prev) => ({ ...prev, open: false }));
       },
+    });
+  };
+
+  const handleBulkBan = () => {
+    if (!bulkBanIds.length) return;
+    setConfirmDialog({
+      open: true,
+      title: t('admin.users.banSelectedTitle'),
+      message: t('admin.users.banSelectedMessage', { count: bulkBanIds.length }),
+      variant: 'warning',
+      action: () => bulkMutation.mutate({
+        action: 'ban',
+        userIds: bulkBanIds,
+        reason: 'Banned by admin using bulk action',
+      }),
+    });
+  };
+
+  const handleBulkDelete = () => {
+    if (!selectedRows.length || currentUser?.role !== 'super_admin') return;
+    setConfirmDialog({
+      open: true,
+      title: t('admin.users.deleteSelectedTitle'),
+      message: t('admin.users.deleteSelectedMessage'),
+      variant: 'danger',
+      action: () => bulkMutation.mutate({ action: 'delete', userIds: selectedRows }),
     });
   };
 
@@ -314,25 +359,28 @@ const AdminUsers: React.FC = () => {
 
       {/* Bulk actions */}
       {selectedRows.length > 0 && (
-        <div className="flex items-center gap-4 mb-4 p-4 bg-[#2a2a2a] rounded-lg">
-          <span className="text-sm text-gray-300">
-            {selectedRows.length} user(s) selected
-          </span>
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-white/[.07] bg-[#202126] p-4">
+          <span className="mr-auto text-sm text-gray-300">{t('admin.common.selected', { count: selectedRows.length })}</span>
           <button
-            onClick={() => console.log('Bulk ban', selectedRows)}
-            className="px-3 py-1.5 text-sm bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
+            onClick={handleBulkBan}
+            disabled={!bulkBanIds.length || bulkMutation.isPending}
+            className="inline-flex items-center gap-2 rounded-lg border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-sm font-medium text-amber-200 transition hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Ban Selected
+            <Ban className="size-4" />{t('admin.users.banSelected')}
           </button>
-          <button
-            onClick={() => console.log('Bulk delete', selectedRows)}
-            className="px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700"
-          >
-            Delete Selected
-          </button>
+          {currentUser?.role === 'super_admin' && (
+            <button
+              onClick={handleBulkDelete}
+              disabled={bulkMutation.isPending}
+              className="inline-flex items-center gap-2 rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-200 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Trash2 className="size-4" />{t('admin.users.deleteSelected')}
+            </button>
+          )}
           <button
             onClick={() => setSelectedRows([])}
-            className="px-3 py-1.5 text-sm text-gray-400 hover:text-white"
+            disabled={bulkMutation.isPending}
+            className="rounded-lg px-3 py-2 text-sm text-gray-400 transition hover:bg-white/[.05] hover:text-white disabled:opacity-40"
           >
             {t('admin.common.clearSelection')}
           </button>
@@ -363,7 +411,7 @@ const AdminUsers: React.FC = () => {
         title={confirmDialog.title}
         message={confirmDialog.message}
         variant={confirmDialog.variant}
-        loading={banMutation.isPending || deleteMutation.isPending}
+        loading={banMutation.isPending || deleteMutation.isPending || bulkMutation.isPending}
       />
 
       {/* User Details Modal */}

@@ -71,7 +71,7 @@ export const adminService = {
     api.delete<ApiResponse<void>>(`/admin/users/${id}`),
   
   bulkUserAction: (action: 'ban' | 'unban' | 'delete', userIds: string[], reason?: string) =>
-    api.post<ApiResponse<{ modifiedCount: number }>>('/admin/users/bulk-action', { action, userIds, reason }),
+    api.post<{ success: boolean; message: string; modifiedCount: number }>('/admin/users/bulk-action', { action, userIds, reason }),
 
   // ==========================================
   // Managed PhimAPI movies live in managedMovieService.ts.

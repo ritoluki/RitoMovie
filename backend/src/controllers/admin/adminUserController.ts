@@ -374,7 +374,11 @@ export const bulkAction = asyncHandler(async (req: Request, res: Response) => {
   switch (action) {
     case 'ban':
       result = await User.updateMany(
-        { _id: { $in: userIds }, role: { $nin: ['super_admin', 'admin'] } },
+        {
+          _id: { $in: userIds, $ne: req.user._id },
+          role: { $nin: ['super_admin', 'admin'] },
+          isBanned: { $ne: true },
+        },
         { isBanned: true, banReason: reason, bannedAt: new Date() }
       );
       break;
@@ -389,10 +393,17 @@ export const bulkAction = asyncHandler(async (req: Request, res: Response) => {
       if (req.user.role !== 'super_admin') {
         throw new ApiError(403, 'Only super admin can bulk delete users');
       }
-      result = await User.deleteMany({
+      const deletableIds = await User.find({
         _id: { $in: userIds },
         role: { $nin: ['super_admin', 'admin'] },
-      });
+      }).distinct('_id');
+      const [deletedUsers] = await Promise.all([
+        User.deleteMany({ _id: { $in: deletableIds } }),
+        WatchHistory.deleteMany({ user: { $in: deletableIds } }),
+        Comment.deleteMany({ user: { $in: deletableIds } }),
+        Rating.deleteMany({ user: { $in: deletableIds } }),
+      ]);
+      result = deletedUsers;
       break;
   }
 
