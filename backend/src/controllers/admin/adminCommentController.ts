@@ -6,6 +6,7 @@ import Movie from '../../models/Movie';
 import SystemSetting from '../../models/SystemSetting';
 import settingsService from '../../services/settingsService';
 import { logAdminAction } from '../../middleware/adminAuth';
+import { notifyVisibleReplies } from '../../services/notificationService';
 
 const DEFAULT_MODERATION_RULES = {
   autoApprove: true,
@@ -242,6 +243,7 @@ export const bulkAction = asyncHandler(async (req: Request, res: Response) => {
       break;
   }
 
+  if (action === 'approve' || action === 'unhide') await notifyVisibleReplies(commentIds);
   await logAdminAction(req, 'UPDATE', 'COMMENT', undefined, {
     bulkAction: action,
     commentIds,

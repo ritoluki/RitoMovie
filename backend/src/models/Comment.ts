@@ -1,5 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import { adminRealtimePlugin } from '../utils/adminRealtimePlugin';
+import { notifyReply } from '../services/notificationService';
 
 export interface IComment extends Document {
     user: mongoose.Types.ObjectId;
@@ -18,6 +19,7 @@ export interface IComment extends Document {
     moderatedAt?: Date;
     createdAt: Date;
     updatedAt: Date;
+    sourcePath?: string;
 }
 
 const CommentSchema: Schema = new Schema(
@@ -32,6 +34,7 @@ const CommentSchema: Schema = new Schema(
             required: [true, 'Movie ID is required'],
             index: true,
         },
+        sourcePath: { type: String, maxlength: 500 },
         text: {
             type: String,
             required: [true, 'Comment text is required'],
@@ -95,6 +98,13 @@ const CommentSchema: Schema = new Schema(
 CommentSchema.index({ movie: 1, createdAt: -1 });
 CommentSchema.index({ parentComment: 1 });
 
+CommentSchema.pre('save', function (next) {
+    this.$locals.notifyNewReply = this.isNew || this.isModified('isApproved') || this.isModified('isHidden');
+    next();
+});
+CommentSchema.post('save', async (comment: IComment) => {
+    if (comment.$locals.notifyNewReply) await notifyReply(comment);
+});
 CommentSchema.plugin(adminRealtimePlugin, { topics: ['comments', 'reports', 'dashboard', 'analytics'] });
 
 export default mongoose.model<IComment>('Comment', CommentSchema);

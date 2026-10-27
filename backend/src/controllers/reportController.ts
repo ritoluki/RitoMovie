@@ -4,6 +4,7 @@ import ApiError from '../utils/ApiError';
 import Report from '../models/Report';
 import Comment from '../models/Comment';
 import User from '../models/User';
+import { notifyNewReport } from '../services/notificationService';
 import {
   ACTIVE_REPORT_STATUSES,
   parseReportInput,
@@ -83,6 +84,7 @@ const submitReport = async (req: Request, res: Response) => {
   }
   try {
     const report = await Report.create({ ...input, reporter });
+    await notifyNewReport(report);
     res.status(201).json({
       success: true,
       data: {

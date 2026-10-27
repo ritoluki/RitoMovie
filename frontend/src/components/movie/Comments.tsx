@@ -1,6 +1,8 @@
+import CommentReactions from './CommentReactions';
 import { lazy, Suspense, useState, useRef, useEffect } from 'react';
-import { Clapperboard, ChevronDown, MessageCircle, Send, SmilePlus, Sparkles, ThumbsDown, ThumbsUp } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Clapperboard, ChevronDown, MessageCircle, Send, SmilePlus, Sparkles } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { useAuthStore } from '../../store/authStore';
 import Dropdown from '../common/Dropdown';
@@ -8,12 +10,10 @@ import Pagination from '../common/Pagination';
 import {
   useMovieComments,
   useCreateComment,
-  useLikeComment,
-  useDislikeComment,
   useCommentReplies,
 } from '../../hooks/useComments';
 import LoadingSpinner from '../common/LoadingSpinner';
-import { Comment } from '../../services/commentService';
+import { Comment, getCommentThread } from '../../services/commentService';
 import { useTranslation } from 'react-i18next';
 import ReportButton from '../common/ReportButton';
 
@@ -88,8 +88,6 @@ const getTimeAgoValues = (dateString: string) => {
 // Reply Item Component
 const ReplyItem = ({
   reply,
-  onLike,
-  onDislike,
   currentUserId,
   onReplySubmit,
   isFormActive,
@@ -97,8 +95,6 @@ const ReplyItem = ({
   t,
 }: {
   reply: Comment;
-  onLike: (id: string) => void;
-  onDislike: (id: string) => void;
   currentUserId?: string;
   onReplySubmit: (parentId: string, text: string) => void;
   isFormActive: boolean;
@@ -177,27 +173,7 @@ const ReplyItem = ({
 
         {/* Reply Actions */}
         <div className="flex items-center gap-3 text-xs">
-          <button
-            onClick={() => onLike(reply._id)}
-            className={`flex items-center gap-1.5 transition-colors ${currentUserId && reply.likes.includes(currentUserId)
-              ? 'text-white'
-              : 'text-gray-400 hover:text-white'
-              }`}
-          >
-            <ThumbsUp className={`size-4 ${currentUserId && reply.likes.includes(currentUserId) ? 'fill-current' : ''}`} />
-            {reply.likesCount > 0 && <span className="font-medium">{reply.likesCount}</span>}
-          </button>
-
-          <button
-            onClick={() => onDislike(reply._id)}
-            className={`flex items-center gap-1.5 transition-colors ${currentUserId && reply.dislikes.includes(currentUserId)
-              ? 'text-white'
-              : 'text-gray-400 hover:text-white'
-              }`}
-          >
-            <ThumbsDown className={`size-4 ${currentUserId && reply.dislikes.includes(currentUserId) ? 'fill-current' : ''}`} />
-            {reply.dislikesCount > 0 && <span className="font-medium">{reply.dislikesCount}</span>}
-          </button>
+          <CommentReactions comment={reply} userId={currentUserId} compact />
 
           <button
             onClick={() => {
@@ -252,27 +228,26 @@ const ReplyItem = ({
 // Comment Item Component
 const CommentItem = ({
   comment,
-  onLike,
-  onDislike,
+  focused = false,
+  focusRequest,
   currentUserId,
   onReplySubmit,
   t,
 }: {
   comment: Comment;
-  onLike: (id: string) => void;
-  onDislike: (id: string) => void;
+  focused?: boolean;
+  focusRequest?: string;
   currentUserId?: string;
   onReplySubmit: (parentId: string, text: string) => void;
   t: any;
 }) => {
-  const [showReplies, setShowReplies] = useState(false);
+  const [showReplies, setShowReplies] = useState(focused);
+  useEffect(() => { if (focused) setShowReplies(true); }, [focused, focusRequest]);
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [activeReplyFormId, setActiveReplyFormId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [spoilerRevealed, setSpoilerRevealed] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const hasLiked = currentUserId ? comment.likes.includes(currentUserId) : false;
-  const hasDisliked = currentUserId ? comment.dislikes.includes(currentUserId) : false;
   const { user } = useAuthStore();
 
   // Load replies when showReplies is true
@@ -303,7 +278,7 @@ const CommentItem = ({
     : t(`comments.${timeAgo.key}`, { count: timeAgo.count });
 
   return (
-    <article className="group rounded-2xl border border-white/[.07] bg-gradient-to-br from-[#191b21] to-[#131419] p-4 shadow-lg shadow-black/10 transition hover:border-white/[.12] sm:p-5">
+    <article id={`comment-${comment._id}`} className={`group scroll-mt-24 rounded-2xl border border-white/[.07] bg-gradient-to-br from-[#191b21] to-[#131419] p-4 shadow-lg shadow-black/10 transition hover:border-white/[.12] sm:p-5 ${focused ? 'ring-2 ring-red-400/50' : ''}`}>
       <div className="flex gap-3">
       {/* Avatar */}
       <img
@@ -347,23 +322,7 @@ const CommentItem = ({
 
         {/* Actions */}
         <div className="flex flex-wrap items-center gap-2 text-xs sm:gap-2.5">
-          <button
-            onClick={() => onLike(comment._id)}
-            className={`inline-flex items-center gap-1.5 rounded-full border border-white/[.07] px-3 py-1.5 transition ${hasLiked ? 'border-red-400/30 bg-red-400/10 text-red-300' : 'text-gray-400 hover:bg-white/[.06] hover:text-white'
-              }`}
-          >
-            <ThumbsUp className={`size-3.5 ${hasLiked ? 'fill-current' : ''}`} />
-            {comment.likesCount > 0 && <span className="font-medium">{comment.likesCount}</span>}
-          </button>
-
-          <button
-            onClick={() => onDislike(comment._id)}
-            className={`inline-flex items-center gap-1.5 rounded-full border border-white/[.07] px-3 py-1.5 transition ${hasDisliked ? 'border-blue-400/30 bg-blue-400/10 text-blue-300' : 'text-gray-400 hover:bg-white/[.06] hover:text-white'
-              }`}
-          >
-            <ThumbsDown className={`size-3.5 ${hasDisliked ? 'fill-current' : ''}`} />
-            {comment.dislikesCount > 0 && <span className="font-medium">{comment.dislikesCount}</span>}
-          </button>
+          <CommentReactions comment={comment} userId={currentUserId} />
 
           <button
             onClick={() => {
@@ -435,8 +394,6 @@ const CommentItem = ({
                   <ReplyItem
                     key={reply._id}
                     reply={reply}
-                    onLike={onLike}
-                    onDislike={onDislike}
                     currentUserId={currentUserId}
                     onReplySubmit={onReplySubmit}
                     isFormActive={activeReplyFormId === reply._id}
@@ -463,6 +420,10 @@ const CommentItem = ({
 
 const Comments = ({ movieId }: CommentsProps) => {
   const { t } = useTranslation();
+  const location = useLocation();
+  const focusedId = /^#comment-([a-f\d]{24})$/i.exec(location.hash)?.[1];
+  const focusedThread = useQuery({ queryKey: ['comment-thread', focusedId], queryFn: () => getCommentThread(focusedId!), enabled: !!focusedId, retry: false, staleTime: 0, refetchOnMount: true });
+  useEffect(() => { if (focusedId) void focusedThread.refetch(); }, [focusedId, location.key]);
   const [commentText, setCommentText] = useState('');
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const [page, setPage] = useState(1);
@@ -473,8 +434,6 @@ const Comments = ({ movieId }: CommentsProps) => {
   // Queries & Mutations
   const { data, isLoading, error } = useMovieComments(movieId, page, 10, sort);
   const createCommentMutation = useCreateComment(movieId);
-  const likeMutation = useLikeComment();
-  const dislikeMutation = useDislikeComment();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -500,16 +459,6 @@ const Comments = ({ movieId }: CommentsProps) => {
     );
   };
 
-  const handleLike = (commentId: string) => {
-    if (!user) return;
-    likeMutation.mutate(commentId);
-  };
-
-  const handleDislike = (commentId: string) => {
-    if (!user) return;
-    dislikeMutation.mutate(commentId);
-  };
-
   const handleReplySubmit = (parentId: string, text: string) => {
     if (!user) return;
     createCommentMutation.mutate({
@@ -530,7 +479,17 @@ const Comments = ({ movieId }: CommentsProps) => {
     setPage(newPage);
   };
 
-  const comments = data?.data?.comments || [];
+  const normalComments = data?.data?.comments || [];
+  const focus = focusedThread.data?.data;
+  const focusedHere = focus && focus.movie === movieId;
+  const comments = focusedHere ? normalComments.some(item => item._id === focus._id)
+    ? normalComments.map(item => item._id === focus._id ? focus : item)
+    : [focus, ...normalComments] : normalComments;
+  useEffect(() => {
+    if (!focusedId || !focus) return;
+    const timer = window.setTimeout(() => document.getElementById(`comment-${focus._id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+    return () => window.clearTimeout(timer);
+  }, [focusedId, focus?._id, isLoading, location.key]);
   const pagination = data?.data?.pagination;
 
   // Prepare sort options
@@ -639,6 +598,7 @@ const Comments = ({ movieId }: CommentsProps) => {
         </div>
       )}
 
+      {focusedThread.isError && <p role="status" className="mb-3 text-sm text-amber-300">{t('notifications.commentUnavailable')}</p>}
       {!isLoading && !error && comments.length === 0 && (
         <div className="rounded-2xl border border-dashed border-white/10 bg-white/[.02] px-4 py-10 text-center sm:py-12">
           <span className="mx-auto mb-3 grid size-12 place-items-center rounded-2xl bg-white/[.05] text-gray-400"><Clapperboard className="size-6" /></span>
@@ -653,8 +613,8 @@ const Comments = ({ movieId }: CommentsProps) => {
             <CommentItem
               key={comment._id}
               comment={comment}
-              onLike={handleLike}
-              onDislike={handleDislike}
+              focused={!!focusedId && comment._id === focus?._id}
+              focusRequest={location.key}
               onReplySubmit={handleReplySubmit}
               currentUserId={user?._id}
               t={t}

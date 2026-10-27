@@ -20,7 +20,6 @@ const ConfiguredGoogleLoginButton = ({ onSuccess, onError }: GoogleLoginButtonPr
                 const credential = tokenResponse.access_token;
 
                 await loginWithGoogle(credential);
-                toast.success(t('auth.loginSuccess') || 'Login successful!');
                 onSuccess?.();
             } catch (error) {
                 console.error('Google login error:', error);

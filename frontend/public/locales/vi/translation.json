@@ -198,6 +198,7 @@
     "noStreamingData": "Chưa có nguồn phát cho bộ phim này."
   },
   "comments": {
+    "reactionFailed": "Không thể lưu phản hồi của bạn. Vui lòng thử lại.",
     "title": "Bình luận",
     "commentCount": "Bình luận ({{count}})",
     "sortBy": "Sắp xếp theo",
@@ -1012,5 +1013,51 @@
     "updated": "Đã cập nhật báo cáo",
     "bulkUpdated": "Đã cập nhật {{count}} báo cáo",
     "failed": "Không thể cập nhật báo cáo."
+  },
+  "notifications": {
+    "viewAccount": "Xem tài khoản",
+    "viewContent": "Xem nội dung liên quan",
+    "title": "Thông báo",
+    "description": "Phản hồi bình luận, cập nhật tài khoản và kết quả báo cáo của bạn.",
+    "all": "Tất cả",
+    "unread": "Chưa đọc",
+    "readAll": "Đọc tất cả",
+    "empty": "Bạn chưa có thông báo nào.",
+    "emptyUnread": "Bạn đã đọc hết thông báo.",
+    "viewAll": "Xem tất cả",
+    "loadMore": "Xem thêm",
+    "bellLabel": "Thông báo, {{count}} chưa đọc",
+    "failed": "Không thể tải hoặc cập nhật thông báo. Vui lòng thử lại.",
+    "open": "Xem",
+    "someone": "Một người dùng",
+    "until": "Hạn chế đến {{date}}",
+    "untilLifted": "Đến khi quản trị viên gỡ hạn chế",
+    "commentUnavailable": "Bình luận này không còn hiển thị.",
+    "types": {
+      "COMMENT_REPLY": {
+        "title": "Có phản hồi mới",
+        "body": "{{actor}} đã trả lời bình luận của bạn."
+      },
+      "COMMENT_RESTRICTED": {
+        "title": "Bình luận bị hạn chế",
+        "body": "Tài khoản của bạn bị hạn chế bình luận. Lý do: {{reason}}"
+      },
+      "COMMENT_RESTRICTION_LIFTED": {
+        "title": "Đã gỡ hạn chế bình luận",
+        "body": "Bạn có thể tiếp tục đăng và sửa bình luận."
+      },
+      "REPORT_RESOLVED": {
+        "title": "Báo cáo đã được xử lý",
+        "body": "Báo cáo về {{reportType}} của bạn đã được xử lý."
+      },
+      "REPORT_REJECTED": {
+        "title": "Báo cáo đã được xem xét",
+        "body": "Báo cáo về {{reportType}} của bạn đã được xem xét và từ chối."
+      },
+      "ADMIN_REPORT": {
+        "title": "Có báo cáo mới",
+        "body": "Một người dùng vừa báo cáo {{reportType}}. Nhấn để xem chi tiết."
+      }
+    }
   }
 }

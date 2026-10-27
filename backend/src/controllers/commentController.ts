@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import Comment from '../models/Comment';
 import asyncHandler from '../utils/asyncHandler';
 import ApiError from '../utils/ApiError';
 import settingsService from '../services/settingsService';
+import { isObjectId, isReportPath } from '../utils/reportPolicy';
 
 const DEFAULT_MODERATION_RULES = {
     autoApprove: true,
@@ -115,12 +117,24 @@ export const getCommentReplies = asyncHandler(
     }
 );
 
+export const getCommentThread = asyncHandler(async (req: Request, res: Response) => {
+    if (!isObjectId(req.params.id)) throw new ApiError(404, 'notifications.commentUnavailable');
+    const visible = { isDeleted: false, isApproved: true, isHidden: { $ne: true } };
+    let root = await Comment.findOne({ _id: req.params.id, ...visible }).populate('user', 'name avatar');
+    for (let depth = 0; root?.parentComment && depth < 10; depth++) {
+        root = await Comment.findOne({ _id: root.parentComment, movie: root.movie, ...visible }).populate('user', 'name avatar');
+    }
+    if (!root || root.parentComment) throw new ApiError(404, 'notifications.commentUnavailable');
+    res.json({ success: true, data: { ...root.toObject(), likesCount: root.likes.length, dislikesCount: root.dislikes.length,
+        repliesCount: await Comment.countDocuments({ parentComment: root._id, ...visible }) } });
+});
+
 // @desc    Create a comment
 // @route   POST /api/comments
 // @access  Private
 export const createComment = asyncHandler(
     async (req: Request, res: Response) => {
-        const { movie, text, rating, isSpoiler, parentComment } = req.body;
+        const { movie, text, rating, isSpoiler, parentComment, sourcePath } = req.body;
         const userId = req.user?.id;
 
         if (!userId) {
@@ -155,7 +169,7 @@ export const createComment = asyncHandler(
         // If it's a reply, validate parent comment exists
         if (parentComment) {
             const parent = await Comment.findById(parentComment);
-            if (!parent) {
+            if (!parent || parent.isDeleted || parent.isHidden || !parent.isApproved || parent.movie !== Number(movie)) {
                 throw new ApiError(404, 'Parent comment not found');
             }
         }
@@ -163,6 +177,7 @@ export const createComment = asyncHandler(
         const comment = await Comment.create({
             user: userId,
             movie: parseInt(movie),
+            sourcePath: isReportPath(sourcePath) && /^\/(movie|watch)\//.test(sourcePath) ? sourcePath : undefined,
             text: normalizedText,
             rating: rating || null,
             isSpoiler: isSpoiler || false,
@@ -251,103 +266,42 @@ export const deleteComment = asyncHandler(
     }
 );
 
-// @desc    Like/Unlike a comment
-// @route   POST /api/comments/:id/like
-// @access  Private
-export const likeComment = asyncHandler(
-    async (req: Request, res: Response) => {
-        const { id } = req.params;
-        const userId = req.user?.id;
-
-        if (!userId) {
-            throw new ApiError(401, 'User not authenticated');
-        }
-
-        const comment = await Comment.findById(id);
-
-        if (!comment) {
-            throw new ApiError(404, 'Comment not found');
-        }
-
-        const userObjectId = new mongoose.Types.ObjectId(userId);
-        const hasLiked = comment.likes.some((id) => id.equals(userObjectId));
-        const hasDisliked = comment.dislikes.some((id) => id.equals(userObjectId));
-
-        if (hasLiked) {
-            // Unlike
-            comment.likes = comment.likes.filter((id) => !id.equals(userObjectId));
-        } else {
-            // Remove dislike if exists
-            if (hasDisliked) {
-                comment.dislikes = comment.dislikes.filter(
-                    (id) => !id.equals(userObjectId)
-                );
-            }
-            // Add like
-            comment.likes.push(userObjectId);
-        }
-
-        await comment.save();
-
-        res.status(200).json({
-            success: true,
-            data: {
-                liked: !hasLiked,
-                likesCount: comment.likes.length,
-                dislikesCount: comment.dislikes.length,
-            },
-        });
+// Store a desired reaction with one atomic update. Concurrent voters cannot overwrite
+// one another, and repeating the same desired choice is idempotent.
+const applyReaction = async (req: Request, res: Response, reaction: 'like' | 'dislike' | null, toggle = false) => {
+    const { id } = req.params;
+    if (!isObjectId(id)) throw new ApiError(404, 'Comment not found', 'COMMENT_NOT_AVAILABLE');
+    const visible = { isDeleted: false, isApproved: true, isHidden: { $ne: true } };
+    const target = await Comment.findOne({ _id: id, ...visible }).select('parentComment');
+    if (!target || (target.parentComment && !await Comment.exists({ _id: target.parentComment, ...visible }))) {
+        throw new ApiError(404, 'Comment not found', 'COMMENT_NOT_AVAILABLE');
     }
-);
+    const userId = new mongoose.Types.ObjectId(req.user.id);
+    const existingLikes = { $ifNull: ['$likes', []] };
+    const existingDislikes = { $ifNull: ['$dislikes', []] };
+    const withoutLike = { $setDifference: [existingLikes, [userId]] };
+    const withoutDislike = { $setDifference: [existingDislikes, [userId]] };
+    const addLike = { $setUnion: [existingLikes, [userId]] };
+    const addDislike = { $setUnion: [existingDislikes, [userId]] };
+    const comment = await Comment.findOneAndUpdate({ _id: id, ...visible }, [{
+        $set: {
+            likes: reaction === 'like' ? toggle ? { $cond: [{ $in: [userId, existingLikes] }, withoutLike, addLike] } : addLike : withoutLike,
+            dislikes: reaction === 'dislike' ? toggle ? { $cond: [{ $in: [userId, existingDislikes] }, withoutDislike, addDislike] } : addDislike : withoutDislike,
+        },
+    }], { new: true }).select('likes dislikes');
+    if (!comment) throw new ApiError(404, 'Comment not found', 'COMMENT_NOT_AVAILABLE');
+    const liked = comment.likes.some(value => value.equals(userId));
+    const disliked = comment.dislikes.some(value => value.equals(userId));
+    res.json({ success: true, data: { reaction: liked ? 'like' : disliked ? 'dislike' : null, liked, disliked,
+        likesCount: comment.likes.length, dislikesCount: comment.dislikes.length } });
+};
 
-// @desc    Dislike/Undislike a comment
-// @route   POST /api/comments/:id/dislike
-// @access  Private
-export const dislikeComment = asyncHandler(
-    async (req: Request, res: Response) => {
-        const { id } = req.params;
-        const userId = req.user?.id;
+export const setCommentReaction = asyncHandler(async (req: Request, res: Response) => {
+    const reaction = req.body?.reaction;
+    if (reaction !== null && reaction !== 'like' && reaction !== 'dislike') throw new ApiError(400, 'Invalid reaction');
+    await applyReaction(req, res, reaction);
+});
 
-        if (!userId) {
-            throw new ApiError(401, 'User not authenticated');
-        }
-
-        const comment = await Comment.findById(id);
-
-        if (!comment) {
-            throw new ApiError(404, 'Comment not found');
-        }
-
-        const userObjectId = new mongoose.Types.ObjectId(userId);
-        const hasLiked = comment.likes.some((id) => id.equals(userObjectId));
-        const hasDisliked = comment.dislikes.some((id) => id.equals(userObjectId));
-
-        if (hasDisliked) {
-            // Remove dislike
-            comment.dislikes = comment.dislikes.filter(
-                (id) => !id.equals(userObjectId)
-            );
-        } else {
-            // Remove like if exists
-            if (hasLiked) {
-                comment.likes = comment.likes.filter((id) => !id.equals(userObjectId));
-            }
-            // Add dislike
-            comment.dislikes.push(userObjectId);
-        }
-
-        await comment.save();
-
-        res.status(200).json({
-            success: true,
-            data: {
-                disliked: !hasDisliked,
-                likesCount: comment.likes.length,
-                dislikesCount: comment.dislikes.length,
-            },
-        });
-    }
-);
-
-// Missing import
-import mongoose from 'mongoose';
+// Retain compatibility with existing clients while using the same atomic update.
+export const likeComment = asyncHandler((req: Request, res: Response) => applyReaction(req, res, 'like', true));
+export const dislikeComment = asyncHandler((req: Request, res: Response) => applyReaction(req, res, 'dislike', true));

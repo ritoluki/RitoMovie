@@ -6,6 +6,7 @@ const path = require('node:path');
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 exports.runBrowserCheck = async (api, bootstrap, check) => {
+  const origin = (process.env.BROWSER_TEST_ORIGIN || 'http://localhost:5173').replace(/\/+$/, '');
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'ritomovie-browser-'));
   const chrome = spawn(process.env.BROWSER_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe',
     ['--headless=new', '--disable-gpu', '--no-first-run', '--remote-debugging-port=0', `--user-data-dir=${profile}`, 'about:blank'],
@@ -56,15 +57,19 @@ exports.runBrowserCheck = async (api, bootstrap, check) => {
         const response = request.method === 'OPTIONS' ? { status: 204, body: {} } : await api(input);
         await send('Fetch.fulfillRequest', { requestId, responseCode: response.status || 200,
           responseHeaders: [
-            { name: 'Content-Type', value: 'application/json; charset=utf-8' },
-            { name: 'Access-Control-Allow-Origin', value: 'http://localhost:5173' },
+            { name: 'Content-Type', value: response.contentType || 'application/json; charset=utf-8' },
+            { name: 'Access-Control-Allow-Origin', value: origin },
             { name: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, Accept-Language' },
             { name: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, DELETE, OPTIONS' },
-          ], body: Buffer.from(JSON.stringify(response.body)).toString('base64'),
+          ], body: Buffer.from(response.contentType === 'text/event-stream' ? response.body : JSON.stringify(response.body)).toString('base64'),
         });
       } catch (error) {
+        // Route changes and aborted live streams can cancel an intercepted request
+        // before the fixture response is delivered. Chrome then discards its ID.
+        if (/Invalid InterceptionId/.test(String(error))) return;
         errors.push(String(error));
-        await send('Fetch.failRequest', { requestId, errorReason: 'Failed' });
+        try { await send('Fetch.failRequest', { requestId, errorReason: 'Failed' }); }
+        catch (failure) { if (!/Invalid InterceptionId/.test(String(failure))) errors.push(String(failure)); }
       }
     };
     const evaluate = async expression => {
@@ -81,13 +86,13 @@ exports.runBrowserCheck = async (api, bootstrap, check) => {
       Object.getOwnPropertyDescriptor(target instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype, 'value').set.call(target, ${JSON.stringify(value)});
       target.dispatchEvent(new Event('input', { bubbles: true })); return true; })()`);
     const navigate = async route => {
-      await send('Page.navigate', { url: `http://localhost:5173${route}` });
+      await send('Page.navigate', { url: `${origin}${route}` });
       await waitFor('document.querySelector("#root")?.children.length');
     };
     await send('Page.enable'); await send('Runtime.enable'); await send('Network.enable');
     await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
     await send('Network.setBlockedURLs', { urls: ['https://*'] });
-    await send('Fetch.enable', { patterns: [{ urlPattern: '*://localhost:5000/api/*' }, { urlPattern: '*://localhost:5173/api/*' }] });
+    await send('Fetch.enable', { patterns: [{ urlPattern: '*://localhost:5000/api/*' }, { urlPattern: '*://localhost:5001/api/*' }, { urlPattern: `${origin}/api/*` }] });
     await send('Page.addScriptToEvaluateOnNewDocument', { source: bootstrap });
     let timeout;
     try {

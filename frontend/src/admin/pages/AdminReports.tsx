@@ -13,10 +13,13 @@ import { getErrorMessage } from '@/utils/errorMessage';
 import ActionDropdown from '../components/common/ActionDropdown';
 import AdminBreadcrumb from '../components/layout/AdminBreadcrumb';
 import type { AdminReport, ReportQueryParams } from '../types/admin';
+import { useSearchParams } from 'react-router-dom';
 
 const AdminReports: React.FC = () => {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedReport = searchParams.get('report');
 
   // State
   const [queryParams, setQueryParams] = useState<ReportQueryParams>({
@@ -27,6 +30,10 @@ const AdminReports: React.FC = () => {
   });
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [selection, setSelection] = useState<ReportSelection | null>(null);
+  useEffect(() => {
+    if (requestedReport && /^[a-f\d]{24}$/i.test(requestedReport))
+      setSelection({ ids: [requestedReport], mode: 'view' });
+  }, [requestedReport]);
   useEffect(() => setSelectedRows([]), [queryParams]);
 
   // Fetch reports
@@ -420,7 +427,14 @@ const AdminReports: React.FC = () => {
 
       <ReportReviewDialog
         selection={selection}
-        onClose={() => setSelection(null)}
+        onClose={() => {
+          setSelection(null);
+          if (requestedReport) {
+            const params = new URLSearchParams(searchParams);
+            params.delete('report');
+            setSearchParams(params, { replace: true });
+          }
+        }}
         onUpdated={() => setSelectedRows([])}
       />
     </div>

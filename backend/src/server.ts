@@ -70,6 +70,8 @@ import videoRoutes from './routes/videos';
 import userRoutes from './routes/users';
 import commentRoutes from './routes/comments';
 import reportRoutes from './routes/reports';
+import notificationRoutes from './routes/notifications';
+import { closeNotificationStreams } from './controllers/notificationController';
 import phimRoutes from './routes/phim';
 import homeRoutes from './routes/home';
 import adminRoutes from './routes/admin';
@@ -92,6 +94,7 @@ app.use('/api/videos', videoRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use('/api/phim', phimRoutes);
 app.use('/api/home', homeRoutes);
 app.use('/api/admin', adminRoutes);
@@ -166,6 +169,7 @@ const server = app.listen(PORT, () => {
 process.on('unhandledRejection', (err: Error) => {
   console.error('Unhandled Rejection:', err);
   closeAdminStreams();
+  closeNotificationStreams();
   server.close(() => {
     process.exit(1);
   });

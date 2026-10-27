@@ -11,6 +11,7 @@ const MovieDetails = lazy(() => import('@/pages/MovieDetails'));
 const Watch = lazy(() => import('@/pages/Watch'));
 const MyList = lazy(() => import('@/pages/MyList'));
 const Profile = lazy(() => import('@/pages/Profile'));
+const Notifications = lazy(() => import('@/pages/Notifications'));
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
@@ -43,6 +44,7 @@ const AppRoutes = () => {
           <Route path="movie/:id" element={<MovieDetails />} />
           <Route path="watch/:id" element={<Watch />} />
           <Route path="skeleton-test" element={<SkeletonTest />} />
+          <Route path="notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
           <Route
             path="my-list"
             element={

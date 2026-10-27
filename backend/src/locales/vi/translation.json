@@ -67,5 +67,9 @@
     "notFound": "Không tìm thấy báo cáo.",
     "alreadyClosed": "Báo cáo này đã được đóng. Vui lòng tải lại danh sách.",
     "resolutionRequired": "Nhập ghi chú xử lý từ 5 đến 500 ký tự."
+  },
+  "notifications": {
+    "notFound": "Không tìm thấy thông báo.",
+    "commentUnavailable": "Bình luận này không còn hiển thị."
   }
 }

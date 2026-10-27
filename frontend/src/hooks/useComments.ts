@@ -5,8 +5,6 @@ import {
     createComment,
     updateComment,
     deleteComment,
-    likeComment,
-    dislikeComment,
     CreateCommentData,
     UpdateCommentData,
 } from '../services/commentService';
@@ -24,6 +22,7 @@ export const useMovieComments = (
         queryKey: ['comments', movieId, page, sort],
         queryFn: () => getMovieComments(movieId, page, limit, sort),
         staleTime: 1000 * 60, // 1 minute
+        refetchOnMount: true,
     });
 };
 
@@ -33,6 +32,8 @@ export const useCommentReplies = (commentId: string | null) => {
         queryKey: ['replies', commentId],
         queryFn: () => getCommentReplies(commentId!),
         enabled: !!commentId,
+        staleTime: 0,
+        refetchOnMount: true,
     });
 };
 
@@ -141,47 +142,6 @@ export const useDeleteComment = () => {
         },
         onError: (error: any) => {
             const message = error.response?.data?.message || 'Không thể xóa bình luận';
-            toast.error(message);
-        },
-    });
-};
-
-// Like comment mutation
-export const useLikeComment = () => {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: (commentId: string) => likeComment(commentId),
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ['comments'],
-                refetchType: 'all'
-            });
-        },
-        onError: (error: any) => {
-            if (error?.code === 'EMAIL_VERIFICATION_REQUIRED') return;
-            const message = error.response?.data?.message || 'Không thể thích bình luận';
-            toast.error(message);
-        },
-    });
-};
-
-// Dislike comment mutation
-export const useDislikeComment = () => {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: (commentId: string) => dislikeComment(commentId),
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ['comments'],
-                refetchType: 'all'
-            });
-        },
-        onError: (error: any) => {
-            if (error?.code === 'EMAIL_VERIFICATION_REQUIRED') return;
-            const message =
-                error.response?.data?.message || 'Không thể dislike bình luận';
             toast.error(message);
         },
     });

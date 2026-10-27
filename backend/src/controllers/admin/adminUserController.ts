@@ -5,6 +5,8 @@ import User from '../../models/User';
 import WatchHistory from '../../models/WatchHistory';
 import Comment from '../../models/Comment';
 import Rating from '../../models/Rating';
+import Notification from '../../models/Notification';
+import { notifyRestriction } from '../../services/notificationService';
 import { logAdminAction } from '../../middleware/adminAuth';
 
 /**
@@ -287,6 +289,7 @@ export const restrictUserComments = asyncHandler(async (req: Request, res: Respo
     expiresAt: user.commentRestrictionExpiresAt,
     targetEmail: user.email,
   });
+  await notifyRestriction(user);
 
   res.status(200).json({ success: true, message: 'Commenting restricted successfully' });
 });
@@ -295,6 +298,7 @@ export const restrictUserComments = asyncHandler(async (req: Request, res: Respo
 export const liftUserCommentRestriction = asyncHandler(async (req: Request, res: Response) => {
   const user = await User.findById(req.params.id);
   if (!user) throw new ApiError(404, 'User not found');
+  const wasRestricted = user.isCommentRestricted;
 
   user.isCommentRestricted = false;
   user.commentRestrictionReason = undefined;
@@ -306,6 +310,7 @@ export const liftUserCommentRestriction = asyncHandler(async (req: Request, res:
   await logAdminAction(req, 'LIFT_COMMENT_RESTRICTION', 'USER', user._id.toString(), {
     targetEmail: user.email,
   });
+  if (wasRestricted) await notifyRestriction(user, true);
 
   res.status(200).json({ success: true, message: 'Comment restriction lifted' });
 });
@@ -344,6 +349,7 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
     WatchHistory.deleteMany({ user: user._id }),
     Comment.deleteMany({ user: user._id }),
     Rating.deleteMany({ user: user._id }),
+    Notification.deleteMany({ recipient: user._id }),
   ]);
 
   res.status(200).json({
@@ -402,6 +408,7 @@ export const bulkAction = asyncHandler(async (req: Request, res: Response) => {
         WatchHistory.deleteMany({ user: { $in: deletableIds } }),
         Comment.deleteMany({ user: { $in: deletableIds } }),
         Rating.deleteMany({ user: { $in: deletableIds } }),
+        Notification.deleteMany({ recipient: { $in: deletableIds } }),
       ]);
       result = deletedUsers;
       break;

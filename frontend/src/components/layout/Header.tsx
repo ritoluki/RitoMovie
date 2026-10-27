@@ -14,6 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePhim } from '@/hooks/usePhim';
 import { LogoLink } from '@/components/common/Logo';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
+import NotificationBell from '@/components/common/NotificationBell';
 import TaxonomyMenu from './TaxonomyMenu';
 import { getTranslatedGenre, getTranslatedCountry } from '@/utils/translations';
 import { cn } from '@/utils/helpers';
@@ -190,6 +191,7 @@ const Header = () => {
               </PopoverContent>
             </Popover>
             <LanguageSwitcher />
+            <NotificationBell />
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

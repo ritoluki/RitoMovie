@@ -198,6 +198,7 @@
     "noStreamingData": "Streaming sources are currently unavailable for this title."
   },
   "comments": {
+    "reactionFailed": "Could not save your reaction. Please try again.",
     "title": "Comments",
     "commentCount": "Comments ({{count}})",
     "sortBy": "Sort by",
@@ -1012,5 +1013,51 @@
     "updated": "Report updated",
     "bulkUpdated": "Updated {{count}} report(s)",
     "failed": "Could not update the report."
+  },
+  "notifications": {
+    "viewAccount": "View account",
+    "viewContent": "View related content",
+    "title": "Notifications",
+    "description": "Replies, account updates and report decisions in one place.",
+    "all": "All",
+    "unread": "Unread",
+    "readAll": "Mark all read",
+    "empty": "You have no notifications yet.",
+    "emptyUnread": "You're all caught up.",
+    "viewAll": "View all",
+    "loadMore": "Load more",
+    "bellLabel": "Notifications, {{count}} unread",
+    "failed": "Could not load or update notifications. Please try again.",
+    "open": "View",
+    "someone": "Someone",
+    "until": "Restricted until {{date}}",
+    "untilLifted": "Until a moderator lifts the restriction",
+    "commentUnavailable": "This comment is no longer available.",
+    "types": {
+      "COMMENT_REPLY": {
+        "title": "New reply",
+        "body": "{{actor}} replied to your comment."
+      },
+      "COMMENT_RESTRICTED": {
+        "title": "Commenting restricted",
+        "body": "Your commenting access has been restricted. Reason: {{reason}}"
+      },
+      "COMMENT_RESTRICTION_LIFTED": {
+        "title": "Commenting restored",
+        "body": "Your commenting restriction has been lifted. You can comment again."
+      },
+      "REPORT_RESOLVED": {
+        "title": "Report resolved",
+        "body": "Your report about {{reportType}} has been resolved."
+      },
+      "REPORT_REJECTED": {
+        "title": "Report reviewed",
+        "body": "Your report about {{reportType}} was reviewed and rejected."
+      },
+      "ADMIN_REPORT": {
+        "title": "New report",
+        "body": "A user reported {{reportType}}. Open the report to review it."
+      }
+    }
   }
 }

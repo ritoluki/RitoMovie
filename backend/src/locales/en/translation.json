@@ -67,5 +67,9 @@
     "notFound": "Report not found.",
     "alreadyClosed": "This report has already been closed. Refresh the list.",
     "resolutionRequired": "Enter a moderation note between 5 and 500 characters."
+  },
+  "notifications": {
+    "notFound": "Notification not found.",
+    "commentUnavailable": "This comment is no longer available."
   }
 }

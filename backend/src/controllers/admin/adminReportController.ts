@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import asyncHandler from '../../utils/asyncHandler';
 import ApiError from '../../utils/ApiError';
 import Report from '../../models/Report';
+import { notifyReportOutcome } from '../../services/notificationService';
 import Comment from '../../models/Comment';
 import User from '../../models/User';
 import Movie from '../../models/Movie';
@@ -171,6 +172,7 @@ export const resolveReport = asyncHandler(
     report.reviewedBy = req.user._id;
     report.resolvedAt = new Date();
     await report.save();
+    await notifyReportOutcome(report);
     await logAdminAction(req, 'UPDATE', 'REPORT', report.id, {
       resolution,
       actionTaken: action,
@@ -188,6 +190,7 @@ export const rejectReport = asyncHandler(
     report.reviewedBy = req.user._id;
     report.resolvedAt = new Date();
     await report.save();
+    await notifyReportOutcome(report);
     await logAdminAction(req, 'UPDATE', 'REPORT', report.id, { reason });
     res.json({ success: true, data: report });
   }
@@ -214,6 +217,7 @@ export const bulkAction = asyncHandler(async (req: Request, res: Response) => {
       : action === 'reject'
         ? 'REJECTED'
         : 'REVIEWING';
+  const resolvedAt = new Date();
   const result = await Report.updateMany(
     {
       _id: { $in: [...new Set(reportIds)] },
@@ -224,10 +228,14 @@ export const bulkAction = asyncHandler(async (req: Request, res: Response) => {
     {
       status,
       reviewedBy: req.user._id,
-      ...(reason ? { resolution: reason, resolvedAt: new Date() } : {}),
+      ...(reason ? { resolution: reason, resolvedAt } : {}),
     },
     { runValidators: true }
   );
+  if (reason && result.modifiedCount) {
+    const changed = await Report.find({ _id: { $in: reportIds }, status, resolvedAt });
+    for (const report of changed) await notifyReportOutcome(report);
+  }
   await logAdminAction(req, 'UPDATE', 'REPORT', undefined, {
     bulkAction: action,
     reportIds,

@@ -24,6 +24,7 @@ export interface Comment {
 }
 
 export interface CreateCommentData {
+    sourcePath?: string;
     movie: number;
     text: string;
     rating?: number;
@@ -54,6 +55,10 @@ export interface CommentResponse {
     success: boolean;
     data: Comment;
 }
+export type CommentReaction = 'like' | 'dislike' | null;
+export interface ReactionResult { reaction: CommentReaction; likesCount: number; dislikesCount: number }
+export const setCommentReaction = (commentId: string, reaction: CommentReaction) =>
+    axios.put<{ success: boolean; data: ReactionResult }>(`/comments/${commentId}/reaction`, { reaction });
 
 export interface LikeResponse {
     success: boolean;
@@ -94,11 +99,13 @@ export const getCommentReplies = async (
     return response as unknown as { success: boolean; data: Comment[] };
 };
 
+export const getCommentThread = (id: string) => axios.get<CommentResponse>(`/comments/${id}/thread`);
+
 // Create a new comment
 export const createComment = async (
     data: CreateCommentData
 ): Promise<CommentResponse> => {
-    const response = await axios.post('/comments', data);
+    const response = await axios.post('/comments', { ...data, sourcePath: `${window.location.pathname}${window.location.search}` });
     return response as unknown as CommentResponse;
 };
 
