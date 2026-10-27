@@ -1,7 +1,6 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
-  Search,
   UserRound,
   Menu,
   LogOut,
@@ -15,16 +14,11 @@ import { usePhim } from '@/hooks/usePhim';
 import { LogoLink } from '@/components/common/Logo';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import NotificationBell from '@/components/common/NotificationBell';
+import SearchDialog from '@/components/common/SearchDialog';
 import TaxonomyMenu from './TaxonomyMenu';
 import { getTranslatedGenre, getTranslatedCountry } from '@/utils/translations';
 import { cn } from '@/utils/helpers';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,8 +38,6 @@ import {
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [query, setQuery] = useState('');
   const { t, i18n } = useTranslation();
   const { user, isAuthenticated, logout } = useAuth();
   const { useGenres, useCountries } = usePhim();
@@ -89,15 +81,6 @@ const Header = () => {
         ]
       : []),
   ];
-  const search = (event: FormEvent) => {
-    event.preventDefault();
-    if (query.trim()) {
-      navigate(`/browse?q=${encodeURIComponent(query.trim())}`);
-      setSearchOpen(false);
-      setMobileOpen(false);
-      setQuery('');
-    }
-  };
   const signOut = () => {
     logout();
     setMobileOpen(false);
@@ -106,6 +89,7 @@ const Header = () => {
   return (
     <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
       <header
+        style={{ right: 'var(--removed-body-scroll-bar-size, 0px)' }}
         className={cn(
           'fixed inset-x-0 top-0 z-50 border-b transition-colors duration-200',
           scrolled
@@ -149,47 +133,7 @@ const Header = () => {
             />
           </nav>
           <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-            <Popover open={searchOpen} onOpenChange={setSearchOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={t('common.search')}
-                >
-                  <Search className="h-4 w-4" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-96 p-4">
-                <form onSubmit={search} className="space-y-3">
-                  <label
-                    htmlFor="header-search"
-                    className="text-sm font-medium"
-                  >
-                    {t('common.search')}
-                  </label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="header-search"
-                      value={query}
-                      onChange={(event) => setQuery(event.target.value)}
-                      placeholder={t('header.searchPlaceholder')}
-                      autoComplete="off"
-                    />
-                    <Button
-                      type="submit"
-                      size="icon"
-                      aria-label={t('common.search')}
-                      className="h-11 w-11"
-                    >
-                      <Search className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {t('header.searchHint')}
-                  </p>
-                </form>
-              </PopoverContent>
-            </Popover>
+            <SearchDialog />
             <LanguageSwitcher />
             <NotificationBell />
             {isAuthenticated ? (

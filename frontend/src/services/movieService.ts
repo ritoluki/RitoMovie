@@ -53,9 +53,9 @@ export const movieService = {
   },
 
   // Search movies
-  search: async (query: string, page: number = 1): Promise<PaginatedResponse<Movie>> => {
+  search: async (query: string, page: number = 1, signal?: AbortSignal): Promise<PaginatedResponse<Movie>> => {
     const response = await axios.get<{ success: boolean; data: PaginatedResponse<Movie> }>(
-      `/movies/search?q=${encodeURIComponent(query)}&page=${page}`
+      `/movies/search?q=${encodeURIComponent(query)}&page=${page}`, { signal }
     );
     return response.data;
   },

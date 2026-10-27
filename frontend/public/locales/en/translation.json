@@ -1,4 +1,27 @@
 {
+  "searchPalette": {
+    "title": "Find your next movie",
+    "description": "Search movies and series by title.",
+    "inputLabel": "Search movies and series",
+    "placeholder": "What would you like to watch?",
+    "recent": "Recent searches",
+    "clearHistory": "Clear all",
+    "removeHistory": "Remove {{keyword}} from search history",
+    "clearInput": "Clear search",
+    "startTyping": "A good movie starts with a search.",
+    "historyHint": "Your recent searches will appear here on this browser.",
+    "minimum": "Type at least 2 characters to search.",
+    "searching": "Finding movies…",
+    "failed": "Search is temporarily unavailable. Please try again.",
+    "partial": "Some search sources are unavailable. Available results are shown below.",
+    "noResults": "No movies found for “{{keyword}}”. Try another title.",
+    "results": "Search suggestions",
+    "viewAll": "View all results for “{{keyword}}”",
+    "keyboardHint": "↑ ↓ Select · Enter Search or open selection",
+    "escapeHint": "Esc to close",
+    "movie": "Movie",
+    "tv": "Series"
+  },
   "common": {
     "selectOption": "Select an option",
     "language": "Language",

@@ -1,4 +1,27 @@
 {
+  "searchPalette": {
+    "title": "Tìm bộ phim tiếp theo",
+    "description": "Tìm phim lẻ và phim bộ theo tên.",
+    "inputLabel": "Tìm phim lẻ và phim bộ",
+    "placeholder": "Hôm nay bạn muốn xem gì?",
+    "recent": "Tìm kiếm gần đây",
+    "clearHistory": "Xóa tất cả",
+    "removeHistory": "Xóa {{keyword}} khỏi lịch sử tìm kiếm",
+    "clearInput": "Xóa từ khóa",
+    "startTyping": "Một bộ phim hay bắt đầu từ đây.",
+    "historyHint": "Lịch sử tìm kiếm sẽ được lưu trên trình duyệt này.",
+    "minimum": "Nhập ít nhất 2 ký tự để tìm phim.",
+    "searching": "Đang tìm phim…",
+    "failed": "Tạm thời chưa thể tìm kiếm. Bạn vui lòng thử lại.",
+    "partial": "Một số nguồn tìm kiếm đang gián đoạn. Các kết quả còn lại được hiển thị bên dưới.",
+    "noResults": "Chưa tìm thấy phim cho “{{keyword}}”. Bạn thử tên khác nhé.",
+    "results": "Gợi ý tìm kiếm",
+    "viewAll": "Xem tất cả kết quả cho “{{keyword}}”",
+    "keyboardHint": "↑ ↓ Chọn · Enter Tìm kiếm hoặc mở mục đã chọn",
+    "escapeHint": "Esc để đóng",
+    "movie": "Phim lẻ",
+    "tv": "Phim bộ"
+  },
   "common": {
     "selectOption": "Chọn một mục",
     "language": "Ngôn ngữ",
