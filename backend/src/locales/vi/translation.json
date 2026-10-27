@@ -56,5 +56,16 @@
     "success": "Thao tác thành công",
     "failed": "Thao tác thất bại",
     "processing": "Đang xử lý yêu cầu"
+  },
+  "reports": {
+    "invalid": "Chọn lý do phù hợp và nhập mô tả từ 10 đến 1.000 ký tự.",
+    "targetMissing": "Nội dung này không còn tồn tại.",
+    "selfReport": "Bạn không thể báo cáo chính mình hoặc bình luận của mình.",
+    "duplicate": "Bạn đã gửi báo cáo cho nội dung này và đang chờ xử lý.",
+    "rateLimited": "Vui lòng chờ một phút giữa các lần gửi báo cáo.",
+    "dailyLimit": "Bạn chỉ có thể gửi tối đa 10 báo cáo trong 24 giờ. Vui lòng thử lại sau.",
+    "notFound": "Không tìm thấy báo cáo.",
+    "alreadyClosed": "Báo cáo này đã được đóng. Vui lòng tải lại danh sách.",
+    "resolutionRequired": "Nhập ghi chú xử lý từ 5 đến 500 ký tự."
   }
 }

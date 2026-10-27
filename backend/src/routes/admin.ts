@@ -21,11 +21,13 @@ import * as reportController from '../controllers/admin/adminReportController';
 import * as analyticsController from '../controllers/admin/adminAnalyticsController';
 import * as settingsController from '../controllers/admin/adminSettingsController';
 import * as auditLogController from '../controllers/admin/adminAuditLogController';
+import { streamAdminEvents } from '../controllers/admin/adminEventController';
 
 const router = Router();
 
 // All admin routes require authentication
 router.use(protect);
+router.get('/events', requireAnalyst, streamAdminEvents);
 
 // ==========================================
 // Dashboard Routes (Admin level)

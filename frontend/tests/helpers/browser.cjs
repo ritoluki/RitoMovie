@@ -19,16 +19,26 @@ exports.runBrowserCheck = async (api, bootstrap, check) => {
     assert.ok(port, 'Chrome started');
     const target = await (await fetch(`http://127.0.0.1:${port}/json/new?about:blank`, { method: 'PUT' })).json();
     socket = new WebSocket(target.webSocketDebuggerUrl);
-    await new Promise((resolve, reject) => { socket.onopen = resolve; socket.onerror = reject; });
+    await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Browser debugger connection timed out')), 10000);
+      socket.onopen = () => { clearTimeout(timeout); resolve(); };
+      socket.onerror = event => { clearTimeout(timeout); reject(new Error(event.message || 'Browser debugger connection failed')); };
+      socket.onclose = () => { clearTimeout(timeout); reject(new Error('Browser debugger closed during connection')); };
+    });
     let nextId = 0;
     const pending = new Map();
     const errors = [];
     const requests = [];
     const send = (method, params = {}) => new Promise((resolve, reject) => {
       const id = ++nextId;
-      pending.set(id, { resolve, reject });
+      const timeout = setTimeout(() => { pending.delete(id); reject(new Error(`Browser command timed out: ${method}`)); }, 10000);
+      pending.set(id, { resolve: value => { clearTimeout(timeout); resolve(value); }, reject: error => { clearTimeout(timeout); reject(error); } });
       socket.send(JSON.stringify({ id, method, params }));
     });
+    socket.onclose = () => {
+      for (const callback of pending.values()) callback.reject(new Error('Browser debugger disconnected'));
+      pending.clear();
+    };
     socket.onmessage = async event => {
       const message = JSON.parse(event.data);
       const callback = pending.get(message.id);
@@ -81,12 +91,13 @@ exports.runBrowserCheck = async (api, bootstrap, check) => {
     await send('Page.addScriptToEvaluateOnNewDocument', { source: bootstrap });
     let timeout;
     try {
-      await Promise.race([check({ navigate, waitFor, evaluate, click, fill, requests, errors }), new Promise((_, reject) => {
+      await Promise.race([check({ navigate, waitFor, evaluate, click, fill, requests, errors, send }), new Promise((_, reject) => {
         timeout = setTimeout(() => reject(new Error('Browser check timed out')), 90000);
       })]);
     } finally { clearTimeout(timeout); }
     assert.deepEqual(errors, []);
-    await send('Browser.close');
+    // Chrome may close its debugger socket before acknowledging Browser.close.
+    await send('Browser.close').catch(() => {});
   } finally {
     socket?.close(); chrome.kill(); await sleep(500);
     if (path.dirname(path.resolve(profile)) === path.resolve(os.tmpdir()) && path.basename(profile).startsWith('ritomovie-browser-')) {

@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { adminRealtimePlugin } from '../utils/adminRealtimePlugin';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
@@ -201,6 +202,8 @@ UserSchema.methods.getResetPasswordToken = function (): string {
 
   return resetToken;
 };
+
+UserSchema.plugin(adminRealtimePlugin, { topics: ['users', 'comments', 'reports', 'dashboard', 'analytics'] });
 
 export default mongoose.model<IUser>('User', UserSchema);
 

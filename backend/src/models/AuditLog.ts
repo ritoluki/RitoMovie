@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { adminRealtimePlugin } from '../utils/adminRealtimePlugin';
 
 // Define specific detail types for type safety
 interface AuditDetails {
@@ -32,7 +33,7 @@ export interface IAuditLog extends Document {
     | 'LIFT_COMMENT_RESTRICTION'
     | 'TEST_EMAIL'
     | 'INITIALIZE_SETTINGS';
-  resource: 'USER' | 'MOVIE' | 'COMMENT' | 'RATING' | 'SETTINGS' | 'SETTING' | 'ADMIN_PANEL';
+  resource: 'USER' | 'MOVIE' | 'COMMENT' | 'REPORT' | 'RATING' | 'SETTINGS' | 'SETTING' | 'ADMIN_PANEL';
   resourceId?: string;
   details: AuditDetails;
   ipAddress: string;
@@ -74,7 +75,7 @@ const AuditLogSchema = new Schema<IAuditLog>(
     resource: {
       type: String,
       required: true,
-      enum: ['USER', 'MOVIE', 'COMMENT', 'RATING', 'SETTINGS', 'SETTING', 'ADMIN_PANEL'],
+      enum: ['USER', 'MOVIE', 'COMMENT', 'REPORT', 'RATING', 'SETTINGS', 'SETTING', 'ADMIN_PANEL'],
     },
     resourceId: {
       type: String,
@@ -101,5 +102,7 @@ AuditLogSchema.index({ action: 1, createdAt: -1 });
 AuditLogSchema.index({ resource: 1, createdAt: -1 });
 AuditLogSchema.index({ createdAt: -1 }); // For chronological queries
 AuditLogSchema.index({ resourceId: 1, resource: 1 });
+
+AuditLogSchema.plugin(adminRealtimePlugin, { topics: ['audit-logs', 'dashboard'] });
 
 export default mongoose.model<IAuditLog>('AuditLog', AuditLogSchema);

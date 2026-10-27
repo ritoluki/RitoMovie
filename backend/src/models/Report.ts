@@ -1,18 +1,14 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { adminRealtimePlugin } from '../utils/adminRealtimePlugin';
+import { ReportContext, ReportReason, REPORT_REASONS } from '../utils/reportPolicy';
 
 export interface IReport extends Document {
   reporter: mongoose.Types.ObjectId;
   type: 'COMMENT' | 'USER' | 'MOVIE' | 'BUG';
   targetId: mongoose.Types.ObjectId | string; // ObjectId for COMMENT/USER/MOVIE, string for BUG
   targetModel?: 'Comment' | 'User' | 'Movie'; // Helps with dynamic reference population
-  reason:
-    | 'SPAM'
-    | 'HARASSMENT'
-    | 'INAPPROPRIATE'
-    | 'SPOILER'
-    | 'COPYRIGHT'
-    | 'BUG_REPORT'
-    | 'OTHER';
+  reason: ReportReason;
+  context?: ReportContext;
   description: string;
   status: 'PENDING' | 'REVIEWING' | 'RESOLVED' | 'REJECTED';
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
@@ -46,15 +42,22 @@ const ReportSchema = new Schema<IReport>(
     reason: {
       type: String,
       required: true,
-      enum: [
-        'SPAM',
-        'HARASSMENT',
-        'INAPPROPRIATE',
-        'SPOILER',
-        'COPYRIGHT',
-        'BUG_REPORT',
-        'OTHER',
-      ],
+      enum: [...new Set(Object.values(REPORT_REASONS).flat())],
+    },
+    context: {
+      type: new Schema({
+        movieId: Number,
+        mediaType: { type: String, enum: ['movie', 'tv'] },
+        movieSlug: String,
+        movieTitle: String,
+        episode: String,
+        server: String,
+        pagePath: String,
+        commentId: String,
+        commentText: String,
+        authorName: String,
+      }, { _id: false }),
+      default: undefined,
     },
     description: {
       type: String,
@@ -95,6 +98,11 @@ ReportSchema.index({ type: 1, status: 1 });
 ReportSchema.index({ priority: 1, status: 1 });
 ReportSchema.index({ reporter: 1, createdAt: -1 });
 ReportSchema.index({ reviewedBy: 1, status: 1 });
+// Concurrent submissions cannot create duplicate open reports for the same person and target.
+ReportSchema.index({ reporter: 1, type: 1, targetId: 1 }, {
+  unique: true,
+  partialFilterExpression: { status: { $in: ['PENDING', 'REVIEWING'] } },
+});
 
 // Validation middleware to ensure targetModel matches type
 ReportSchema.pre('save', function (next) {
@@ -118,5 +126,7 @@ ReportSchema.virtual('target', {
 // Ensure virtuals are included in JSON output
 ReportSchema.set('toJSON', { virtuals: true });
 ReportSchema.set('toObject', { virtuals: true });
+
+ReportSchema.plugin(adminRealtimePlugin, { topics: ['reports', 'dashboard'] });
 
 export default mongoose.model<IReport>('Report', ReportSchema);

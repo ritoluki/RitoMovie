@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import { adminRealtimePlugin } from '../utils/adminRealtimePlugin';
 import type { MoviePolicy } from '../utils/movieManagement';
 
 export interface IManagedMovie extends MoviePolicy {
@@ -29,5 +30,7 @@ schema.index({ tmdbId: 1, mediaType: 1 });
 schema.index({ source: 1, isHidden: 1 });
 schema.index({ isHidden: 1, isFeatured: 1, updatedAt: -1 });
 schema.index({ isHidden: 1, isTrending: 1, updatedAt: -1 });
+
+schema.plugin(adminRealtimePlugin, { topics: ['movies', 'movie-source', 'managed-movie-genres', 'genres', 'home-layout', 'dashboard', 'analytics'] });
 
 export default mongoose.model<IManagedMovie>('ManagedMovie', schema);

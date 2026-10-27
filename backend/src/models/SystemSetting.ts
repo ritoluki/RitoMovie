@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { adminRealtimePlugin } from '../utils/adminRealtimePlugin';
 
 // Type-safe value using union types
 type SettingValue = string | number | boolean | Record<string, unknown>;
@@ -73,5 +74,7 @@ SystemSettingSchema.methods.toSafeJSON = function () {
   }
   return obj;
 };
+
+SystemSettingSchema.plugin(adminRealtimePlugin, { topics: ['settings', 'moderation-rules', 'dashboard'] });
 
 export default mongoose.model<ISystemSetting>('SystemSetting', SystemSettingSchema);

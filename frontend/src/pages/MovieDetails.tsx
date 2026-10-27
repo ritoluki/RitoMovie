@@ -31,6 +31,7 @@ import {
   selectPhimImages,
 } from '@/utils/phimFallback';
 import { phimTitle, phimOverview } from '@/utils/phimLocalization';
+import ReportButton from '@/components/common/ReportButton';
 
 type TabType = 'episodes' | 'gallery' | 'cast' | 'recommendations';
 
@@ -516,6 +517,11 @@ const MovieDetails = () => {
 
             {/* Action Buttons */}
             <div className="flex items-center gap-3 flex-wrap pt-2">
+              <ReportButton target={{ type: 'MOVIE',
+                targetId: streamingData?.movie?.slug || phimSlug
+                  ? `phim:${streamingData?.movie?.slug || phimSlug}` : `tmdb:${metadataMediaType}:${movieId}`,
+                label: displayTitle, context: { movieId, mediaType: metadataMediaType, movieTitle: displayTitle,
+                  movieSlug: streamingData?.movie?.slug || phimSlug } }} />
               <Button
                 onClick={handleWatchlistClick}
                 disabled={!isAuthenticated || movieId <= 0}

@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import AdminSidebar from './AdminSidebar';
 import AdminHeader from './AdminHeader';
+import { useAdminRealtime } from '../../hooks/useAdminRealtime';
 
 const AdminLayout: React.FC = () => {
+  const realtimeStatus = useAdminRealtime();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
@@ -35,6 +37,7 @@ const AdminLayout: React.FC = () => {
       >
         {/* Header */}
         <AdminHeader
+          realtimeStatus={realtimeStatus}
           onMenuClick={toggleMobileSidebar}
           onToggleSidebar={toggleSidebar}
           sidebarOpen={sidebarOpen}

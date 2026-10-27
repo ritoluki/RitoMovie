@@ -19,7 +19,8 @@
     "backToHome": "← Quay lại Trang chủ",
     "backToTop": "Lên đầu trang",
     "scrollDown": "Kéo xuống",
-    "swipeUp": "Khám phá"
+    "swipeUp": "Khám phá",
+    "retry": "Thử lại"
   },
   "header": {
     "searchHint": "Nhập tên phim và nhấn Enter để tìm kiếm.",
@@ -349,6 +350,14 @@
     "serverError": "Lỗi máy chủ. Vui lòng thử lại sau."
   },
   "admin": {
+    "realtime": {
+      "live": "Cập nhật trực tiếp",
+      "connecting": "Đang kết nối",
+      "reconnecting": "Đang kết nối lại",
+      "paused": "Tạm dừng cập nhật",
+      "liveHint": "Các thay đổi mới sẽ tự xuất hiện.",
+      "fallbackHint": "Khi kết nối trực tiếp bị gián đoạn, dữ liệu tự làm mới mỗi 30 giây."
+    },
     "nav": {
       "dashboard": "Tổng quan",
       "users": "Người dùng",
@@ -410,9 +419,9 @@
       "recentUsers": "Người dùng mới",
       "recentActions": "Thao tác quản trị gần đây",
       "alerts": {
-      "pendingReports": "Có {{count}} báo cáo đang chờ xử lý",
-      "criticalReports": "Có {{count}} báo cáo mức nghiêm trọng cần xử lý ngay",
-      "failedLogins": "Có {{count}} lần truy cập không được phép trong 24 giờ qua"
+        "pendingReports": "Có {{count}} báo cáo đang chờ xử lý",
+        "criticalReports": "Có {{count}} báo cáo mức nghiêm trọng cần xử lý ngay",
+        "failedLogins": "Có {{count}} lần truy cập không được phép trong 24 giờ qua"
       }
     },
     "analytics": {
@@ -955,7 +964,53 @@
       "SPOILER": "Tiết lộ nội dung",
       "COPYRIGHT": "Bản quyền",
       "BUG_REPORT": "Báo lỗi",
-      "OTHER": "Khác"
+      "OTHER": "Khác",
+      "PLAYBACK_ERROR": "Không phát được phim",
+      "WRONG_CONTENT": "Sai phim hoặc tập phim",
+      "SUBTITLE_ERROR": "Lỗi phụ đề hoặc âm thanh"
     }
+  },
+  "reporting": {
+    "open": "Báo cáo",
+    "movieButton": "Báo lỗi phim",
+    "title": "Gửi báo cáo",
+    "description": "Giúp RitoMovie giữ nội dung phù hợp và cải thiện trải nghiệm xem phim.",
+    "loginRequired": "Đăng nhập để gửi báo cáo. Hãy mô tả đủ thông tin để quản trị viên có thể kiểm tra.",
+    "target": "Bạn muốn báo cáo điều gì?",
+    "author": "Người đăng",
+    "comment": "Bình luận này",
+    "reason": "Lý do",
+    "details": "Mô tả chi tiết",
+    "placeholder": "Mô tả vấn đề bạn gặp và nội dung cần kiểm tra…",
+    "minLength": "Tối thiểu 10 ký tự.",
+    "submit": "Gửi báo cáo",
+    "wait": "Chờ {{count}} giây",
+    "success": "Đã nhận báo cáo. Quản trị viên sẽ kiểm tra.",
+    "duplicate": "Bạn đã gửi báo cáo cho nội dung này và đang chờ xử lý.",
+    "rateLimited": "Vui lòng chờ một phút giữa các lần gửi báo cáo.",
+    "dailyLimit": "Bạn chỉ có thể gửi tối đa 10 báo cáo trong 24 giờ. Vui lòng thử lại sau.",
+    "invalid": "Chọn lý do phù hợp và nhập mô tả từ 10 đến 1.000 ký tự.",
+    "targetMissing": "Nội dung này không còn tồn tại.",
+    "selfReport": "Bạn không thể báo cáo chính mình hoặc bình luận của mình.",
+    "failed": "Không thể gửi báo cáo. Vui lòng thử lại."
+  },
+  "adminReport": {
+    "target": "Nội dung bị báo cáo",
+    "reviewHint": "Kiểm tra báo cáo và thông tin liên quan, sau đó ghi lại quyết định xử lý.",
+    "bulkTitle": "Xử lý {{count}} báo cáo đã chọn",
+    "bulkHint": "Chỉ cập nhật các báo cáo chưa đóng. Thao tác này đổi trạng thái báo cáo; nội dung không tự động bị ẩn hoặc xóa.",
+    "playbackContext": "Tập phim / máy chủ",
+    "openTarget": "Mở trang được báo cáo",
+    "targetMissing": "Nội dung gốc đã bị xóa. Bản lưu tại thời điểm báo cáo sẽ được hiển thị nếu có.",
+    "alreadyHidden": "Bình luận này đã được ẩn.",
+    "resolution": "Ghi chú xử lý",
+    "notePlaceholder": "Mô tả nội dung đã kiểm tra, cách xử lý hoặc lý do từ chối báo cáo…",
+    "noteHint": "Cần ghi chú tối thiểu 5 ký tự.",
+    "action": "Thao tác khi hoàn tất",
+    "noAction": "Chỉ ghi nhận đã xử lý",
+    "hideComment": "Ẩn bình luận bị báo cáo",
+    "updated": "Đã cập nhật báo cáo",
+    "bulkUpdated": "Đã cập nhật {{count}} báo cáo",
+    "failed": "Không thể cập nhật báo cáo."
   }
 }

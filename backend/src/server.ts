@@ -69,6 +69,7 @@ import movieRoutes from './routes/movies';
 import videoRoutes from './routes/videos';
 import userRoutes from './routes/users';
 import commentRoutes from './routes/comments';
+import reportRoutes from './routes/reports';
 import phimRoutes from './routes/phim';
 import homeRoutes from './routes/home';
 import adminRoutes from './routes/admin';
@@ -76,6 +77,7 @@ import cacheService from './services/cacheService';
 import settingsService from './services/settingsService';
 import { checkMaintenanceMode } from './middleware/settings';
 import { getPublicSettings } from './controllers/admin/adminSettingsController';
+import { closeAdminStreams } from './controllers/admin/adminEventController';
 
 // Public settings endpoint (no auth required)
 app.get('/api/settings/public', getPublicSettings);
@@ -89,6 +91,7 @@ app.use('/api/movies', movieRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/comments', commentRoutes);
+app.use('/api/reports', reportRoutes);
 app.use('/api/phim', phimRoutes);
 app.use('/api/home', homeRoutes);
 app.use('/api/admin', adminRoutes);
@@ -162,6 +165,7 @@ const server = app.listen(PORT, () => {
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err: Error) => {
   console.error('Unhandled Rejection:', err);
+  closeAdminStreams();
   server.close(() => {
     process.exit(1);
   });

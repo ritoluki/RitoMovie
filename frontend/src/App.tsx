@@ -22,6 +22,12 @@ const queryClient = new QueryClient({
     },
   },
 });
+// Admin data changes frequently; catalog metadata keeps its existing long cache lifetime.
+queryClient.setQueryDefaults(['admin'], {
+  staleTime: 30_000,
+  refetchOnMount: true,
+  refetchOnWindowFocus: true,
+});
 
 function EmailVerificationPromptListener() {
   const navigate = useNavigate();

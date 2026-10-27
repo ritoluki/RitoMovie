@@ -113,7 +113,7 @@ export const adminService = {
     }>('/admin/reports', { params }),
   
   getReportDetails: (id: string) =>
-    api.get<ApiResponse<{ report: AdminReport; target: unknown }>>(`/admin/reports/${id}`),
+    api.get<ApiResponse<{ report: AdminReport; target: { text?: string; name?: string; title?: string; isDeleted?: boolean; isHidden?: boolean; isBanned?: boolean } | null }>>(`/admin/reports/${id}`),
   
   updateReportStatus: (id: string, status: AdminReport['status']) =>
     api.put<ApiResponse<AdminReport>>(`/admin/reports/${id}/status`, { status }),
@@ -128,7 +128,7 @@ export const adminService = {
     api.post<ApiResponse<AdminReport>>(`/admin/reports/${id}/reject`, { reason }),
   
   bulkReportAction: (action: 'resolve' | 'reject' | 'set-reviewing', reportIds: string[], reason?: string) =>
-    api.post<ApiResponse<{ modifiedCount: number }>>('/admin/reports/bulk-action', { action, reportIds, reason }),
+    api.post<{ success: boolean; modifiedCount: number }>('/admin/reports/bulk-action', { action, reportIds, reason }),
 
   // ==========================================
   // Analytics API

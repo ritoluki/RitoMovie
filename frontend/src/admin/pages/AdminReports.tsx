@@ -1,16 +1,15 @@
 import { SelectField } from '@/components/ui/select-field';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import {
-  CheckCircle,
-  XCircle,
-  Eye,
-  RefreshCw,
-} from 'lucide-react';
+import { CheckCircle, XCircle, Eye, RefreshCw } from 'lucide-react';
 import adminService from '../services/adminService';
 import DataTable, { Column } from '../components/common/DataTable';
-import ConfirmDialog from '../components/common/ConfirmDialog';
+import ReportReviewDialog, {
+  type ReportSelection,
+} from '../components/modals/ReportReviewDialog';
+import { toast } from 'sonner';
+import { getErrorMessage } from '@/utils/errorMessage';
 import ActionDropdown from '../components/common/ActionDropdown';
 import AdminBreadcrumb from '../components/layout/AdminBreadcrumb';
 import type { AdminReport, ReportQueryParams } from '../types/admin';
@@ -27,81 +26,52 @@ const AdminReports: React.FC = () => {
     sortOrder: 'desc',
   });
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
-  const [confirmDialog, setConfirmDialog] = useState<{
-    open: boolean;
-    title: string;
-    message: string;
-    action: () => void;
-    variant: 'danger' | 'warning' | 'info';
-  }>({
-    open: false,
-    title: '',
-    message: '',
-    action: () => {},
-    variant: 'info',
-  });
+  const [selection, setSelection] = useState<ReportSelection | null>(null);
+  useEffect(() => setSelectedRows([]), [queryParams]);
 
   // Fetch reports
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['admin', 'reports', queryParams],
     queryFn: () => adminService.getReports(queryParams),
   });
 
   // Mutations
   const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: AdminReport['status'] }) =>
-      adminService.updateReportStatus(id, status),
+    mutationFn: ({
+      id,
+      status,
+    }: {
+      id: string;
+      status: AdminReport['status'];
+    }) => adminService.updateReportStatus(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'reports'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
+      toast.success(t('adminReport.updated'));
     },
-  });
-
-  const resolveMutation = useMutation({
-    mutationFn: ({ id, resolution }: { id: string; resolution: string }) =>
-      adminService.resolveReport(id, resolution),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'reports'] });
-    },
-  });
-
-  const rejectMutation = useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-      adminService.rejectReport(id, reason),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'reports'] });
-    },
+    onError: (error) =>
+      toast.error(getErrorMessage(error, t('adminReport.failed'))),
   });
 
   // axios interceptor returns response.data directly, so structure is {success, data, pagination}
   const reports = data?.data || [];
   const pagination = data?.pagination;
   const statusCounts = data?.statusCounts || {};
+  const selectedOpenIds = reports
+    .filter(
+      (report) =>
+        selectedRows.includes(report._id) &&
+        ['PENDING', 'REVIEWING'].includes(report.status),
+    )
+    .map((report) => report._id);
 
   // Handlers
   const handleResolve = (report: AdminReport) => {
-    setConfirmDialog({
-      open: true,
-      title: t('admin.reports.resolveTitle'),
-      message: t('admin.reports.resolveMessage', { type: t(`admin.reports.${report.type.toLowerCase()}`, { defaultValue: report.type.toLowerCase() }) }),
-      variant: 'info',
-      action: () => {
-        resolveMutation.mutate({ id: report._id, resolution: 'Resolved by admin' });
-        setConfirmDialog((prev) => ({ ...prev, open: false }));
-      },
-    });
+    setSelection({ ids: [report._id], mode: 'resolve' });
   };
 
   const handleReject = (report: AdminReport) => {
-    setConfirmDialog({
-      open: true,
-      title: t('admin.reports.rejectTitle'),
-      message: t('admin.reports.rejectMessage', { type: t(`admin.reports.${report.type.toLowerCase()}`, { defaultValue: report.type.toLowerCase() }) }),
-      variant: 'warning',
-      action: () => {
-        rejectMutation.mutate({ id: report._id, reason: 'Rejected by admin' });
-        setConfirmDialog((prev) => ({ ...prev, open: false }));
-      },
-    });
+    setSelection({ ids: [report._id], mode: 'reject' });
   };
 
   // Priority badge colors
@@ -139,11 +109,27 @@ const AdminReports: React.FC = () => {
   // Table columns
   const columns: Column<AdminReport>[] = [
     {
+      key: 'targetId',
+      header: t('adminReport.target'),
+      render: (report) => (
+        <button
+          onClick={() => setSelection({ ids: [report._id], mode: 'view' })}
+          className="max-w-52 truncate text-left text-sm text-red-300 hover:underline"
+        >
+          {report.context?.movieTitle ||
+            report.context?.authorName ||
+            report.targetId}
+        </button>
+      ),
+    },
+    {
       key: 'type',
       header: t('admin.reports.type'),
       render: (report) => (
         <span className="px-2 py-1 text-xs font-medium bg-gray-700 text-gray-300 rounded">
-          {t(`admin.reports.${report.type.toLowerCase()}`, { defaultValue: report.type })}
+          {t(`admin.reports.${report.type.toLowerCase()}`, {
+            defaultValue: report.type,
+          })}
         </span>
       ),
     },
@@ -151,7 +137,11 @@ const AdminReports: React.FC = () => {
       key: 'reason',
       header: t('admin.reports.reason'),
       render: (report) => (
-        <span className="text-gray-300 text-sm">{t(`admin.reportReasons.${report.reason}`, { defaultValue: report.reason.replace('_', ' ') })}</span>
+        <span className="text-gray-300 text-sm">
+          {t(`admin.reportReasons.${report.reason}`, {
+            defaultValue: report.reason.replace('_', ' '),
+          })}
+        </span>
       ),
     },
     {
@@ -179,7 +169,9 @@ const AdminReports: React.FC = () => {
               {report.reporter?.name?.charAt(0).toUpperCase() || '?'}
             </div>
           )}
-          <span className="text-gray-300 text-sm">{report.reporter?.name || t('admin.common.unknown')}</span>
+          <span className="text-gray-300 text-sm">
+            {report.reporter?.name || t('admin.common.unknown')}
+          </span>
         </div>
       ),
     },
@@ -187,8 +179,12 @@ const AdminReports: React.FC = () => {
       key: 'priority',
       header: t('admin.reports.priority'),
       render: (report) => (
-        <span className={`px-2 py-1 text-xs font-medium rounded ${getPriorityColor(report.priority)}`}>
-          {t(`admin.reportPriority.${report.priority}`, { defaultValue: report.priority })}
+        <span
+          className={`px-2 py-1 text-xs font-medium rounded ${getPriorityColor(report.priority)}`}
+        >
+          {t(`admin.reportPriority.${report.priority}`, {
+            defaultValue: report.priority,
+          })}
         </span>
       ),
     },
@@ -196,8 +192,12 @@ const AdminReports: React.FC = () => {
       key: 'status',
       header: t('admin.common.status'),
       render: (report) => (
-        <span className={`px-2 py-1 text-xs font-medium rounded ${getStatusColor(report.status)}`}>
-          {t(`admin.reportStatus.${report.status}`, { defaultValue: report.status })}
+        <span
+          className={`px-2 py-1 text-xs font-medium rounded ${getStatusColor(report.status)}`}
+        >
+          {t(`admin.reportStatus.${report.status}`, {
+            defaultValue: report.status,
+          })}
         </span>
       ),
     },
@@ -221,14 +221,19 @@ const AdminReports: React.FC = () => {
             {
               label: t('admin.reports.viewDetails'),
               icon: <Eye className="h-5 w-5" />,
-              onClick: () => console.log('View', report._id),
+              onClick: () => setSelection({ ids: [report._id], mode: 'view' }),
             },
             ...(report.status === 'PENDING'
               ? [
                   {
                     label: t('admin.reports.startReviewing'),
                     icon: <RefreshCw className="h-5 w-5" />,
-                    onClick: () => updateStatusMutation.mutate({ id: report._id, status: 'REVIEWING' }),
+                    onClick: () =>
+                      updateStatusMutation.mutate({
+                        id: report._id,
+                        status: 'REVIEWING',
+                      }),
+                    disabled: updateStatusMutation.isPending,
                   },
                 ]
               : []),
@@ -255,36 +260,55 @@ const AdminReports: React.FC = () => {
 
   return (
     <div>
-      <AdminBreadcrumb items={[{ label: t('admin.common.admin'), href: '/admin' }, { label: t('admin.reports.title') }]} />
+      <AdminBreadcrumb
+        items={[
+          { label: t('admin.common.admin'), href: '/admin' },
+          { label: t('admin.reports.title') },
+        ]}
+      />
 
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">{t('admin.reports.title')}</h1>
+        <h1 className="text-2xl font-bold text-white">
+          {t('admin.reports.title')}
+        </h1>
         <p className="text-gray-400 mt-1">{t('admin.reports.description')}</p>
       </div>
 
       {/* Status tabs */}
       <div className="flex flex-wrap gap-2 mb-6">
         <button
-          onClick={() => setQueryParams({ ...queryParams, status: undefined, page: 1 })}
+          onClick={() =>
+            setQueryParams({ ...queryParams, status: undefined, page: 1 })
+          }
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             !queryParams.status
               ? 'bg-red-600 text-white'
               : 'bg-[#2a2a2a] text-gray-300 hover:bg-gray-700'
           }`}
         >
-          {t('admin.common.all')} ({Object.values(statusCounts).reduce((a, b) => a + b, 0) || 0})
+          {t('admin.common.all')} (
+          {Object.values(statusCounts).reduce((a, b) => a + b, 0) || 0})
         </button>
         {['PENDING', 'REVIEWING', 'RESOLVED', 'REJECTED'].map((status) => (
           <button
             key={status}
-            onClick={() => setQueryParams({ ...queryParams, status: status as ReportQueryParams['status'], page: 1 })}
+            onClick={() =>
+              setQueryParams({
+                ...queryParams,
+                status: status as ReportQueryParams['status'],
+                page: 1,
+              })
+            }
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               queryParams.status === status
                 ? 'bg-red-600 text-white'
                 : 'bg-[#2a2a2a] text-gray-300 hover:bg-gray-700'
             }`}
           >
-            {t(`admin.reportStatus.${status}`, { defaultValue: status.charAt(0) + status.slice(1).toLowerCase() })} ({statusCounts[status] || 0})
+            {t(`admin.reportStatus.${status}`, {
+              defaultValue: status.charAt(0) + status.slice(1).toLowerCase(),
+            })}{' '}
+            ({statusCounts[status] || 0})
           </button>
         ))}
       </div>
@@ -293,7 +317,13 @@ const AdminReports: React.FC = () => {
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <SelectField
           value={queryParams.type || ''}
-          onValueChange={value => setQueryParams({ ...queryParams, type: value as ReportQueryParams['type'], page: 1 })}
+          onValueChange={(value) =>
+            setQueryParams({
+              ...queryParams,
+              type: value as ReportQueryParams['type'],
+              page: 1,
+            })
+          }
           className="w-full sm:w-44"
         >
           <option value="">{t('admin.reports.allTypes')}</option>
@@ -305,7 +335,13 @@ const AdminReports: React.FC = () => {
 
         <SelectField
           value={queryParams.priority || ''}
-          onValueChange={value => setQueryParams({ ...queryParams, priority: value as ReportQueryParams['priority'], page: 1 })}
+          onValueChange={(value) =>
+            setQueryParams({
+              ...queryParams,
+              priority: value as ReportQueryParams['priority'],
+              page: 1,
+            })
+          }
           className="w-full sm:w-44"
         >
           <option value="">{t('admin.reports.allPriorities')}</option>
@@ -318,14 +354,30 @@ const AdminReports: React.FC = () => {
 
       {/* Bulk actions */}
       {selectedRows.length > 0 && (
-        <div className="flex items-center gap-4 mb-4 p-4 bg-[#2a2a2a] rounded-lg">
+        <div className="flex flex-wrap items-center gap-4 mb-4 p-4 bg-[#2a2a2a] rounded-lg">
           <span className="text-sm text-gray-300">
             {t('admin.reports.selected', { count: selectedRows.length })}
           </span>
-          <button className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700">
+          <button
+            disabled={!selectedOpenIds.length}
+            onClick={() =>
+              setSelection({
+                ids: selectedOpenIds,
+                bulk: true,
+                mode: 'resolve',
+              })
+            }
+            className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-40"
+          >
             {t('admin.reports.resolveSelected')}
           </button>
-          <button className="px-3 py-1.5 text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+          <button
+            disabled={!selectedOpenIds.length}
+            onClick={() =>
+              setSelection({ ids: selectedOpenIds, bulk: true, mode: 'reject' })
+            }
+            className="px-3 py-1.5 text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-40"
+          >
             {t('admin.reports.rejectSelected')}
           </button>
           <button
@@ -338,13 +390,26 @@ const AdminReports: React.FC = () => {
       )}
 
       {/* Data Table */}
+      {error && (
+        <div
+          role="alert"
+          className="mb-4 flex items-center gap-3 rounded-xl bg-red-500/10 p-4 text-sm text-red-300"
+        >
+          {getErrorMessage(error, t('adminReport.failed'))}
+          <button className="underline" onClick={() => refetch()}>
+            {t('common.retry', 'Try again')}
+          </button>
+        </div>
+      )}
       <DataTable
         columns={columns}
         data={reports}
         loading={isLoading}
         pagination={pagination}
         onPageChange={(page) => setQueryParams({ ...queryParams, page })}
-        onSort={(key, order) => setQueryParams({ ...queryParams, sortBy: key, sortOrder: order })}
+        onSort={(key, order) =>
+          setQueryParams({ ...queryParams, sortBy: key, sortOrder: order })
+        }
         sortBy={queryParams.sortBy}
         sortOrder={queryParams.sortOrder}
         selectable
@@ -353,15 +418,10 @@ const AdminReports: React.FC = () => {
         emptyMessage={t('admin.reports.noReports')}
       />
 
-      {/* Confirm Dialog */}
-      <ConfirmDialog
-        isOpen={confirmDialog.open}
-        onClose={() => setConfirmDialog((prev) => ({ ...prev, open: false }))}
-        onConfirm={confirmDialog.action}
-        title={confirmDialog.title}
-        message={confirmDialog.message}
-        variant={confirmDialog.variant}
-        loading={resolveMutation.isPending || rejectMutation.isPending}
+      <ReportReviewDialog
+        selection={selection}
+        onClose={() => setSelection(null)}
+        onUpdated={() => setSelectedRows([])}
       />
     </div>
   );

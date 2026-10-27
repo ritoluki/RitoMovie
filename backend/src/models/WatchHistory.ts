@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { adminRealtimePlugin } from '../utils/adminRealtimePlugin';
 
 export interface IWatchHistory extends Document {
   user: mongoose.Types.ObjectId;
@@ -48,6 +49,8 @@ const WatchHistorySchema: Schema = new Schema(
 
 // Create compound index for user and movieId
 WatchHistorySchema.index({ user: 1, movieId: 1 }, { unique: true });
+
+WatchHistorySchema.plugin(adminRealtimePlugin, { topics: ['users', 'dashboard', 'analytics'] });
 
 export default mongoose.model<IWatchHistory>('WatchHistory', WatchHistorySchema);
 

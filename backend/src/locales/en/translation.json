@@ -56,5 +56,16 @@
     "success": "Operation successful",
     "failed": "Operation failed",
     "processing": "Processing request"
+  },
+  "reports": {
+    "invalid": "Choose a valid reason and enter between 10 and 1,000 characters.",
+    "targetMissing": "This content is no longer available.",
+    "selfReport": "You cannot report yourself or your own comment.",
+    "duplicate": "You already have an open report for this item. Our team is reviewing it.",
+    "rateLimited": "Please wait one minute between reports.",
+    "dailyLimit": "You can send at most 10 reports in 24 hours. Please try again later.",
+    "notFound": "Report not found.",
+    "alreadyClosed": "This report has already been closed. Refresh the list.",
+    "resolutionRequired": "Enter a moderation note between 5 and 500 characters."
   }
 }

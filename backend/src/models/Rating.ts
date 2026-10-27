@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { adminRealtimePlugin } from '../utils/adminRealtimePlugin';
 
 export interface IRating extends Document {
   user: mongoose.Types.ObjectId;
@@ -38,6 +39,8 @@ const RatingSchema: Schema = new Schema(
 
 // Create compound index for user and movieId
 RatingSchema.index({ user: 1, movieId: 1 }, { unique: true });
+
+RatingSchema.plugin(adminRealtimePlugin, { topics: ['users', 'dashboard', 'analytics'] });
 
 export default mongoose.model<IRating>('Rating', RatingSchema);
 

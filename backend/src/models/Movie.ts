@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { adminRealtimePlugin } from '../utils/adminRealtimePlugin';
 
 export interface IMovie extends Document {
   title: string;
@@ -76,6 +77,8 @@ const MovieSchema: Schema = new Schema(
 
 // Create text index for search
 MovieSchema.index({ title: 'text', description: 'text' });
+
+MovieSchema.plugin(adminRealtimePlugin, { topics: ['movies', 'genres', 'dashboard', 'analytics'] });
 
 export default mongoose.model<IMovie>('Movie', MovieSchema);
 

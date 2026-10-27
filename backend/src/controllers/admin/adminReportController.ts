@@ -2,329 +2,237 @@ import { Request, Response } from 'express';
 import asyncHandler from '../../utils/asyncHandler';
 import ApiError from '../../utils/ApiError';
 import Report from '../../models/Report';
+import Comment from '../../models/Comment';
+import User from '../../models/User';
+import Movie from '../../models/Movie';
 import { logAdminAction } from '../../middleware/adminAuth';
+import {
+  ACTIVE_REPORT_STATUSES,
+  isObjectId,
+  parseReportResolution,
+  REPORT_REASONS,
+} from '../../utils/reportPolicy';
 
-/**
- * @desc    List all reports with pagination and filters
- * @route   GET /api/admin/reports
- * @access  Admin
- */
+const statuses = ['PENDING', 'REVIEWING', 'RESOLVED', 'REJECTED'];
+const priorities = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+const requireId = (id: unknown) => {
+  if (!isObjectId(id))
+    throw new ApiError(400, 'reports.invalid', 'REPORT_INVALID');
+};
+const findReport = async (id: string, actionable = false) => {
+  requireId(id);
+  const report = await Report.findById(id);
+  if (!report) throw new ApiError(404, 'reports.notFound', 'REPORT_NOT_FOUND');
+  if (actionable && !ACTIVE_REPORT_STATUSES.includes(report.status)) {
+    throw new ApiError(409, 'reports.alreadyClosed', 'REPORT_ALREADY_CLOSED');
+  }
+  return report;
+};
+
 export const listReports = asyncHandler(async (req: Request, res: Response) => {
-  const {
-    page = 1,
-    limit = 20,
-    type,
-    status,
-    priority,
-    sortBy = 'createdAt',
-    sortOrder = 'desc',
-  } = req.query;
-
-  // Build query
+  const pageNumber = Number(req.query.page);
+  const limitNumber = Number(req.query.limit);
+  const page = Number.isFinite(pageNumber)
+    ? Math.max(1, Math.floor(pageNumber) || 1)
+    : 1;
+  const limit = Number.isFinite(limitNumber)
+    ? Math.min(100, Math.max(1, Math.floor(limitNumber) || 20))
+    : 20;
   const query: Record<string, unknown> = {};
-
-  if (type) {
-    query.type = type;
+  for (const [key, options] of Object.entries({
+    type: Object.keys(REPORT_REASONS),
+    status: statuses,
+    priority: priorities,
+  })) {
+    const value = req.query[key];
+    if (!value) continue;
+    if (typeof value !== 'string' || !options.includes(value))
+      throw new ApiError(400, 'reports.invalid', 'REPORT_INVALID');
+    query[key] = value;
   }
-
-  if (status) {
-    query.status = status;
-  }
-
-  if (priority) {
-    query.priority = priority;
-  }
-
-  // Build sort
-  const sort: Record<string, 1 | -1> = {};
-  sort[sortBy as string] = sortOrder === 'asc' ? 1 : -1;
-
-  const reports = await Report.find(query)
-    .populate('reporter', 'name email avatar')
-    .populate('reviewedBy', 'name email')
-    .skip((+page - 1) * +limit)
-    .limit(+limit)
-    .sort(sort);
-
-  const total = await Report.countDocuments(query);
-
-  // Get counts by status
-  const statusCounts = await Report.aggregate([
-    { $group: { _id: '$status', count: { $sum: 1 } } },
+  const sortBy = ['createdAt', 'updatedAt', 'priority', 'status'].includes(
+    String(req.query.sortBy)
+  )
+    ? String(req.query.sortBy)
+    : 'createdAt';
+  const [reports, total, counts] = await Promise.all([
+    Report.find(query)
+      .populate('reporter', 'name email avatar')
+      .populate('reviewedBy', 'name email')
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .sort({ [sortBy]: req.query.sortOrder === 'asc' ? 1 : -1, _id: -1 }),
+    Report.countDocuments(query),
+    Report.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
   ]);
-
-  res.status(200).json({
+  res.json({
     success: true,
     data: reports,
-    statusCounts: statusCounts.reduce((acc, curr) => {
-      acc[curr._id] = curr.count;
-      return acc;
-    }, {} as Record<string, number>),
-    pagination: {
-      page: +page,
-      limit: +limit,
-      total,
-      pages: Math.ceil(total / +limit),
-    },
+    statusCounts: Object.fromEntries(
+      counts.map((item) => [item._id, item.count])
+    ),
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
   });
 });
 
-/**
- * @desc    Get report details
- * @route   GET /api/admin/reports/:id
- * @access  Admin
- */
-export const getReportDetails = asyncHandler(async (req: Request, res: Response) => {
-  const report = await Report.findById(req.params.id)
-    .populate('reporter', 'name email avatar')
-    .populate('reviewedBy', 'name email');
-
-  if (!report) {
-    throw new ApiError(404, 'Report not found');
+export const getReportDetails = asyncHandler(
+  async (req: Request, res: Response) => {
+    requireId(req.params.id);
+    const report = await Report.findById(req.params.id)
+      .populate('reporter', 'name email avatar')
+      .populate('reviewedBy', 'name email');
+    if (!report)
+      throw new ApiError(404, 'reports.notFound', 'REPORT_NOT_FOUND');
+    let target = null;
+    // PhimAPI slugs and TMDB IDs are external identifiers, not MongoDB ObjectIds.
+    if (isObjectId(String(report.targetId))) {
+      if (report.type === 'COMMENT')
+        target = await Comment.findById(report.targetId)
+          .populate('user', 'name avatar')
+          .select('text movie user isDeleted isHidden');
+      if (report.type === 'USER')
+        target = await User.findById(report.targetId).select(
+          'name email avatar role isBanned'
+        );
+      if (report.type === 'MOVIE')
+        target = await Movie.findById(report.targetId).select('title tmdbId');
+    }
+    res.json({ success: true, data: { report, target } });
   }
+);
 
-  // Populate target based on type
-  let target = null;
-  if (report.type !== 'BUG' && report.targetModel) {
-    const Model = require(`../../models/${report.targetModel}`).default;
-    target = await Model.findById(report.targetId);
-  }
-
-  res.status(200).json({
-    success: true,
-    data: {
-      report,
-      target,
-    },
-  });
-});
-
-/**
- * @desc    Update report status
- * @route   PUT /api/admin/reports/:id/status
- * @access  Admin
- */
-export const updateReportStatus = asyncHandler(async (req: Request, res: Response) => {
-  const { status } = req.body;
-
-  const validStatuses = ['PENDING', 'REVIEWING', 'RESOLVED', 'REJECTED'];
-  if (!validStatuses.includes(status)) {
-    throw new ApiError(400, `Invalid status. Valid statuses: ${validStatuses.join(', ')}`);
-  }
-
-  const report = await Report.findById(req.params.id);
-
-  if (!report) {
-    throw new ApiError(404, 'Report not found');
-  }
-
-  const oldStatus = report.status;
-  report.status = status;
-  report.reviewedBy = req.user._id;
-
-  if (status === 'RESOLVED' || status === 'REJECTED') {
-    report.resolvedAt = new Date();
-  }
-
-  await report.save();
-
-  await logAdminAction(req, 'UPDATE', 'COMMENT', report._id.toString(), {
-    type: 'report_status_change',
-    oldStatus,
-    newStatus: status,
-    reportType: report.type,
-  });
-
-  res.status(200).json({
-    success: true,
-    data: report,
-    message: `Report status updated to ${status}`,
-  });
-});
-
-/**
- * @desc    Update report priority
- * @route   PUT /api/admin/reports/:id/priority
- * @access  Admin
- */
-export const updateReportPriority = asyncHandler(async (req: Request, res: Response) => {
-  const { priority } = req.body;
-
-  const validPriorities = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
-  if (!validPriorities.includes(priority)) {
-    throw new ApiError(400, `Invalid priority. Valid priorities: ${validPriorities.join(', ')}`);
-  }
-
-  const report = await Report.findById(req.params.id);
-
-  if (!report) {
-    throw new ApiError(404, 'Report not found');
-  }
-
-  const oldPriority = report.priority;
-  report.priority = priority;
-  await report.save();
-
-  await logAdminAction(req, 'UPDATE', 'COMMENT', report._id.toString(), {
-    type: 'report_priority_change',
-    oldPriority,
-    newPriority: priority,
-  });
-
-  res.status(200).json({
-    success: true,
-    data: report,
-    message: `Report priority updated to ${priority}`,
-  });
-});
-
-/**
- * @desc    Resolve report with action
- * @route   POST /api/admin/reports/:id/resolve
- * @access  Admin
- */
-export const resolveReport = asyncHandler(async (req: Request, res: Response) => {
-  const { resolution, action } = req.body;
-
-  if (!resolution) {
-    throw new ApiError(400, 'Resolution description is required');
-  }
-
-  const report = await Report.findById(req.params.id);
-
-  if (!report) {
-    throw new ApiError(404, 'Report not found');
-  }
-
-  report.status = 'RESOLVED';
-  report.resolution = resolution;
-  report.reviewedBy = req.user._id;
-  report.resolvedAt = new Date();
-
-  await report.save();
-
-  // Take action on reported content if specified
-  if (action) {
-    // TODO: Implement actions like delete content, ban user, etc.
-    await logAdminAction(req, 'UPDATE', report.type as any, report.targetId?.toString(), {
-      actionTaken: action,
-      fromReport: report._id,
+export const updateReportStatus = asyncHandler(
+  async (req: Request, res: Response) => {
+    // Closing a report goes through resolve/reject so a moderation note is required.
+    if (!ACTIVE_REPORT_STATUSES.includes(req.body.status))
+      throw new ApiError(400, 'reports.invalid', 'REPORT_INVALID');
+    const report = await findReport(req.params.id, true);
+    const oldStatus = report.status;
+    report.status = req.body.status;
+    report.reviewedBy = req.user._id;
+    await report.save();
+    await logAdminAction(req, 'UPDATE', 'REPORT', report.id, {
+      oldStatus,
+      newStatus: report.status,
     });
+    res.json({ success: true, data: report });
   }
+);
 
-  await logAdminAction(req, 'UPDATE', 'COMMENT', report._id.toString(), {
-    type: 'report_resolved',
-    resolution,
-    actionTaken: action,
-  });
-
-  res.status(200).json({
-    success: true,
-    data: report,
-    message: 'Report resolved successfully',
-  });
-});
-
-/**
- * @desc    Reject report
- * @route   POST /api/admin/reports/:id/reject
- * @access  Admin
- */
-export const rejectReport = asyncHandler(async (req: Request, res: Response) => {
-  const { reason } = req.body;
-
-  if (!reason) {
-    throw new ApiError(400, 'Rejection reason is required');
+export const updateReportPriority = asyncHandler(
+  async (req: Request, res: Response) => {
+    if (!priorities.includes(req.body.priority))
+      throw new ApiError(400, 'reports.invalid', 'REPORT_INVALID');
+    const report = await findReport(req.params.id, true);
+    const oldPriority = report.priority;
+    report.priority = req.body.priority;
+    await report.save();
+    await logAdminAction(req, 'UPDATE', 'REPORT', report.id, {
+      oldPriority,
+      newPriority: report.priority,
+    });
+    res.json({ success: true, data: report });
   }
+);
 
-  const report = await Report.findById(req.params.id);
-
-  if (!report) {
-    throw new ApiError(404, 'Report not found');
+export const resolveReport = asyncHandler(
+  async (req: Request, res: Response) => {
+    const resolution = parseReportResolution(req.body.resolution);
+    const report = await findReport(req.params.id, true);
+    const action = req.body.action || 'NONE';
+    if (
+      !['NONE', 'HIDE_COMMENT'].includes(action) ||
+      (action === 'HIDE_COMMENT' && report.type !== 'COMMENT')
+    ) {
+      throw new ApiError(400, 'reports.invalid', 'REPORT_INVALID');
+    }
+    if (action === 'HIDE_COMMENT') {
+      const comment = await Comment.findOneAndUpdate(
+        { _id: report.targetId, isDeleted: false },
+        {
+          isHidden: true,
+          moderatedBy: req.user._id,
+          moderatedAt: new Date(),
+        }
+      );
+      if (!comment)
+        throw new ApiError(
+          404,
+          'reports.targetMissing',
+          'REPORT_TARGET_MISSING'
+        );
+      await logAdminAction(req, 'UPDATE', 'COMMENT', String(report.targetId), {
+        isHidden: true,
+        fromReport: report.id,
+      });
+    }
+    report.status = 'RESOLVED';
+    report.resolution = resolution;
+    report.reviewedBy = req.user._id;
+    report.resolvedAt = new Date();
+    await report.save();
+    await logAdminAction(req, 'UPDATE', 'REPORT', report.id, {
+      resolution,
+      actionTaken: action,
+    });
+    res.json({ success: true, data: report });
   }
+);
 
-  report.status = 'REJECTED';
-  report.resolution = reason;
-  report.reviewedBy = req.user._id;
-  report.resolvedAt = new Date();
+export const rejectReport = asyncHandler(
+  async (req: Request, res: Response) => {
+    const reason = parseReportResolution(req.body.reason);
+    const report = await findReport(req.params.id, true);
+    report.status = 'REJECTED';
+    report.resolution = reason;
+    report.reviewedBy = req.user._id;
+    report.resolvedAt = new Date();
+    await report.save();
+    await logAdminAction(req, 'UPDATE', 'REPORT', report.id, { reason });
+    res.json({ success: true, data: report });
+  }
+);
 
-  await report.save();
-
-  await logAdminAction(req, 'UPDATE', 'COMMENT', report._id.toString(), {
-    type: 'report_rejected',
-    reason,
-  });
-
-  res.status(200).json({
-    success: true,
-    data: report,
-    message: 'Report rejected',
-  });
-});
-
-/**
- * @desc    Bulk action on reports
- * @route   POST /api/admin/reports/bulk-action
- * @access  Admin
- */
 export const bulkAction = asyncHandler(async (req: Request, res: Response) => {
-  const { action, reportIds, reason } = req.body;
-
-  if (!reportIds || !Array.isArray(reportIds) || reportIds.length === 0) {
-    throw new ApiError(400, 'No reports selected');
+  const { action, reportIds } = req.body;
+  if (
+    !['resolve', 'reject', 'set-reviewing'].includes(action) ||
+    !Array.isArray(reportIds) ||
+    !reportIds.length ||
+    reportIds.length > 100 ||
+    !reportIds.every(isObjectId)
+  ) {
+    throw new ApiError(400, 'reports.invalid', 'REPORT_INVALID');
   }
-
-  const validActions = ['resolve', 'reject', 'set-reviewing'];
-  if (!validActions.includes(action)) {
-    throw new ApiError(400, `Invalid action. Valid actions: ${validActions.join(', ')}`);
-  }
-
-  let result;
-
-  switch (action) {
-    case 'resolve':
-      result = await Report.updateMany(
-        { _id: { $in: reportIds } },
-        {
-          status: 'RESOLVED',
-          resolution: reason || 'Bulk resolved',
-          reviewedBy: req.user._id,
-          resolvedAt: new Date(),
-        }
-      );
-      break;
-    case 'reject':
-      result = await Report.updateMany(
-        { _id: { $in: reportIds } },
-        {
-          status: 'REJECTED',
-          resolution: reason || 'Bulk rejected',
-          reviewedBy: req.user._id,
-          resolvedAt: new Date(),
-        }
-      );
-      break;
-    case 'set-reviewing':
-      result = await Report.updateMany(
-        { _id: { $in: reportIds } },
-        {
-          status: 'REVIEWING',
-          reviewedBy: req.user._id,
-        }
-      );
-      break;
-  }
-
-  await logAdminAction(req, 'UPDATE', 'COMMENT', undefined, {
+  const reason =
+    action === 'set-reviewing'
+      ? undefined
+      : parseReportResolution(req.body.reason);
+  const status =
+    action === 'resolve'
+      ? 'RESOLVED'
+      : action === 'reject'
+        ? 'REJECTED'
+        : 'REVIEWING';
+  const result = await Report.updateMany(
+    {
+      _id: { $in: [...new Set(reportIds)] },
+      status: {
+        $in: action === 'set-reviewing' ? ['PENDING'] : ACTIVE_REPORT_STATUSES,
+      },
+    },
+    {
+      status,
+      reviewedBy: req.user._id,
+      ...(reason ? { resolution: reason, resolvedAt: new Date() } : {}),
+    },
+    { runValidators: true }
+  );
+  await logAdminAction(req, 'UPDATE', 'REPORT', undefined, {
     bulkAction: action,
     reportIds,
     reason,
-    modifiedCount: result?.modifiedCount,
+    modifiedCount: result.modifiedCount,
   });
-
-  res.status(200).json({
-    success: true,
-    message: `Bulk ${action} completed`,
-    modifiedCount: result?.modifiedCount,
-  });
+  res.json({ success: true, modifiedCount: result.modifiedCount });
 });

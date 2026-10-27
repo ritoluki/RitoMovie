@@ -19,7 +19,8 @@
     "backToHome": "← Back to Home",
     "backToTop": "Back to top",
     "scrollDown": "Scroll down",
-    "swipeUp": "Swipe up"
+    "swipeUp": "Swipe up",
+    "retry": "Try again"
   },
   "header": {
     "searchHint": "Enter a movie title and press Enter to search.",
@@ -349,6 +350,14 @@
     "serverError": "Server error. Please try again later."
   },
   "admin": {
+    "realtime": {
+      "live": "Live updates",
+      "connecting": "Connecting",
+      "reconnecting": "Reconnecting",
+      "paused": "Updates paused",
+      "liveHint": "New changes appear automatically.",
+      "fallbackHint": "If the live connection is interrupted, data refreshes automatically every 30 seconds."
+    },
     "nav": {
       "dashboard": "Dashboard",
       "users": "Users",
@@ -955,7 +964,53 @@
       "SPOILER": "Spoiler",
       "COPYRIGHT": "Copyright",
       "BUG_REPORT": "Bug report",
-      "OTHER": "Other"
+      "OTHER": "Other",
+      "PLAYBACK_ERROR": "Video will not play",
+      "WRONG_CONTENT": "Wrong movie or episode",
+      "SUBTITLE_ERROR": "Subtitle or audio issue"
     }
+  },
+  "reporting": {
+    "open": "Report",
+    "movieButton": "Report a problem",
+    "title": "Send a report",
+    "description": "Help us keep RitoMovie safe and improve your viewing experience.",
+    "loginRequired": "Sign in to send a report. Include enough detail so the moderation team can check it.",
+    "target": "What are you reporting?",
+    "author": "The author",
+    "comment": "This comment",
+    "reason": "Reason",
+    "details": "Details",
+    "placeholder": "Describe what happened and what should be checked…",
+    "minLength": "At least 10 characters.",
+    "submit": "Send report",
+    "wait": "Wait {{count}}s",
+    "success": "Report received. Our team will review it.",
+    "duplicate": "You already have an open report for this item. Our team is reviewing it.",
+    "rateLimited": "Please wait one minute between reports.",
+    "dailyLimit": "You can send at most 10 reports in 24 hours. Please try again later.",
+    "invalid": "Choose a valid reason and enter between 10 and 1,000 characters.",
+    "targetMissing": "This content is no longer available.",
+    "selfReport": "You cannot report yourself or your own comment.",
+    "failed": "Could not send your report. Please try again."
+  },
+  "adminReport": {
+    "target": "Reported content",
+    "reviewHint": "Check the report and its context, then record your decision.",
+    "bulkTitle": "Review {{count}} selected reports",
+    "bulkHint": "Only open reports will be updated. This action changes report status; it does not hide or delete content.",
+    "playbackContext": "Episode / server",
+    "openTarget": "Open reported page",
+    "targetMissing": "The original content has been removed. The saved snapshot is shown when available.",
+    "alreadyHidden": "This comment is already hidden.",
+    "resolution": "Moderation note",
+    "notePlaceholder": "Describe what you checked, what you changed, or why the report is rejected…",
+    "noteHint": "A note of at least 5 characters is required.",
+    "action": "Action when resolving",
+    "noAction": "Record resolution only",
+    "hideComment": "Hide the reported comment",
+    "updated": "Report updated",
+    "bulkUpdated": "Updated {{count}} report(s)",
+    "failed": "Could not update the report."
   }
 }

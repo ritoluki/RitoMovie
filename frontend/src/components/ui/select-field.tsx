@@ -32,16 +32,19 @@ export const SelectField = ({
   onValueChange,
   className,
   disabled,
+  id,
 }: {
   children: ReactNode;
   value: string;
   onValueChange: (value: string) => void;
   className?: string;
   disabled?: boolean;
+  id?: string;
 }) => {
   const options = optionsFrom(children);
   return (
     <Dropdown
+      id={id}
       value={value}
       onChange={onValueChange}
       options={options}

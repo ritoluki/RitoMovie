@@ -8,6 +8,7 @@ import { useMovies } from '@/hooks/useMovies';
 import { usePhim } from '@/hooks/usePhim';
 import VideoPlayer from '@/components/movie/VideoPlayer';
 import Comments from '@/components/movie/Comments';
+import ReportButton from '@/components/common/ReportButton';
 import { getImageUrl, getPhimImageUrl } from '@/utils/helpers';
 import { phimTitle, phimOverview, phimLabel, phimEpisodeName, phimEpisodeCount } from '@/utils/phimLocalization';
 import { getTranslatedGenre, getTranslatedCountry } from '@/utils/translations';
@@ -258,6 +259,13 @@ const Watch = () => {
             showEpisodeListButton={isSeries}
             episodeListLabel={t('watch.toggleEpisodes')}
           />
+        </div>
+
+        <div className="flex justify-end px-4 pt-3 md:px-0">
+          <ReportButton target={{ type: 'MOVIE',
+            targetId: streamingMeta?.slug || resolvedSlug ? `phim:${streamingMeta?.slug || resolvedSlug}` : `tmdb:${mediaType}:${movieId}`,
+            label: displayTitle, context: { movieId, mediaType, movieTitle: displayTitle, movieSlug: streamingMeta?.slug || resolvedSlug,
+              episode: currentEpisode?.name, server: currentServer?.server_name } }} />
         </div>
 
         {/* Nút back trên mobile - xuống dưới video */}

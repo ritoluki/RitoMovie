@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { adminRealtimePlugin } from '../utils/adminRealtimePlugin';
 
 export interface IComment extends Document {
     user: mongoose.Types.ObjectId;
@@ -93,5 +94,7 @@ const CommentSchema: Schema = new Schema(
 // Index for faster queries
 CommentSchema.index({ movie: 1, createdAt: -1 });
 CommentSchema.index({ parentComment: 1 });
+
+CommentSchema.plugin(adminRealtimePlugin, { topics: ['comments', 'reports', 'dashboard', 'analytics'] });
 
 export default mongoose.model<IComment>('Comment', CommentSchema);

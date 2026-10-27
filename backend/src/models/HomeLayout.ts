@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import { adminRealtimePlugin } from '../utils/adminRealtimePlugin';
 import type { SectionSettings } from '../utils/homeSections';
 
 interface IHomeLayout { _id: string; revision: number; sections: SectionSettings[] }
@@ -10,4 +11,6 @@ const sectionSchema = new Schema({
 const schema = new Schema<IHomeLayout>({
   _id: { type: String, default: 'home' }, revision: { type: Number, required: true, default: 0 }, sections: [sectionSchema],
 }, { timestamps: true });
+schema.plugin(adminRealtimePlugin, { topics: ['home-layout', 'dashboard'] });
+
 export default mongoose.model<IHomeLayout>('HomeLayout', schema);

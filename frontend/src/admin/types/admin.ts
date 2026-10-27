@@ -88,7 +88,8 @@ export interface AdminReport {
   type: 'COMMENT' | 'USER' | 'MOVIE' | 'BUG';
   targetId: string;
   targetModel?: 'Comment' | 'User' | 'Movie';
-  reason: 'SPAM' | 'HARASSMENT' | 'INAPPROPRIATE' | 'SPOILER' | 'COPYRIGHT' | 'BUG_REPORT' | 'OTHER';
+  reason: import('@/services/reportService').ReportReason;
+  context?: import('@/services/reportService').ReportContext;
   description: string;
   status: 'PENDING' | 'REVIEWING' | 'RESOLVED' | 'REJECTED';
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';

@@ -15,6 +15,7 @@ import {
 import LoadingSpinner from '../common/LoadingSpinner';
 import { Comment } from '../../services/commentService';
 import { useTranslation } from 'react-i18next';
+import ReportButton from '../common/ReportButton';
 
 const insertEmoji = (
   value: string,
@@ -209,6 +210,8 @@ const ReplyItem = ({
           >
             {t('comments.reply')}
           </button>
+          <ReportButton compact target={{ type: 'COMMENT', targetId: reply._id, authorId: reply.user._id,
+            label: `${reply.user.name}: ${reply.text.slice(0, 160)}`, context: { movieId: reply.movie } }} />
         </div>
 
         {/* Reply Form */}
@@ -374,6 +377,8 @@ const CommentItem = ({
           >
             <MessageCircle className="size-3.5" />{t('comments.reply')}
           </button>
+          <ReportButton compact target={{ type: 'COMMENT', targetId: comment._id, authorId: comment.user._id,
+            label: `${comment.user.name}: ${comment.text.slice(0, 160)}`, context: { movieId: comment.movie } }} />
         </div>
 
         {/* Reply Form */}
