@@ -183,6 +183,24 @@ const bootstrap = `if(!localStorage.getItem('i18nextLng')) localStorage.setItem(
         await waitFor(
           `document.getElementById('comment-${root._id}')?.textContent.includes(${JSON.stringify(root.text)})`,
         );
+        await evaluate("document.body.style.minHeight = '200vh'");
+        const geometry = () => evaluate(`Array.from(document.querySelectorAll('header button')).map(button => {const rect = button.getBoundingClientRect();return [rect.x, rect.width]})`);
+        for (const label of [en.common.language, en.header.profile]) {
+          const trigger = `document.querySelector('header button[aria-label=${JSON.stringify(label)}]')`;
+          const before = await geometry();
+          const point = await evaluate(`(() => { const rect = ${trigger}.getBoundingClientRect(); return { x: rect.x + rect.width/2, y: rect.y + rect.height/2 }; })()`);
+          await send('Input.dispatchMouseEvent', { type: 'mousePressed', button: 'left', clickCount: 1, ...point });
+          await send('Input.dispatchMouseEvent', { type: 'mouseReleased', button: 'left', clickCount: 1, ...point });
+          await waitFor(`document.querySelector('[role=menu][data-state=open]')`);
+          assert.deepEqual(await geometry(), before, `${label} must not shift header buttons`);
+          assert.notEqual(await evaluate('getComputedStyle(document.body).overflow'), 'hidden');
+          await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape' });
+          await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape' });
+          await waitFor(`!document.querySelector('[role=menu][data-state=open]')`);
+          assert.deepEqual(await geometry(), before);
+          await waitFor(`document.activeElement === ${trigger}`);
+        }
+        console.log('PASS: opening language/account menus preserves header positions, keeps page scrolling and returns focus on Escape');
         while (
           !requests.some((request) =>
             request.path.endsWith(`/${root._id}/replies`),

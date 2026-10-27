@@ -15,7 +15,7 @@ const LanguageSwitcher = () => {
   const { t, i18n } = useTranslation();
   const current = i18n.language.split('-')[0];
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"

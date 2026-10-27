@@ -25,7 +25,7 @@ const AdminHeader = ({ onMenuClick, onToggleSidebar, sidebarOpen, realtimeStatus
       </span>
       <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex"><Link to="/">{t('admin.nav.website')}<ArrowUpRight className="h-3.5 w-3.5" /></Link></Button>
       <NotificationBell />
-      <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" className="h-10 gap-2 px-2" aria-label={t('admin.common.adminAccount')}><span className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-muted text-xs">{user?.name?.charAt(0).toUpperCase() || 'A'}</span><ChevronDown className="h-3 w-3" /></Button></DropdownMenuTrigger>
+      <DropdownMenu modal={false}><DropdownMenuTrigger asChild><Button variant="ghost" className="h-10 gap-2 px-2" aria-label={t('admin.common.adminAccount')}><span className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-muted text-xs">{user?.name?.charAt(0).toUpperCase() || 'A'}</span><ChevronDown className="h-3 w-3" /></Button></DropdownMenuTrigger>
         <DropdownMenuContent align="end"><DropdownMenuLabel>{user?.name || t('admin.common.admin')}<span className="mt-1 block text-xs capitalize">{user?.role ? t(`admin.roles.${user.role}`, { defaultValue: user.role.replace('_', ' ') }) : ''}</span></DropdownMenuLabel><DropdownMenuSeparator />
           <DropdownMenuItem asChild><Link to="/profile"><UserRound />{t('admin.nav.profile')}</Link></DropdownMenuItem>
           <DropdownMenuItem asChild><Link to="/"><ArrowUpRight />{t('admin.nav.website')}</Link></DropdownMenuItem><DropdownMenuSeparator />
