@@ -28,7 +28,14 @@ export function phimOverview(source: { content?: string; siteOverrides?: PhimMov
   return isVietnamese(language) ? plainText(source?.content || '') : '';
 }
 
-export function phimLabel(value: string | undefined, language: string): string {
+// Upstream metadata can use numbers for episode fields even on the same endpoint.
+// Ignore malformed values instead of passing objects/arrays into string methods.
+const metadataText = (value: unknown): string => typeof value === 'string'
+  ? value.trim()
+  : typeof value === 'number' && Number.isFinite(value) ? String(value) : '';
+
+export function phimLabel(input: unknown, language: string): string {
+  const value = metadataText(input);
   if (!value) return '';
   const types: Record<string, [string, string]> = {
     single: ['Phim lẻ', 'Movie'], series: ['Phim bộ', 'TV series'],
@@ -52,14 +59,16 @@ export function phimLabel(value: string | undefined, language: string): string {
     .replace(/giờ/gi, 'h').trim();
 }
 
-export function phimEpisodeName(value: string | undefined, language: string): string {
+export function phimEpisodeName(input: unknown, language: string): string {
+  const value = metadataText(input);
   if (!value) return '';
   return /^\d+$/.test(value.trim())
     ? `${isVietnamese(language) ? 'Tập' : 'Episode'} ${value.trim()}`
     : phimLabel(value, language);
 }
 
-export function phimEpisodeCount(value: string | undefined, language: string): string {
+export function phimEpisodeCount(input: unknown, language: string): string {
+  const value = metadataText(input);
   if (!value) return '';
   const count = value.trim().match(/^(\d+)\s*(?:tập|episodes?)?$/i);
   return count ? `${count[1]} ${isVietnamese(language) ? 'Tập' : 'Episodes'}` : phimLabel(value, language);

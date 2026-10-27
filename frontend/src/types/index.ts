@@ -248,8 +248,8 @@ export interface PhimMovieSummary {
   year: number;
   type?: string;
   time?: string;
-  episode_current?: string;
-  episode_total?: string;
+  episode_current?: string | number | null;
+  episode_total?: string | number | null;
   quality?: string;
   lang?: string;
   lang_name?: string;
@@ -312,8 +312,8 @@ export interface PhimMovieMeta {
   poster_url: string;
   thumb_url: string;
   time: string;
-  episode_current: string;
-  episode_total: string;
+  episode_current: string | number | null;
+  episode_total: string | number | null;
   quality: string;
   lang: string;
   notify: string;

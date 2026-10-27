@@ -55,6 +55,24 @@ test('localizes episode, progress, runtime and audio labels while retaining thei
   assert.equal(phimEpisodeCount('12', 'vi'), '12 Tập');
 });
 
+test('numeric episode metadata renders in both languages without throwing on missing or malformed upstream values', () => {
+  assert.equal(phimEpisodeCount(12, 'en'), '12 Episodes');
+  assert.equal(phimEpisodeCount(12, 'vi'), '12 Tập');
+  assert.equal(phimEpisodeCount(' 12 Tập ', 'en'), '12 Episodes');
+  assert.equal(phimEpisodeCount(0, 'en'), phimEpisodeCount('0', 'en'));
+  assert.equal(phimEpisodeName(2, 'en'), 'Episode 2');
+  assert.equal(phimEpisodeName(2, 'vi'), 'Tập 2');
+  assert.equal(phimLabel(12, 'en'), '12');
+  assert.equal(phimLabel(12, 'vi'), '12');
+  for (const value of [null, undefined, '', '  ', {}, [], true, NaN, Infinity]) {
+    for (const language of ['vi', 'en']) {
+      assert.equal(phimEpisodeCount(value, language), '');
+      assert.equal(phimEpisodeName(value, language), '');
+      assert.equal(phimLabel(value, language), '');
+    }
+  }
+});
+
 test('fallback details translate taxonomies and status for regional English locales', () => {
   const english = phimToMovieDetails(source, 0, 'en-US');
   assert.equal(english.title, source.origin_name);
